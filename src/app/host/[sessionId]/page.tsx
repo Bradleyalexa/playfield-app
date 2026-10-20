@@ -46,6 +46,7 @@ import {
   ALGORITHM_REGISTRY,
   EquipmentConfig,
   GameSession,
+  SessionBillingConfig,
   calculateEquipmentCost,
 } from "../../../core/entities/session";
 import { generateBalancedMatches } from "../../../core/matchmaking/balanced-queue";
@@ -687,10 +688,11 @@ function HostDashboardContent({ params }: HostPageProps) {
   };
 
   // 9. Selesaikan Sesi Mabar Resmi & Tampilkan Podium Rekap
-  const handleConfirmFinishSession = () => {
+  const handleConfirmFinishSession = (updatedBilling?: SessionBillingConfig) => {
     const updated: GameSession = {
       ...session,
       status: "completed",
+      billing: updatedBilling || session.billing,
     };
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
@@ -701,6 +703,16 @@ function HostDashboardContent({ params }: HostPageProps) {
     } catch {}
 
     AudioAnnouncer.announceGeneral("Sesi mabar hari ini resmi diselesaikan! Terima kasih semua pemain.");
+  };
+
+  // 9b. Update Konfigurasi Biaya Billing dari Kartu Rekap
+  const handleUpdateBilling = (updatedBilling: SessionBillingConfig) => {
+    const updated: GameSession = {
+      ...session,
+      billing: updatedBilling,
+    };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
   };
 
   // 10. Buka Kembali Sesi Mabar (Safety valve jika salah klik)
@@ -759,6 +771,7 @@ function HostDashboardContent({ params }: HostPageProps) {
             session={session}
             isHost={true}
             onReopenSession={handleReopenSession}
+            onUpdateBilling={handleUpdateBilling}
           />
         )}
 

@@ -37,6 +37,7 @@ import { Player, getTierFromSkill, getTierLabel } from "../core/entities/player"
 import { generateBalancedMatches, addMinutesToTimeString } from "../core/matchmaking/balanced-queue";
 import {
   ALGORITHM_REGISTRY,
+  BillingModel,
   EquipmentPricingModel,
   MatchmakingAlgorithm,
   SportType,
@@ -69,12 +70,17 @@ export default function HomePage() {
   const [customInitialMatchesCount, setCustomInitialMatchesCount] = useState(6);
   const [isCustomMatchesCountInput, setIsCustomMatchesCountInput] = useState(false);
 
-  // Cock / Bola & Slop Pricing Settings (Opsional & Customizable Host)
-  const [trackEquipment, setTrackEquipment] = useState(false);
+  // Pengaturan Biaya & Patungan (Nomor 6)
+  const [billingModelChoice, setBillingModelChoice] = useState<BillingModel>("track_equipment");
+  const [fixedPriceInput, setFixedPriceInput] = useState<string>("40000");
+  const [courtRentalFeeInput, setCourtRentalFeeInput] = useState<string>("160000");
   const [equipmentPricingModel, setEquipmentPricingModel] = useState<EquipmentPricingModel>("per_unit");
   const [costPerUnitInput, setCostPerUnitInput] = useState<string>("12000");
   const [costPerSlopInput, setCostPerSlopInput] = useState<string>("140000");
   const [unitsPerSlopInput, setUnitsPerSlopInput] = useState<string>("12");
+  const [bankNameInput, setBankNameInput] = useState<string>("BCA");
+  const [accountNumberInput, setAccountNumberInput] = useState<string>("");
+  const [accountHolderInput, setAccountHolderInput] = useState<string>("");
 
   // Dropdown Sesi Tersimpan (Hanya Tampilkan 2 Recent)
   const [isRecentDropdownOpen, setIsRecentDropdownOpen] = useState(false);
@@ -251,8 +257,9 @@ export default function HomePage() {
     demo.players = initialPlayers;
 
     // Konfigurasi Equipment (Cock / Bola & Slop)
+    const isTrackingEquipment = billingModelChoice === "track_equipment";
     demo.sportConfig.equipment = {
-      enabled: trackEquipment,
+      enabled: isTrackingEquipment,
       unitName:
         selectedSport === "badminton"
           ? "shuttlecock"
@@ -269,6 +276,22 @@ export default function HomePage() {
       costPerSlop: Math.max(0, parseInt(costPerSlopInput, 10) || 140000),
       unitsPerSlop: Math.max(1, parseInt(unitsPerSlopInput, 10) || 12),
       slopUsed: equipmentPricingModel === "per_slop" ? 1 : 0,
+    };
+
+    // Konfigurasi Billing & Split Bill Mabar
+    demo.billing = {
+      model: billingModelChoice,
+      fixedPricePerPerson:
+        billingModelChoice === "fixed_per_person"
+          ? Math.max(0, parseInt(fixedPriceInput, 10) || 40000)
+          : undefined,
+      courtRentalFee:
+        billingModelChoice === "track_equipment"
+          ? Math.max(0, parseInt(courtRentalFeeInput, 10) || 160000)
+          : undefined,
+      bankName: bankNameInput.trim() || undefined,
+      accountNumber: accountNumberInput.trim() || undefined,
+      accountHolder: accountHolderInput.trim() || undefined,
     };
 
     // Inisialisasi seluruh lapangan (demo.courts) sesuai jumlah courtCount yang dipilih host
@@ -1034,77 +1057,180 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <Flame className="h-4 w-4 stroke-[3]" />
                     <span className="text-xs font-black uppercase tracking-wider text-black">
-                      6. Biaya Shuttlecock / Bola Lapangan (Opsional)
+                      6. Model Pembayaran &amp; Biaya Mabar (Cock &amp; Sewa Lapangan)
                     </span>
                   </div>
                   <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] ${
-                    trackEquipment ? "bg-[#ccff00] text-black" : "bg-white text-slate-700"
+                    billingModelChoice === "fixed_per_person"
+                      ? "bg-[#ccff00] text-black"
+                      : billingModelChoice === "track_equipment"
+                      ? "bg-[#ffde00] text-black"
+                      : "bg-white text-slate-700"
                   }`}>
-                    {trackEquipment ? "Dihitung & Dicatat" : "Paket All-In (Non-Aktif)"}
+                    {billingModelChoice === "fixed_per_person"
+                      ? "Fixed Price"
+                      : billingModelChoice === "track_equipment"
+                      ? "Hitung Cock + Split Bill"
+                      : "Tanpa Biaya (Gratis)"}
                   </span>
                 </div>
 
-                {/* Switch Utama: All-In-One (Tanpa Hitung Bola) vs Hitung Pemakaian Bola */}
+                {/* 3 Pilihan Model: Fixed Price, Itung Cock, atau Tanpa Biaya */}
                 <div>
                   <label className="block text-[11px] font-black uppercase text-black/70 mb-2">
-                    Status Biaya Shuttlecock / Bola Mabar:
+                    Pilih Skema Patungan / Biaya Mabar:
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {/* Opsi 1: Fixed Price */}
                     <button
                       type="button"
-                      onClick={() => setTrackEquipment(false)}
-                      className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
-                        !trackEquipment
+                      onClick={() => setBillingModelChoice("fixed_per_person")}
+                      className={`flex flex-col p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                        billingModelChoice === "fixed_per_person"
                           ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
                           : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
                       }`}
                     >
-                      <span className="text-2xl shrink-0">🎯</span>
-                      <div>
-                        <span className="text-xs font-black uppercase tracking-wide block">
-                          Paket All-In-One (Fixed Price)
-                        </span>
-                        <span className="text-[10px] font-bold text-black/70 block mt-0.5">
-                          Biaya sudah flat per orang. Tidak perlu counter bola.
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">🎯</span>
+                        <span className="text-xs font-black uppercase tracking-wide">
+                          Fixed Price
                         </span>
                       </div>
+                      <span className="text-[10px] font-bold text-black/70 leading-tight">
+                        Tarif tetap per orang all-in (misal Rp 40rb). Tanpa hitung cock.
+                      </span>
                     </button>
 
+                    {/* Opsi 2: Itung Cock + Split Bill */}
                     <button
                       type="button"
-                      onClick={() => setTrackEquipment(true)}
-                      className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
-                        trackEquipment
+                      onClick={() => setBillingModelChoice("track_equipment")}
+                      className={`flex flex-col p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                        billingModelChoice === "track_equipment"
                           ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
                           : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
                       }`}
                     >
-                      <span className="text-2xl shrink-0">🏸</span>
-                      <div>
-                        <span className="text-xs font-black uppercase tracking-wide block">
-                          Hitung Pemakaian Cock / Bola
-                        </span>
-                        <span className="text-[10px] font-bold text-black/70 block mt-0.5">
-                          Aktifkan counter pemakaian & patungan butir / slop.
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">🏸</span>
+                        <span className="text-xs font-black uppercase tracking-wide">
+                          Itung Cock &amp; Sewa
                         </span>
                       </div>
+                      <span className="text-[10px] font-bold text-black/70 leading-tight">
+                        Catat cock &amp; sewa lapangan. Split bill otomatis di akhir.
+                      </span>
+                    </button>
+
+                    {/* Opsi 3: Tanpa Biaya / Bebas */}
+                    <button
+                      type="button"
+                      onClick={() => setBillingModelChoice("none")}
+                      className={`flex flex-col p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                        billingModelChoice === "none"
+                          ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                          : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">✨</span>
+                        <span className="text-xs font-black uppercase tracking-wide">
+                          Tanpa Biaya
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-black/70 leading-tight">
+                        Sesi santai / gratis. Tidak ada counter bola atau tagihan.
+                      </span>
                     </button>
                   </div>
                 </div>
 
-                {!trackEquipment ? (
-                  <div className="p-3.5 rounded-xl bg-white border-2 border-dashed border-black/50 text-xs font-bold text-slate-700 flex items-center gap-2.5">
-                    <span className="text-base">✨</span>
-                    <span>
-                      Mode santai: Dashboard Host dan Papan Penonton akan tampil bersih tanpa tombol hitung bola/cock.
-                    </span>
+                {/* Sub-form Opsi 1: Fixed Price */}
+                {billingModelChoice === "fixed_per_person" && (
+                  <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-3 animate-in fade-in">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <label className="text-[11px] font-black uppercase text-black block">
+                          Harga Mabar Tetap Per Orang (All-In):
+                        </label>
+                        <span className="text-[10px] text-slate-600 font-bold">
+                          Tagihan per peserta yang akan ditampilkan di rekap akhir
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-mono font-black">Rp</span>
+                        <input
+                          type="number"
+                          step="5000"
+                          min="0"
+                          value={fixedPriceInput}
+                          onChange={(e) => setFixedPriceInput(e.target.value)}
+                          className="w-32 rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                          placeholder="40000"
+                        />
+                        <span className="text-xs font-bold text-slate-600">/org</span>
+                      </div>
+                    </div>
+
+                    {/* Quick Preset Chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
+                      <span className="text-[10px] font-mono font-bold text-black/50">Preset Cepat:</span>
+                      {[25000, 30000, 35000, 40000, 50000].map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setFixedPriceInput(val.toString())}
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
+                            fixedPriceInput === val.toString()
+                              ? "bg-black text-[#ccff00] border-black"
+                              : "bg-[#faf8f2] text-black border-black/40 hover:border-black"
+                          }`}
+                        >
+                          Rp {val.toLocaleString("id-ID")}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Form Rekening Pembayaran */}
+                    <div className="pt-2 border-t border-black/10 flex flex-col gap-2">
+                      <label className="text-[11px] font-black uppercase text-black block">
+                        💳 Info Rekening Transfer Host (Opsional - Muncul di Pesan WhatsApp):
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Bank / E-Wallet (misal: BCA)"
+                          value={bankNameInput}
+                          onChange={(e) => setBankNameInput(e.target.value)}
+                          className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-bold bg-[#faf8f2]"
+                        />
+                        <input
+                          type="text"
+                          placeholder="No. Rekening / No. HP"
+                          value={accountNumberInput}
+                          onChange={(e) => setAccountNumberInput(e.target.value)}
+                          className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-mono font-bold bg-[#faf8f2]"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Atas Nama Rekening"
+                          value={accountHolderInput}
+                          onChange={(e) => setAccountHolderInput(e.target.value)}
+                          className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-bold bg-[#faf8f2]"
+                        />
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <>
+                )}
+
+                {/* Sub-form Opsi 2: Itung Cock + Split Bill */}
+                {billingModelChoice === "track_equipment" && (
+                  <div className="flex flex-col gap-3 animate-in fade-in">
                     {/* Pilihan Model: Hitung Per Butir vs Per Slop */}
                     <div>
                       <label className="block text-[11px] font-black uppercase text-black/70 mb-2">
-                        Pilih Cara Hitung Biaya:
+                        Pilih Cara Hitung Biaya Shuttlecock/Bola:
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <button
@@ -1149,126 +1275,191 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                {/* Form Input Custom Harga Sesuai Pilihan */}
-                {equipmentPricingModel === "per_unit" ? (
-                  <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <label className="text-[11px] font-black uppercase text-black block">
-                          Harga Custom Per Butir Cock/Bola (Rp):
-                        </label>
-                        <span className="text-[10px] text-slate-600 font-bold">
-                          Contoh: Rp 12.000 / kok (Setara Rp{" "}
-                          {(
-                            (parseInt(costPerUnitInput, 10) || 12000) * 12
-                          ).toLocaleString("id-ID")}{" "}
-                          / slop)
-                        </span>
-                      </div>
+                    {/* Form Input Custom Harga Cock */}
+                    {equipmentPricingModel === "per_unit" ? (
+                      <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <label className="text-[11px] font-black uppercase text-black block">
+                              Harga Custom Per Butir Cock/Bola (Rp):
+                            </label>
+                            <span className="text-[10px] text-slate-600 font-bold">
+                              Contoh: Rp 12.000 / kok (Setara Rp{" "}
+                              {(
+                                (parseInt(costPerUnitInput, 10) || 12000) * 12
+                              ).toLocaleString("id-ID")}{" "}
+                              / slop)
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-mono font-black">Rp</span>
+                            <input
+                              type="number"
+                              step="1000"
+                              min="0"
+                              value={costPerUnitInput}
+                              onChange={(e) => setCostPerUnitInput(e.target.value)}
+                              className="w-32 rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                            />
+                          </div>
+                        </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-mono font-black">Rp</span>
-                        <input
-                          type="number"
-                          step="1000"
-                          min="0"
-                          value={costPerUnitInput}
-                          onChange={(e) => setCostPerUnitInput(e.target.value)}
-                          className="w-32 rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
-                        />
+                        {/* Quick Preset Buttons */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
+                          <span className="text-[10px] font-mono font-bold text-black/50">Preset Cepat:</span>
+                          {[10000, 12000, 15000, 20000].map((val) => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setCostPerUnitInput(val.toString())}
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
+                                costPerUnitInput === val.toString()
+                                  ? "bg-black text-[#ccff00] border-black"
+                                  : "bg-[#faf8f2] text-black border-black/40 hover:border-black"
+                              }`}
+                            >
+                              Rp {val.toLocaleString("id-ID")}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[11px] font-black uppercase text-black block mb-1">
+                              Harga Custom Per Slop / Tabung (Rp):
+                            </label>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-mono font-black">Rp</span>
+                              <input
+                                type="number"
+                                step="5000"
+                                min="0"
+                                value={costPerSlopInput}
+                                onChange={(e) => setCostPerSlopInput(e.target.value)}
+                                className="w-full rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                              />
+                            </div>
+                          </div>
 
-                    {/* Quick Preset Buttons */}
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
-                      <span className="text-[10px] font-mono font-bold text-black/50">Preset Cepat:</span>
-                      {[10000, 12000, 15000, 20000].map((val) => (
-                        <button
-                          key={val}
-                          type="button"
-                          onClick={() => setCostPerUnitInput(val.toString())}
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
-                            costPerUnitInput === val.toString()
-                              ? "bg-black text-[#ccff00] border-black"
-                              : "bg-[#faf8f2] text-black border-black/40 hover:border-black"
-                          }`}
-                        >
-                          Rp {val.toLocaleString("id-ID")}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[11px] font-black uppercase text-black block mb-1">
-                          Harga Custom Per Slop / Tabung (Rp):
-                        </label>
+                          <div>
+                            <label className="text-[11px] font-black uppercase text-black block mb-1">
+                              Isi Cock / Bola Per Slop:
+                            </label>
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="number"
+                                min="1"
+                                max="24"
+                                value={unitsPerSlopInput}
+                                onChange={(e) => setUnitsPerSlopInput(e.target.value)}
+                                className="w-20 text-center rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                              />
+                              <span className="text-xs font-mono font-bold text-slate-700">
+                                Butir (~Rp{" "}
+                                {Math.round(
+                                  (parseInt(costPerSlopInput, 10) || 140000) /
+                                    (parseInt(unitsPerSlopInput, 10) || 12)
+                                ).toLocaleString("id-ID")}{" "}
+                                /butir)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quick Preset Buttons Slop */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
+                          <span className="text-[10px] font-mono font-bold text-black/50">Preset Slop Populer:</span>
+                          {[
+                            { label: "Standard (Rp 120rb)", val: 120000 },
+                            { label: "Samurai/JP (Rp 140rb)", val: 140000 },
+                            { label: "Aeroplane (Rp 180rb)", val: 180000 },
+                            { label: "Yonex AS (Rp 290rb)", val: 290000 },
+                          ].map((item) => (
+                            <button
+                              key={item.val}
+                              type="button"
+                              onClick={() => setCostPerSlopInput(item.val.toString())}
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
+                                costPerSlopInput === item.val.toString()
+                                  ? "bg-black text-[#ccff00] border-black"
+                                  : "bg-[#faf8f2] text-black border-black/40 hover:border-black"
+                              }`}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Estimasi Sewa Lapangan & Info Rekening Transfer */}
+                    <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <label className="text-[11px] font-black uppercase text-black block">
+                            Estimasi Total Sewa Lapangan (Rp):
+                          </label>
+                          <span className="text-[10px] text-slate-600 font-bold">
+                            Bisa diubah kembali saat selesai mabar untuk split bill
+                          </span>
+                        </div>
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs font-mono font-black">Rp</span>
                           <input
                             type="number"
-                            step="5000"
+                            step="10000"
                             min="0"
-                            value={costPerSlopInput}
-                            onChange={(e) => setCostPerSlopInput(e.target.value)}
-                            className="w-full rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                            value={courtRentalFeeInput}
+                            onChange={(e) => setCourtRentalFeeInput(e.target.value)}
+                            className="w-36 rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                            placeholder="160000"
                           />
                         </div>
                       </div>
 
-                      <div>
-                        <label className="text-[11px] font-black uppercase text-black block mb-1">
-                          Isi Cock / Bola Per Slop:
+                      {/* Info Rekening */}
+                      <div className="pt-2 border-t border-black/10 flex flex-col gap-2">
+                        <label className="text-[11px] font-black uppercase text-black block">
+                          💳 Info Rekening Transfer Host (Untuk Pesan WhatsApp):
                         </label>
-                        <div className="flex items-center gap-1.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <input
-                            type="number"
-                            min="1"
-                            max="24"
-                            value={unitsPerSlopInput}
-                            onChange={(e) => setUnitsPerSlopInput(e.target.value)}
-                            className="w-20 text-center rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                            type="text"
+                            placeholder="Bank / E-Wallet (misal: BCA)"
+                            value={bankNameInput}
+                            onChange={(e) => setBankNameInput(e.target.value)}
+                            className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-bold bg-[#faf8f2]"
                           />
-                          <span className="text-xs font-mono font-bold text-slate-700">
-                            Butir / Slop (~Rp{" "}
-                            {Math.round(
-                              (parseInt(costPerSlopInput, 10) || 140000) /
-                                (parseInt(unitsPerSlopInput, 10) || 12)
-                            ).toLocaleString("id-ID")}
-                            /butir)
-                          </span>
+                          <input
+                            type="text"
+                            placeholder="No. Rekening / No. HP"
+                            value={accountNumberInput}
+                            onChange={(e) => setAccountNumberInput(e.target.value)}
+                            className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-mono font-bold bg-[#faf8f2]"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Atas Nama Rekening"
+                            value={accountHolderInput}
+                            onChange={(e) => setAccountHolderInput(e.target.value)}
+                            className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-bold bg-[#faf8f2]"
+                          />
                         </div>
                       </div>
-                    </div>
-
-                    {/* Quick Preset Buttons Slop */}
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
-                      <span className="text-[10px] font-mono font-bold text-black/50">Preset Slop Populer:</span>
-                      {[
-                        { label: "Standard (Rp 120rb)", val: 120000 },
-                        { label: "Samurai/JP (Rp 140rb)", val: 140000 },
-                        { label: "Aeroplane (Rp 180rb)", val: 180000 },
-                        { label: "Yonex AS (Rp 290rb)", val: 290000 },
-                      ].map((item) => (
-                        <button
-                          key={item.val}
-                          type="button"
-                          onClick={() => setCostPerSlopInput(item.val.toString())}
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
-                            costPerSlopInput === item.val.toString()
-                              ? "bg-black text-[#ccff00] border-black"
-                              : "bg-[#faf8f2] text-black border-black/40 hover:border-black"
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 )}
-                  </>
+
+                {/* Sub-form Opsi 3: Tanpa Biaya */}
+                {billingModelChoice === "none" && (
+                  <div className="p-3.5 rounded-xl bg-white border-2 border-dashed border-black/50 text-xs font-bold text-slate-700 flex items-center gap-2.5 animate-in fade-in">
+                    <span className="text-base">✨</span>
+                    <span>
+                      Mode santai: Dashboard Host dan Papan Penonton akan tampil bersih tanpa tombol hitung bola maupun tagihan biaya.
+                    </span>
+                  </div>
                 )}
               </div>
 

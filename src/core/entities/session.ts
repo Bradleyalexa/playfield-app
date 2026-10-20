@@ -134,6 +134,91 @@ export function calculateEquipmentCost(equipment?: EquipmentConfig): number {
   return (equipment.totalUsed || 0) * (equipment.costPerUnit || 12000);
 }
 
+export type BillingModel = "fixed_per_person" | "track_equipment" | "none";
+
+export interface SessionBillingConfig {
+  model: BillingModel;
+  fixedPricePerPerson?: number;      // misal Rp 40.000 / orang
+  courtRentalFee?: number;           // misal Rp 160.000 (total sewa lapangan)
+  otherFee?: number;                 // misal Rp 20.000 (air mineral / shuttlecock fee tambahan)
+  otherFeeDescription?: string;      // misal "Air Mineral"
+  bankName?: string;                 // misal "BCA", "Mandiri", "GoPay", "OVO", dll
+  accountNumber?: string;            // misal "1234567890"
+  accountHolder?: string;            // misal "Alexander"
+}
+
+export interface SessionBillingSummary {
+  model: BillingModel;
+  courtRentalFee: number;
+  equipmentFee: number;
+  otherFee: number;
+  totalCost: number;
+  costPerPerson: number;
+  playerCount: number;
+  bankName?: string;
+  accountNumber?: string;
+  accountHolder?: string;
+}
+
+export function calculateSessionBilling(session: GameSession): SessionBillingSummary {
+  const playerCount = session.players.length;
+  const billing: SessionBillingConfig = session.billing || {
+    model: session.sportConfig.equipment.enabled ? "track_equipment" : "none",
+  };
+
+  if (billing.model === "none") {
+    return {
+      model: "none",
+      courtRentalFee: 0,
+      equipmentFee: 0,
+      otherFee: 0,
+      totalCost: 0,
+      costPerPerson: 0,
+      playerCount,
+      bankName: billing.bankName,
+      accountNumber: billing.accountNumber,
+      accountHolder: billing.accountHolder,
+    };
+  }
+
+  if (billing.model === "fixed_per_person") {
+    const costPerPerson = billing.fixedPricePerPerson ?? 35000;
+    const totalCost = costPerPerson * playerCount;
+    return {
+      model: "fixed_per_person",
+      courtRentalFee: billing.courtRentalFee || 0,
+      equipmentFee: 0,
+      otherFee: 0,
+      totalCost,
+      costPerPerson,
+      playerCount,
+      bankName: billing.bankName,
+      accountNumber: billing.accountNumber,
+      accountHolder: billing.accountHolder,
+    };
+  }
+
+  // Model "track_equipment" (Itung kok + sewa lapangan)
+  const equipmentFee = calculateEquipmentCost(session.sportConfig.equipment);
+  const courtRentalFee = billing.courtRentalFee ?? 0;
+  const otherFee = billing.otherFee ?? 0;
+  const totalCost = courtRentalFee + equipmentFee + otherFee;
+  const costPerPerson = playerCount > 0 ? Math.ceil(totalCost / playerCount) : 0;
+
+  return {
+    model: "track_equipment",
+    courtRentalFee,
+    equipmentFee,
+    otherFee,
+    totalCost,
+    costPerPerson,
+    playerCount,
+    bankName: billing.bankName,
+    accountNumber: billing.accountNumber,
+    accountHolder: billing.accountHolder,
+  };
+}
+
 export interface SportConfig {
   rulePreset: string;
   targetPoints: number;
@@ -166,6 +251,9 @@ export interface GameSession {
   // Lokasi & Link Google Maps Lapangan
   courtLocation?: string; // contoh "GOR Tomang Barat, Lapangan 1-2"
   googleMapsUrl?: string; // contoh "https://maps.app.goo.gl/..."
+
+  // Pengaturan Biaya & Split Bill Patungan
+  billing?: SessionBillingConfig;
 
   sultanSponsor?: string;
   createdAt: string;
