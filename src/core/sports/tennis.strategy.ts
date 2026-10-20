@@ -43,8 +43,12 @@ export class TennisStrategy implements SportStrategy {
     return {
       unitName: "ball_can",
       totalUsed: 0,
-      costPerUnit: 85000,
+      costPerUnit: 25000,
       billingMode: "shared_all",
+      pricingModel: "per_slop",
+      costPerSlop: 85000,
+      unitsPerSlop: 4,
+      slopUsed: 1,
     };
   }
 

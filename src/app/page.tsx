@@ -17,11 +17,16 @@ import {
   HelpCircle,
   ChevronRight,
   Minus,
+  ChevronDown,
+  FolderOpen,
+  ArrowRight,
+  Package,
 } from "lucide-react";
 import { Navbar } from "../components/common/Navbar";
 import { AlgorithmExplainerModal } from "../components/schedule/AlgorithmExplainerModal";
 import {
   ALGORITHM_REGISTRY,
+  EquipmentPricingModel,
   MatchmakingAlgorithm,
   SportType,
 } from "../core/entities/session";
@@ -50,6 +55,15 @@ export default function HomePage() {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<MatchmakingAlgorithm>("fair_playtime");
   const [customInitialMatchesCount, setCustomInitialMatchesCount] = useState(6);
   const [isCustomMatchesCountInput, setIsCustomMatchesCountInput] = useState(false);
+
+  // Cock / Bola & Slop Pricing Settings (Customizable Host)
+  const [equipmentPricingModel, setEquipmentPricingModel] = useState<EquipmentPricingModel>("per_unit");
+  const [costPerUnitInput, setCostPerUnitInput] = useState<string>("12000");
+  const [costPerSlopInput, setCostPerSlopInput] = useState<string>("140000");
+  const [unitsPerSlopInput, setUnitsPerSlopInput] = useState<string>("12");
+
+  // Dropdown Sesi Tersimpan (Hanya Tampilkan 2 Recent)
+  const [isRecentDropdownOpen, setIsRecentDropdownOpen] = useState(false);
 
   // Modal Penjelasan Algoritma
   const [isAlgoExplainerOpen, setIsAlgoExplainerOpen] = useState(false);
@@ -92,6 +106,26 @@ export default function HomePage() {
       ? customInitialMatchesCount + extraMatchesCount
       : baseMatchesCount + extraMatchesCount;
 
+  const handleSelectSport = (sport: SportType) => {
+    setSelectedSport(sport);
+    if (sport === "badminton") {
+      setEquipmentPricingModel("per_unit");
+      setCostPerUnitInput("12000");
+      setCostPerSlopInput("140000");
+      setUnitsPerSlopInput("12");
+    } else if (sport === "tennis") {
+      setEquipmentPricingModel("per_slop");
+      setCostPerUnitInput("25000");
+      setCostPerSlopInput("85000");
+      setUnitsPerSlopInput("4");
+    } else if (sport === "padel") {
+      setEquipmentPricingModel("per_slop");
+      setCostPerUnitInput("30000");
+      setCostPerSlopInput("90000");
+      setUnitsPerSlopInput("3");
+    }
+  };
+
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
     const title =
@@ -106,6 +140,26 @@ export default function HomePage() {
     demo.matchDurationMinutes = effectiveMatchDurationMinutes;
     demo.algorithm = selectedAlgorithm;
     demo.estimatedMatchesCount = totalProjectedMatches;
+
+    // Konfigurasi Equipment (Cock / Bola & Slop)
+    demo.sportConfig.equipment = {
+      unitName:
+        selectedSport === "badminton"
+          ? "shuttlecock"
+          : selectedSport === "tennis"
+          ? "ball_can"
+          : "padel_ball",
+      totalUsed: 0,
+      costPerUnit: Math.max(
+        0,
+        parseInt(costPerUnitInput, 10) || (selectedSport === "badminton" ? 12000 : 25000)
+      ),
+      billingMode: "shared_all",
+      pricingModel: equipmentPricingModel,
+      costPerSlop: Math.max(0, parseInt(costPerSlopInput, 10) || 140000),
+      unitsPerSlop: Math.max(1, parseInt(unitsPerSlopInput, 10) || 12),
+      slopUsed: equipmentPricingModel === "per_slop" ? 1 : 0,
+    };
 
     // Jika user memilih custom manual, buat N custom matches awal siap pakai
     if (selectedAlgorithm === "custom_manual") {
@@ -159,7 +213,7 @@ export default function HomePage() {
           <h1 className="text-4xl sm:text-6xl font-black text-black tracking-tight leading-[1.05] uppercase">
             Atur Rotasi Lapangan Mabar{" "}
             <span className="bg-[#ccff00] px-2 py-0.5 rounded border-2 border-black shadow-[4px_4px_0px_#000] inline-block mt-1">
-              Tanpa Boncos!
+              Tanpa Ribet!
             </span>
           </h1>
 
@@ -189,16 +243,40 @@ export default function HomePage() {
         {/* Form Buat Sesi Baru */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 rounded-3xl border-4 border-black bg-white p-6 sm:p-8 shadow-[8px_8px_0px_#000]">
-            <div className="flex items-center gap-3 pb-4 border-b-3 border-black mb-6">
-              <div className="h-10 w-10 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center font-black">
-                <Plus className="h-6 w-6 stroke-[3]" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b-3 border-black mb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center font-black">
+                  <Plus className="h-6 w-6 stroke-[3]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-black uppercase tracking-wide">Buat Sesi Mabar Baru</h2>
+                  <p className="text-xs font-bold text-slate-600">
+                    Konfigurasikan jam sewa, durasi, algoritma, dan biaya cock/slop
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-black text-black uppercase tracking-wide">Buat Sesi Mabar Baru</h2>
-                <p className="text-xs font-bold text-slate-600">
-                  Konfigurasikan jam sewa, durasi, dan algoritma matchmaking mabar
-                </p>
-              </div>
+
+              {/* Dropdown Akses Cepat Sesi Tersimpan (Hanya Tampilkan 2 Terakhir) */}
+              {recentSessions.length > 0 && (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value) router.push(`/host/${e.target.value}`);
+                    }}
+                    className="rounded-xl bg-[#faf8f2] border-2 border-black px-3 py-1.5 text-xs font-black text-black shadow-[2px_2px_0px_#000] cursor-pointer hover:bg-[#ccff00]/40 transition-colors"
+                  >
+                    <option value="" disabled>
+                      📂 Buka Sesi (2 Terakhir)...
+                    </option>
+                    {recentSessions.slice(0, 2).map((s) => (
+                      <option key={s.id} value={s.publicSlug}>
+                        {s.title} ({s.sport.toUpperCase()} • {s.playerCount} Pemain)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleCreateSession} className="flex flex-col gap-6">
@@ -221,7 +299,7 @@ export default function HomePage() {
                       <button
                         type="button"
                         key={s.type}
-                        onClick={() => setSelectedSport(s.type)}
+                        onClick={() => handleSelectSport(s.type)}
                         className={`flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border-3 border-black transition-all text-center cursor-pointer ${
                           isSelected
                             ? `${bgAccent} shadow-[4px_4px_0px_#000] translate-x-[-1px] translate-y-[-1px]`
@@ -633,6 +711,189 @@ export default function HomePage() {
                 )}
               </div>
 
+              {/* 6. Biaya Shuttlecock / Bola & Model Hitungan (Per Butir vs Per Slop) */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-[#faf8f2] border-3 border-black shadow-[4px_4px_0px_#000] flex flex-col gap-4">
+                <div className="flex items-center justify-between pb-2 border-b-2 border-black">
+                  <div className="flex items-center gap-2">
+                    <Flame className="h-4 w-4 stroke-[3]" />
+                    <span className="text-xs font-black uppercase tracking-wider text-black">
+                      6. Biaya Shuttlecock / Bola & Model Hitungan
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white border border-black shadow-[1px_1px_0px_#000]">
+                    Harga Customizable
+                  </span>
+                </div>
+
+                {/* Pilihan Model: Hitung Per Butir vs Per Slop */}
+                <div>
+                  <label className="block text-[11px] font-black uppercase text-black/70 mb-2">
+                    Pilih Cara Hitung Biaya:
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setEquipmentPricingModel("per_unit")}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                        equipmentPricingModel === "per_unit"
+                          ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                          : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                      }`}
+                    >
+                      <span className="text-2xl">🏸</span>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wide block">
+                          Hitung Per Butir (Cock / Bola)
+                        </span>
+                        <span className="text-[10px] font-bold text-black/70">
+                          Catat pemakaian per butir per match
+                        </span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEquipmentPricingModel("per_slop")}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                        equipmentPricingModel === "per_slop"
+                          ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                          : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                      }`}
+                    >
+                      <span className="text-2xl">📦</span>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wide block">
+                          Hitung Per Slop (Tabung / Can)
+                        </span>
+                        <span className="text-[10px] font-bold text-black/70">
+                          Patungan per slop yang dibuka
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Form Input Custom Harga Sesuai Pilihan */}
+                {equipmentPricingModel === "per_unit" ? (
+                  <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <label className="text-[11px] font-black uppercase text-black block">
+                          Harga Custom Per Butir Cock/Bola (Rp):
+                        </label>
+                        <span className="text-[10px] text-slate-600 font-bold">
+                          Contoh: Rp 12.000 / kok (Setara Rp{" "}
+                          {(
+                            (parseInt(costPerUnitInput, 10) || 12000) * 12
+                          ).toLocaleString("id-ID")}{" "}
+                          / slop)
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-mono font-black">Rp</span>
+                        <input
+                          type="number"
+                          step="1000"
+                          min="0"
+                          value={costPerUnitInput}
+                          onChange={(e) => setCostPerUnitInput(e.target.value)}
+                          className="w-32 rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Preset Buttons */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
+                      <span className="text-[10px] font-mono font-bold text-black/50">Preset Cepat:</span>
+                      {[10000, 12000, 15000, 20000].map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setCostPerUnitInput(val.toString())}
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
+                            costPerUnitInput === val.toString()
+                              ? "bg-black text-[#ccff00] border-black"
+                              : "bg-[#faf8f2] text-black border-black/40 hover:border-black"
+                          }`}
+                        >
+                          Rp {val.toLocaleString("id-ID")}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-black uppercase text-black block mb-1">
+                          Harga Custom Per Slop / Tabung (Rp):
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-mono font-black">Rp</span>
+                          <input
+                            type="number"
+                            step="5000"
+                            min="0"
+                            value={costPerSlopInput}
+                            onChange={(e) => setCostPerSlopInput(e.target.value)}
+                            className="w-full rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-black uppercase text-black block mb-1">
+                          Isi Cock / Bola Per Slop:
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            min="1"
+                            max="24"
+                            value={unitsPerSlopInput}
+                            onChange={(e) => setUnitsPerSlopInput(e.target.value)}
+                            className="w-20 text-center rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none focus:bg-white"
+                          />
+                          <span className="text-xs font-mono font-bold text-slate-700">
+                            Butir / Slop (~Rp{" "}
+                            {Math.round(
+                              (parseInt(costPerSlopInput, 10) || 140000) /
+                                (parseInt(unitsPerSlopInput, 10) || 12)
+                            ).toLocaleString("id-ID")}
+                            /butir)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Preset Buttons Slop */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
+                      <span className="text-[10px] font-mono font-bold text-black/50">Preset Slop Populer:</span>
+                      {[
+                        { label: "Standard (Rp 120rb)", val: 120000 },
+                        { label: "Samurai/JP (Rp 140rb)", val: 140000 },
+                        { label: "Aeroplane (Rp 180rb)", val: 180000 },
+                        { label: "Yonex AS (Rp 290rb)", val: 290000 },
+                      ].map((item) => (
+                        <button
+                          key={item.val}
+                          type="button"
+                          onClick={() => setCostPerSlopInput(item.val.toString())}
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
+                            costPerSlopInput === item.val.toString()
+                              ? "bg-black text-[#ccff00] border-black"
+                              : "bg-[#faf8f2] text-black border-black/40 hover:border-black"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -644,11 +905,19 @@ export default function HomePage() {
             </form>
           </div>
 
-          {/* Sesi Terakhir (Recent Sessions) */}
-          <div className="rounded-3xl border-4 border-black bg-white p-6 shadow-[8px_8px_0px_#000] flex flex-col">
-            <h3 className="text-sm font-black uppercase tracking-wider text-black mb-4 pb-2 border-b-3 border-black">
-              Sesi Tersimpan ({recentSessions.length})
-            </h3>
+          {/* Sesi Terakhir (Recent Sessions Dropdown - Tampilkan 2 Recent Aja) */}
+          <div className="rounded-3xl border-4 border-black bg-white p-6 shadow-[8px_8px_0px_#000] flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b-3 border-black">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5 text-black stroke-[2.5]" />
+                <h3 className="text-sm font-black uppercase tracking-wider text-black">
+                  Sesi Tersimpan
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-[#ccff00] text-black border border-black shadow-[1px_1px_0px_#000]">
+                2 Recent
+              </span>
+            </div>
 
             {recentSessions.length === 0 ? (
               <div className="py-8 text-center text-xs font-bold text-slate-500 italic">
@@ -656,23 +925,79 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {recentSessions.map((s) => (
-                  <Link
-                    key={s.id}
-                    href={`/host/${s.publicSlug}`}
-                    className="flex flex-col p-3.5 rounded-xl bg-[#faf8f2] border-2 border-black hover:bg-[#ccff00]/20 hover:shadow-[3px_3px_0px_#000] transition-all"
+                {/* Custom Neo-Brutalist Dropdown Selector (2 Recent Only) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsRecentDropdownOpen(!isRecentDropdownOpen)}
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#faf8f2] border-2 border-black font-black text-xs uppercase tracking-wide hover:bg-[#ccff00]/30 shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-black text-xs text-black truncate uppercase">{s.title}</span>
-                      <span className="text-[10px] font-black uppercase px-1.5 py-0.2 rounded bg-black text-[#ccff00]">
-                        {s.sport}
+                    <div className="flex items-center gap-2 truncate">
+                      <Clock className="h-4 w-4 shrink-0 text-black/70" />
+                      <span className="truncate">
+                        Pilih Sesi Terakhir ({Math.min(2, recentSessions.length)})
                       </span>
                     </div>
-                    <span className="text-[11px] font-bold text-slate-600 font-mono-sport">
-                      {s.playerCount} Pemain • {new Date(s.updatedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </Link>
-                ))}
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                        isRecentDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Dropdown Menu Content (2 recent only) */}
+                  {isRecentDropdownOpen && (
+                    <div className="mt-2 flex flex-col gap-2 p-2 rounded-2xl bg-white border-3 border-black shadow-[5px_5px_0px_#000] animate-in fade-in slide-in-from-top-2 duration-150">
+                      {recentSessions.slice(0, 2).map((s) => (
+                        <Link
+                          key={s.id}
+                          href={`/host/${s.publicSlug}`}
+                          className="flex flex-col p-3 rounded-xl bg-[#faf8f2] border-2 border-black hover:bg-[#ccff00] transition-all group"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-black text-xs text-black truncate uppercase group-hover:underline">
+                              {s.title}
+                            </span>
+                            <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.2 rounded bg-black text-[#ccff00] shrink-0 ml-1.5">
+                              {s.sport}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 font-mono-sport">
+                            <span>{s.playerCount} Pemain</span>
+                            <span>
+                              {new Date(s.updatedAt).toLocaleTimeString("id-ID", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Direct quick access preview for the 2 recent sessions */}
+                <div className="space-y-2 mt-1">
+                  <span className="text-[10px] font-black uppercase text-black/50 tracking-wider">
+                    2 Sesi Paling Baru:
+                  </span>
+                  {recentSessions.slice(0, 2).map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/host/${s.publicSlug}`}
+                      className="flex items-center justify-between p-3 rounded-xl bg-[#faf8f2] border-2 border-black hover:bg-yellow-50 hover:shadow-[2px_2px_0px_#000] transition-all"
+                    >
+                      <div className="truncate pr-2">
+                        <p className="font-black text-xs text-black truncate uppercase">{s.title}</p>
+                        <p className="text-[10px] text-slate-600 font-mono">
+                          {s.playerCount} Pemain • {s.sport.toUpperCase()}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-black" />
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>

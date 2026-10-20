@@ -187,7 +187,10 @@ export function CourtCard({
             className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border-2 border-black bg-[#ffde00] py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
           >
             <Flame className="h-3.5 w-3.5 fill-black" />
-            <span>+1 Cock ({match.equipmentUsedCount || 1})</span>
+            <span>
+              +1 {sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
+              {match.equipmentUsedCount || 1})
+            </span>
           </button>
         )}
 

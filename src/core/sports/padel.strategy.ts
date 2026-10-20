@@ -45,8 +45,12 @@ export class PadelStrategy implements SportStrategy {
     return {
       unitName: "padel_ball",
       totalUsed: 0,
-      costPerUnit: 90000,
+      costPerUnit: 30000,
       billingMode: "shared_all",
+      pricingModel: "per_slop",
+      costPerSlop: 90000,
+      unitsPerSlop: 3,
+      slopUsed: 1,
     };
   }
 

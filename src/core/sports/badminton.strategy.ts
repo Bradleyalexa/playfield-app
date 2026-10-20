@@ -41,6 +41,10 @@ export class BadmintonStrategy implements SportStrategy {
       totalUsed: 0,
       costPerUnit: 12000,
       billingMode: "shared_all",
+      pricingModel: "per_unit",
+      costPerSlop: 140000,
+      unitsPerSlop: 12,
+      slopUsed: 0,
     };
   }
 

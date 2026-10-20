@@ -98,11 +98,39 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
   },
 };
 
+export type EquipmentPricingModel = "per_unit" | "per_slop";
+
 export interface EquipmentConfig {
   unitName: "shuttlecock" | "ball_can" | "padel_ball";
   totalUsed: number;
   costPerUnit: number;
   billingMode: "shared_all" | "per_match";
+  pricingModel?: EquipmentPricingModel;
+  costPerSlop?: number;
+  unitsPerSlop?: number;
+  slopUsed?: number;
+}
+
+export function calculateEquipmentCost(equipment?: EquipmentConfig): number {
+  if (!equipment) return 0;
+  const model = equipment.pricingModel || "per_unit";
+
+  if (model === "per_slop") {
+    const costPerSlop = equipment.costPerSlop ?? 140000;
+    const unitsPerSlop = equipment.unitsPerSlop || 12;
+    // Jika host menentukan slop yang dibuka
+    if (typeof equipment.slopUsed === "number" && equipment.slopUsed > 0) {
+      return equipment.slopUsed * costPerSlop;
+    }
+    // Jika hanya mencatat butir kok, hitung estimasi slop yang terpakai
+    if (equipment.totalUsed > 0) {
+      const slops = Math.ceil(equipment.totalUsed / unitsPerSlop);
+      return slops * costPerSlop;
+    }
+    return 0;
+  }
+
+  return (equipment.totalUsed || 0) * (equipment.costPerUnit || 12000);
 }
 
 export interface SportConfig {

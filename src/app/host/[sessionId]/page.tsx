@@ -16,17 +16,25 @@ import {
   AlertCircle,
   Plus,
   Calendar,
+  Package,
+  Settings2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
 import { CourtCard } from "../../../components/court/CourtCard";
+import { EquipmentSettingsModal } from "../../../components/common/EquipmentSettingsModal";
 import { PlayerRoster } from "../../../components/players/PlayerRoster";
 import { WaPasteModal } from "../../../components/players/WaPasteModal";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { CreateCustomMatchModal } from "../../../components/schedule/CreateCustomMatchModal";
 import { Match } from "../../../core/entities/match";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
-import { ALGORITHM_REGISTRY, GameSession } from "../../../core/entities/session";
+import {
+  ALGORITHM_REGISTRY,
+  EquipmentConfig,
+  GameSession,
+  calculateEquipmentCost,
+} from "../../../core/entities/session";
 import { generateBalancedMatches } from "../../../core/matchmaking/balanced-queue";
 import { formatRupiah } from "../../../lib/utils";
 import { AudioAnnouncer } from "../../../services/audio/announcer";
@@ -44,6 +52,7 @@ function HostDashboardContent({ params }: HostPageProps) {
   const [isWaModalOpen, setIsWaModalOpen] = useState(false);
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
   const [isCreateMatchModalOpen, setIsCreateMatchModalOpen] = useState(false);
+  const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Load session dari local storage atau fallback create demo jika tidak ditemukan
@@ -71,16 +80,57 @@ function HostDashboardContent({ params }: HostPageProps) {
     );
   }
 
-  // 1. Tambah Counter Shuttlecock / Bola (+1 Cock)
-  const handleAddCock = () => {
+  // 1. Tambah Counter Shuttlecock / Bola (+1 Cock) atau Slop
+  const handleAddCock = (delta: number = 1) => {
+    if (!session) return;
+    const current = session.sportConfig.equipment;
+    const newTotal = Math.max(0, (current.totalUsed || 0) + delta);
+    const unitsPerSlop = current.unitsPerSlop || 12;
+    const updatedEquipment: EquipmentConfig = {
+      ...current,
+      totalUsed: newTotal,
+      slopUsed:
+        current.pricingModel === "per_slop"
+          ? Math.max(1, Math.ceil(newTotal / unitsPerSlop))
+          : current.slopUsed,
+    };
     const updated: GameSession = {
       ...session,
       sportConfig: {
         ...session.sportConfig,
-        equipment: {
-          ...session.sportConfig.equipment,
-          totalUsed: session.sportConfig.equipment.totalUsed + 1,
-        },
+        equipment: updatedEquipment,
+      },
+    };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+  };
+
+  const handleAddSlop = (delta: number = 1) => {
+    if (!session) return;
+    const current = session.sportConfig.equipment;
+    const newSlop = Math.max(0, (current.slopUsed ?? 1) + delta);
+    const updatedEquipment: EquipmentConfig = {
+      ...current,
+      slopUsed: newSlop,
+    };
+    const updated: GameSession = {
+      ...session,
+      sportConfig: {
+        ...session.sportConfig,
+        equipment: updatedEquipment,
+      },
+    };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+  };
+
+  const handleSaveEquipment = (updatedEquipment: EquipmentConfig) => {
+    if (!session) return;
+    const updated: GameSession = {
+      ...session,
+      sportConfig: {
+        ...session.sportConfig,
+        equipment: updatedEquipment,
       },
     };
     setSession(updated);
@@ -291,7 +341,7 @@ function HostDashboardContent({ params }: HostPageProps) {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const totalEquipmentCost = session.sportConfig.equipment.totalUsed * session.sportConfig.equipment.costPerUnit;
+  const totalEquipmentCost = calculateEquipmentCost(session.sportConfig.equipment);
 
   return (
     <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col selection:bg-[#ccff00] selection:text-black">
@@ -361,19 +411,49 @@ function HostDashboardContent({ params }: HostPageProps) {
               <span>Jadwal & Match ({session.estimatedMatchesCount || 26})</span>
             </button>
 
-            {/* Counter Shuttlecock / Bola */}
-            <button
-              onClick={handleAddCock}
-              className="flex items-center gap-2 rounded-xl bg-[#ffde00] border-2 border-black px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
-              title="Klik tiap kali buka cock/bola baru"
-            >
-              <Flame className="h-4 w-4 fill-black" />
-              <span>
-                +1 {session.sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
-                {session.sportConfig.equipment.totalUsed})
-              </span>
-              <span className="text-[10px] font-mono text-slate-800">({formatRupiah(totalEquipmentCost)})</span>
-            </button>
+            {/* Counter Shuttlecock / Bola & Slop Tracker */}
+            <div className="flex items-center rounded-xl bg-[#ffde00] border-2 border-black shadow-[3px_3px_0px_#000] overflow-hidden">
+              <button
+                type="button"
+                onClick={() =>
+                  session.sportConfig.equipment.pricingModel === "per_slop"
+                    ? handleAddSlop(1)
+                    : handleAddCock(1)
+                }
+                className="flex items-center gap-2 px-3.5 py-2 text-xs font-black text-black uppercase tracking-wider hover:bg-[#ebd000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+                title="Klik untuk tambah pemakaian"
+              >
+                {session.sportConfig.equipment.pricingModel === "per_slop" ? (
+                  <>
+                    <Package className="h-4 w-4 stroke-[2.5]" />
+                    <span>
+                      +1 {session.sport === "badminton" ? "Slop" : "Can"} (
+                      {session.sportConfig.equipment.slopUsed ?? 1})
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Flame className="h-4 w-4 fill-black" />
+                    <span>
+                      +1 {session.sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
+                      {session.sportConfig.equipment.totalUsed})
+                    </span>
+                  </>
+                )}
+                <span className="text-[10px] font-mono text-slate-900 font-black">
+                  ({formatRupiah(totalEquipmentCost)})
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsEquipmentModalOpen(true)}
+                className="p-2 border-l-2 border-black hover:bg-black hover:text-[#ffde00] text-black transition-colors cursor-pointer"
+                title="Atur harga custom & ganti model hitung per cock / per slop"
+              >
+                <Settings2 className="h-4 w-4 stroke-[2.5]" />
+              </button>
+            </div>
 
             {/* Sultan Mode Button */}
             <button
@@ -498,6 +578,17 @@ function HostDashboardContent({ params }: HostPageProps) {
         session={session}
         onSaveCustomMatch={handleSaveCustomMatch}
       />
+
+      {/* Modal Pengaturan Biaya Cock / Bola & Slop */}
+      {isEquipmentModalOpen && (
+        <EquipmentSettingsModal
+          isOpen={isEquipmentModalOpen}
+          onClose={() => setIsEquipmentModalOpen(false)}
+          equipment={session.sportConfig.equipment}
+          sport={session.sport}
+          onSave={handleSaveEquipment}
+        />
+      )}
     </div>
   );
 }
