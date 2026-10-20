@@ -13,7 +13,7 @@ interface NavbarProps {
 export function Navbar({ publicSlug }: NavbarProps) {
   const pathname = usePathname();
   const currentSlug = publicSlug || "demo";
-  const isSpectatorMode = pathname.startsWith("/live");
+  const isHostMode = pathname.startsWith("/host");
 
   const allNavLinks = [
     {
@@ -46,8 +46,17 @@ export function Navbar({ publicSlug }: NavbarProps) {
     },
   ];
 
-  // Pada halaman penonton/pemain (/live), sembunyikan tombol Dashboard Host
-  const navLinks = isSpectatorMode ? allNavLinks.filter((l) => !l.hostOnly) : allNavLinks;
+  // Tombol Dashboard Host HANYA boleh muncul jika pengguna sedang berada di dashboard Host (/host)
+  // Di halaman penonton (/live), edukasi (/education), maupun publik, link Host TIDAK BOLEH muncul.
+  const navLinks = allNavLinks.filter((link) => {
+    if (link.hostOnly) {
+      return isHostMode;
+    }
+    if (pathname.startsWith("/education") && !publicSlug && (link.shortName === "Kiosk" || link.shortName === "Live")) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <>

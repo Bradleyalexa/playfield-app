@@ -23,6 +23,10 @@ import {
   Shuffle,
   Undo2,
   Flag,
+  ChevronDown,
+  ChevronUp,
+  Lightbulb,
+  Lock,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
@@ -76,6 +80,14 @@ function HostDashboardContent({ params }: HostPageProps) {
   // Modal Selesaikan Mabar
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
 
+  // Tips Praktis Host Mabar (Collapsible)
+  const [isHostTipsOpen, setIsHostTipsOpen] = useState(false);
+
+  // Otorisasi Akses Host (Mencegah Penonton Masuk ke Dashboard Kontrol)
+  const [isHostAuthorized, setIsHostAuthorized] = useState<boolean | null>(null);
+  const [hostKeyInput, setHostKeyInput] = useState("");
+  const [authError, setAuthError] = useState("");
+
   // Load session dari local storage atau fallback create demo jika tidak ditemukan
   useEffect(() => {
     let current = LocalStorageAdapter.getSession(sessionId);
@@ -107,6 +119,27 @@ function HostDashboardContent({ params }: HostPageProps) {
       LocalStorageAdapter.saveSession(current);
     }
 
+    // Cek Otorisasi Host
+    const urlParams = new URLSearchParams(window.location.search);
+    const keyParam = urlParams.get("key");
+    const storedAuth = typeof window !== "undefined" ? localStorage.getItem(`playfield_host_auth_${current.id}`) : null;
+
+    if (keyParam && current.adminKey && keyParam === current.adminKey) {
+      localStorage.setItem(`playfield_host_auth_${current.id}`, keyParam);
+      setIsHostAuthorized(true);
+    } else if (storedAuth && current.adminKey && storedAuth === current.adminKey) {
+      setIsHostAuthorized(true);
+    } else if (current.id.startsWith("session-demo")) {
+      setIsHostAuthorized(true);
+    } else {
+      const recent = LocalStorageAdapter.listRecentSessions();
+      if (recent.some((r) => r.id === current.id || r.publicSlug === current.publicSlug)) {
+        setIsHostAuthorized(true);
+      } else {
+        setIsHostAuthorized(false);
+      }
+    }
+
     setSession(current);
 
     const handleSync = (e: any) => {
@@ -122,6 +155,69 @@ function HostDashboardContent({ params }: HostPageProps) {
     return (
       <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono font-bold">
         Memuat sesi mabar...
+      </div>
+    );
+  }
+
+  // Proteksi Akses: Jika penonton mencoba membuka halaman Host tanpa kunci
+  if (isHostAuthorized === false) {
+    return (
+      <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col selection:bg-[#ccff00] selection:text-black font-sans">
+        <Navbar publicSlug={session.publicSlug} />
+        <main className="flex-1 mx-auto max-w-lg w-full px-4 py-12 flex flex-col items-center justify-center text-center">
+          <div className="w-full rounded-3xl border-3 sm:border-4 border-black bg-white p-6 sm:p-8 shadow-[6px_6px_0px_#000] flex flex-col items-center gap-4">
+            <div className="h-16 w-16 rounded-2xl bg-[#ffde00] border-3 border-black flex items-center justify-center text-3xl shadow-[3px_3px_0px_#000]">
+              🔒
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black uppercase tracking-wide text-black">
+              Halaman Khusus Host
+            </h1>
+            <p className="text-xs sm:text-sm font-bold text-slate-700 leading-relaxed">
+              Anda sedang mengakses dashboard kontrol sesi <strong>&quot;{session.title}&quot;</strong>. Untuk menjaga keamanan skor dan rotasi mabar, halaman kontrol ini hanya dapat diakses oleh penyelenggara (Host).
+            </p>
+
+            <div className="w-full flex flex-col gap-3 mt-2">
+              <Link
+                href={`/live/${session.publicSlug}`}
+                className="w-full py-3 px-4 rounded-xl bg-[#ccff00] text-black font-black text-xs uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all flex items-center justify-center gap-2"
+              >
+                <Users className="h-4 w-4 stroke-[2.5]" />
+                <span>Buka Papan Penonton / Pemain</span>
+              </Link>
+
+              <div className="pt-4 border-t-2 border-black/15 flex flex-col gap-2 text-left">
+                <span className="text-[11px] font-bold text-slate-600">
+                  Apakah Anda adalah Host penyelenggara sesi ini?
+                </span>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    placeholder="Masukkan Kunci Host"
+                    value={hostKeyInput}
+                    onChange={(e) => setHostKeyInput(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-lg border-2 border-black text-xs font-mono font-bold bg-[#faf8f2] focus:outline-none focus:bg-white"
+                  />
+                  <button
+                    onClick={() => {
+                      if (hostKeyInput.trim() === session.adminKey) {
+                        localStorage.setItem(`playfield_host_auth_${session.id}`, hostKeyInput.trim());
+                        setIsHostAuthorized(true);
+                      } else {
+                        setAuthError("Kunci Host salah. Silakan periksa kembali.");
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg bg-black text-[#ccff00] font-black text-xs uppercase border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+                  >
+                    Buka
+                  </button>
+                </div>
+                {authError && (
+                  <span className="text-xs font-bold text-rose-600">{authError}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -876,6 +972,79 @@ function HostDashboardContent({ params }: HostPageProps) {
             {copiedLink ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <Copy className="h-3.5 w-3.5 stroke-[2.5]" />}
             <span>{copiedLink ? "Link Tersalin!" : "Salin Link Penonton"}</span>
           </button>
+        </div>
+
+        {/* Accordion / Card Tips Praktis untuk Host */}
+        <div className="rounded-2xl border-3 border-black bg-white shadow-[4px_4px_0px_#000] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsHostTipsOpen(!isHostTipsOpen)}
+            className="w-full flex items-center justify-between p-3.5 sm:p-4 bg-[#fef08a] hover:bg-[#fde047] transition-colors text-left cursor-pointer border-b-2 border-black"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-black text-[#ccff00] font-black text-xs border border-black shadow-[1px_1px_0px_#000]">
+                💡
+              </span>
+              <div>
+                <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-black block">
+                  Tips &amp; Panduan Praktis Host Mabar
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-700">
+                  Aturan Pause vs Hapus Pemain, Pemain Baru Datang, Kocok Ulang &amp; Selesai Mabar
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-black uppercase text-black bg-white px-2.5 py-1 rounded-lg border-2 border-black shadow-[1.5px_1.5px_0px_#000]">
+              <span>{isHostTipsOpen ? "Tutup" : "Buka Tips"}</span>
+              {isHostTipsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
+          </button>
+
+          {isHostTipsOpen && (
+            <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white text-xs text-black animate-in fade-in duration-150">
+              <div className="p-3.5 rounded-xl border-2 border-black bg-[#faf8f2] shadow-[2px_2px_0px_#000] flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 font-black uppercase text-black">
+                  <span className="bg-[#ffde00] px-1.5 py-0.5 rounded border border-black text-[11px]">⏸️ Pause (Rehat)</span>
+                  <span>vs</span>
+                  <span className="bg-rose-200 px-1.5 py-0.5 rounded border border-black text-[11px]">🗑️ Hapus Pemain</span>
+                </div>
+                <p className="font-bold text-slate-700 leading-relaxed text-[11px]">
+                  • <strong className="text-black">Gunakan Pause (⏸️)</strong> jika pemain istirahat, ke toilet, cedera ringan, atau pulang lebih awal. Pemain akan dilewati dari antrean ronde berikutnya, <u>tetapi rekap kemenangan, total poin, dan patungan cock mereka tetap aman tercatat</u>. Klik <strong>Play (▶️)</strong> saat siap main lagi.<br />
+                  • <strong className="text-black">Gunakan Hapus (🗑️)</strong> hanya jika salah ketik nama atau pemain batal hadir sama sekali.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border-2 border-black bg-[#faf8f2] shadow-[2px_2px_0px_#000] flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 font-black uppercase text-black">
+                  <span className="bg-[#ccff00] px-1.5 py-0.5 rounded border border-black text-[11px]">➕ Pemain Telat Datang</span>
+                </div>
+                <p className="font-bold text-slate-700 leading-relaxed text-[11px]">
+                  Pemain baru dapat ditambahkan kapan saja lewat form roster atau tombol WhatsApp Paste. Pemain baru otomatis tercatat dengan jam terbang <strong className="text-black">0x Main</strong>, sehingga algoritma Playfield akan <u>langsung memprioritaskan mereka masuk ke lapangan</u> pada ronde berikutnya atau saat kocok ulang.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border-2 border-black bg-[#faf8f2] shadow-[2px_2px_0px_#000] flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 font-black uppercase text-black">
+                  <span className="bg-[#00e5ff] px-1.5 py-0.5 rounded border border-black text-[11px]">🔄 Kocok Ulang</span>
+                  <span>vs</span>
+                  <span className="bg-[#ccff00] px-1.5 py-0.5 rounded border border-black text-[11px]">⏩ Ronde Berikutnya</span>
+                </div>
+                <p className="font-bold text-slate-700 leading-relaxed text-[11px]">
+                  • <strong className="text-black">Kocok Ulang</strong>: Dipakai jika ada pemain berhalangan mendadak di lapangan yang belum bertanding (skor 0-0), tanpa memajukan nomor ronde.<br />
+                  • <strong className="text-black">Ronde Berikutnya</strong>: Dipakai setelah seluruh lapangan menyelesaikan pertandingannya untuk memutar seluruh rotasi pemain ke ronde baru.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border-2 border-black bg-[#faf8f2] shadow-[2px_2px_0px_#000] flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 font-black uppercase text-black">
+                  <span className="bg-rose-500 text-white px-1.5 py-0.5 rounded border border-black text-[11px]">🏁 Selesaikan Mabar</span>
+                </div>
+                <p className="font-bold text-slate-700 leading-relaxed text-[11px]">
+                  Tekan tombol merah <strong>&quot;Selesaikan Mabar 🏁&quot;</strong> di akhir sesi untuk menampilkan Podium Juara 1, 2, 3, MVP mabar, pembagian patungan bola, dan generate ringkasan WhatsApp siap kirim ke grup.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Grid Lapangan (Court Cards) */}
