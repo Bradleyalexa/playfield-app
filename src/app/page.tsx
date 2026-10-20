@@ -311,22 +311,22 @@ export default function HomePage() {
                         className="bg-transparent border-none text-base sm:text-lg font-mono font-black text-black focus:outline-none cursor-pointer w-28"
                       />
 
-                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
-                          onClick={() => adjustStartTime(-15)}
-                          title="Kurangi 15 Menit"
-                          className="h-7 w-7 rounded-lg bg-[#faf8f2] border border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer"
+                          onClick={() => adjustStartTime(-60)}
+                          title="Kurangi 1 Jam"
+                          className="px-2 py-1 rounded-lg bg-[#faf8f2] border-2 border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                         >
-                          -15
+                          -1 Jam
                         </button>
                         <button
                           type="button"
-                          onClick={() => adjustStartTime(15)}
-                          title="Tambah 15 Menit"
-                          className="h-7 w-7 rounded-lg bg-[#faf8f2] border border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer"
+                          onClick={() => adjustStartTime(60)}
+                          title="Tambah 1 Jam"
+                          className="px-2 py-1 rounded-lg bg-[#faf8f2] border-2 border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                         >
-                          +15
+                          +1 Jam
                         </button>
                       </div>
                     </div>
