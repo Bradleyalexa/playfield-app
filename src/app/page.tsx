@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -60,7 +61,8 @@ export default function HomePage() {
   const [customInitialMatchesCount, setCustomInitialMatchesCount] = useState(6);
   const [isCustomMatchesCountInput, setIsCustomMatchesCountInput] = useState(false);
 
-  // Cock / Bola & Slop Pricing Settings (Customizable Host)
+  // Cock / Bola & Slop Pricing Settings (Opsional & Customizable Host)
+  const [trackEquipment, setTrackEquipment] = useState(false);
   const [equipmentPricingModel, setEquipmentPricingModel] = useState<EquipmentPricingModel>("per_unit");
   const [costPerUnitInput, setCostPerUnitInput] = useState<string>("12000");
   const [costPerSlopInput, setCostPerSlopInput] = useState<string>("140000");
@@ -149,6 +151,7 @@ export default function HomePage() {
 
     // Konfigurasi Equipment (Cock / Bola & Slop)
     demo.sportConfig.equipment = {
+      enabled: trackEquipment,
       unitName:
         selectedSport === "badminton"
           ? "shuttlecock"
@@ -216,37 +219,50 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col selection:bg-[#ccff00] selection:text-black font-sans">
       <Navbar />
 
-      <main className="flex-1 mx-auto max-w-6xl w-full px-4 sm:px-6 py-8 sm:py-12 flex flex-col gap-10">
+      <main className="flex-1 mx-auto max-w-6xl w-full px-3.5 sm:px-6 py-6 sm:py-12 pb-28 sm:pb-12 flex flex-col gap-8 sm:gap-10">
+        {/* Playfield Official Banner Card - Neo Brutalist */}
+        <div className="w-full max-w-2xl mx-auto rounded-3xl border-3 sm:border-4 border-black bg-white p-2.5 sm:p-4 shadow-[5px_5px_0px_#000] sm:shadow-[8px_8px_0px_#000]">
+          <div className="relative w-full h-32 sm:h-52 rounded-2xl overflow-hidden border-2 border-black bg-black">
+            <Image
+              src="/playfield_banner.png"
+              alt="Playfield Banner"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+        </div>
+
         {/* Hero Section - Athletic Neo-Brutalism */}
-        <div className="flex flex-col items-center text-center gap-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-lg bg-[#ccff00] border-2 border-black px-3.5 py-1 text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#000]">
+        <div className="flex flex-col items-center text-center gap-3.5 max-w-3xl mx-auto px-2">
+          <div className="inline-flex items-center gap-2 rounded-lg bg-[#ccff00] border-2 border-black px-3 py-1 text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#000]">
             <Sparkles className="h-4 w-4 stroke-[2.5]" />
-            <span>Pocket Assistant Host Mabar & Ketua Komunitas</span>
+            <span>Pocket Assistant Host Mabar & Matchmaker</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black text-black tracking-tight leading-[1.05] uppercase">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-black tracking-tight leading-[1.08] uppercase">
             Atur Rotasi Lapangan Mabar{" "}
-            <span className="bg-[#ccff00] px-2 py-0.5 rounded border-2 border-black shadow-[4px_4px_0px_#000] inline-block mt-1">
+            <span className="bg-[#ccff00] px-2 py-0.5 rounded border-2 border-black shadow-[3px_3px_0px_#000] inline-block mt-1">
               Tanpa Ribet!
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg font-bold text-slate-800 max-w-2xl leading-relaxed mt-2">
+          <p className="text-sm sm:text-base font-bold text-slate-800 max-w-2xl leading-relaxed">
             Pasangan ganda otomatis seimbang atau susun manual sesukamu, prediksi durasi sewa, panggil giliran via speaker Bluetooth,
             counter shuttlecock/bola, dan display TV GOR secara instan tanpa perlu akun pemain.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3.5 mt-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto mt-2">
             <button
               onClick={handleLaunchDemo}
-              className="flex items-center gap-2 rounded-xl bg-[#ccff00] px-6 py-3.5 text-sm font-black text-black uppercase tracking-wider border-3 border-black shadow-[5px_5px_0px_#000] hover:bg-[#b8e600] active:translate-x-1 active:translate-y-1 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#ccff00] px-6 py-3.5 text-sm font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer min-h-[48px]"
             >
               <Play className="h-5 w-5 fill-black stroke-[2.5]" />
               <span>Coba Demo Langsung (1-Klik)</span>
             </button>
             <Link
               href="/education"
-              className="flex items-center gap-2 rounded-xl border-3 border-black bg-white px-6 py-3.5 text-sm font-black text-black uppercase tracking-wider shadow-[5px_5px_0px_#000] hover:bg-slate-100 active:translate-x-1 active:translate-y-1 active:shadow-[1px_1px_0px_#000] transition-all"
+              className="flex items-center justify-center gap-2 rounded-xl border-3 border-black bg-white px-6 py-3.5 text-sm font-black text-black uppercase tracking-wider shadow-[4px_4px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all min-h-[48px]"
             >
               <BookOpen className="h-5 w-5 stroke-[2.5]" />
               <span>Panduan & Edukasi Sport</span>
@@ -255,42 +271,18 @@ export default function HomePage() {
         </div>
 
         {/* Form Buat Sesi Baru */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-2 rounded-3xl border-4 border-black bg-white p-6 sm:p-8 shadow-[8px_8px_0px_#000]">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b-3 border-black mb-6">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center font-black">
-                  <Plus className="h-6 w-6 stroke-[3]" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-black uppercase tracking-wide">Buat Sesi Mabar Baru</h2>
-                  <p className="text-xs font-bold text-slate-600">
-                    Konfigurasikan jam sewa, durasi, algoritma, dan biaya cock/slop
-                  </p>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
+          <div className="lg:col-span-2 rounded-3xl border-3 sm:border-4 border-black bg-white p-4 sm:p-8 shadow-[6px_6px_0px_#000] sm:shadow-[8px_8px_0px_#000]">
+            <div className="flex items-center gap-3 pb-4 border-b-3 border-black mb-6">
+              <div className="h-11 w-11 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center font-black shrink-0">
+                <Plus className="h-6 w-6 stroke-[3]" />
               </div>
-
-              {/* Dropdown Akses Cepat Sesi Tersimpan (Hanya Tampilkan 2 Terakhir) */}
-              {recentSessions.length > 0 && (
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <select
-                    defaultValue=""
-                    onChange={(e) => {
-                      if (e.target.value) router.push(`/host/${e.target.value}`);
-                    }}
-                    className="rounded-xl bg-[#faf8f2] border-2 border-black px-3 py-1.5 text-xs font-black text-black shadow-[2px_2px_0px_#000] cursor-pointer hover:bg-[#ccff00]/40 transition-colors"
-                  >
-                    <option value="" disabled>
-                      📂 Buka Sesi (2 Terakhir)...
-                    </option>
-                    {recentSessions.slice(0, 2).map((s) => (
-                      <option key={s.id} value={s.publicSlug}>
-                        {s.title} ({s.sport.toUpperCase()} • {s.playerCount} Pemain)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div>
+                <h2 className="text-lg sm:text-xl font-black text-black uppercase tracking-wide">Buat Sesi Mabar Baru</h2>
+                <p className="text-xs font-bold text-slate-600">
+                  Konfigurasikan jam sewa, durasi, algoritma, dan opsional biaya bola
+                </p>
+              </div>
             </div>
 
             <form onSubmit={handleCreateSession} className="flex flex-col gap-6">
@@ -756,67 +748,126 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* 6. Biaya Shuttlecock / Bola & Model Hitungan (Per Butir vs Per Slop) */}
+              {/* 6. Biaya Shuttlecock / Bola (Opsional Host) */}
               <div className="p-4 sm:p-5 rounded-2xl bg-[#faf8f2] border-3 border-black shadow-[4px_4px_0px_#000] flex flex-col gap-4">
                 <div className="flex items-center justify-between pb-2 border-b-2 border-black">
                   <div className="flex items-center gap-2">
                     <Flame className="h-4 w-4 stroke-[3]" />
                     <span className="text-xs font-black uppercase tracking-wider text-black">
-                      6. Biaya Shuttlecock / Bola & Model Hitungan
+                      6. Biaya Shuttlecock / Bola Lapangan (Opsional)
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white border border-black shadow-[1px_1px_0px_#000]">
-                    Harga Customizable
+                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] ${
+                    trackEquipment ? "bg-[#ccff00] text-black" : "bg-white text-slate-700"
+                  }`}>
+                    {trackEquipment ? "Dihitung & Dicatat" : "Paket All-In (Non-Aktif)"}
                   </span>
                 </div>
 
-                {/* Pilihan Model: Hitung Per Butir vs Per Slop */}
+                {/* Switch Utama: All-In-One (Tanpa Hitung Bola) vs Hitung Pemakaian Bola */}
                 <div>
                   <label className="block text-[11px] font-black uppercase text-black/70 mb-2">
-                    Pilih Cara Hitung Biaya:
+                    Status Biaya Shuttlecock / Bola Mabar:
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <button
                       type="button"
-                      onClick={() => setEquipmentPricingModel("per_unit")}
+                      onClick={() => setTrackEquipment(false)}
                       className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
-                        equipmentPricingModel === "per_unit"
+                        !trackEquipment
                           ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
                           : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
                       }`}
                     >
-                      <span className="text-2xl">🏸</span>
+                      <span className="text-2xl shrink-0">🎯</span>
                       <div>
                         <span className="text-xs font-black uppercase tracking-wide block">
-                          Hitung Per Butir (Cock / Bola)
+                          Paket All-In-One (Fixed Price)
                         </span>
-                        <span className="text-[10px] font-bold text-black/70">
-                          Catat pemakaian per butir per match
+                        <span className="text-[10px] font-bold text-black/70 block mt-0.5">
+                          Biaya sudah flat per orang. Tidak perlu counter bola.
                         </span>
                       </div>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setEquipmentPricingModel("per_slop")}
+                      onClick={() => setTrackEquipment(true)}
                       className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
-                        equipmentPricingModel === "per_slop"
+                        trackEquipment
                           ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
                           : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
                       }`}
                     >
-                      <span className="text-2xl">📦</span>
+                      <span className="text-2xl shrink-0">🏸</span>
                       <div>
                         <span className="text-xs font-black uppercase tracking-wide block">
-                          Hitung Per Slop (Tabung / Can)
+                          Hitung Pemakaian Cock / Bola
                         </span>
-                        <span className="text-[10px] font-bold text-black/70">
-                          Patungan per slop yang dibuka
+                        <span className="text-[10px] font-bold text-black/70 block mt-0.5">
+                          Aktifkan counter pemakaian & patungan butir / slop.
                         </span>
                       </div>
                     </button>
                   </div>
                 </div>
+
+                {!trackEquipment ? (
+                  <div className="p-3.5 rounded-xl bg-white border-2 border-dashed border-black/50 text-xs font-bold text-slate-700 flex items-center gap-2.5">
+                    <span className="text-base">✨</span>
+                    <span>
+                      Mode santai: Dashboard Host dan Papan Penonton akan tampil bersih tanpa tombol hitung bola/cock.
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    {/* Pilihan Model: Hitung Per Butir vs Per Slop */}
+                    <div>
+                      <label className="block text-[11px] font-black uppercase text-black/70 mb-2">
+                        Pilih Cara Hitung Biaya:
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setEquipmentPricingModel("per_unit")}
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                            equipmentPricingModel === "per_unit"
+                              ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                              : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                          }`}
+                        >
+                          <span className="text-2xl">🏸</span>
+                          <div>
+                            <span className="text-xs font-black uppercase tracking-wide block">
+                              Hitung Per Butir (Cock / Bola)
+                            </span>
+                            <span className="text-[10px] font-bold text-black/70">
+                              Catat pemakaian per butir per match
+                            </span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setEquipmentPricingModel("per_slop")}
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                            equipmentPricingModel === "per_slop"
+                              ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                              : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                          }`}
+                        >
+                          <span className="text-2xl">📦</span>
+                          <div>
+                            <span className="text-xs font-black uppercase tracking-wide block">
+                              Hitung Per Slop (Tabung / Can)
+                            </span>
+                            <span className="text-[10px] font-bold text-black/70">
+                              Patungan per slop yang dibuka
+                            </span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
 
                 {/* Form Input Custom Harga Sesuai Pilihan */}
                 {equipmentPricingModel === "per_unit" ? (
@@ -936,6 +987,8 @@ export default function HomePage() {
                       ))}
                     </div>
                   </div>
+                )}
+                  </>
                 )}
               </div>
 

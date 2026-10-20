@@ -119,7 +119,7 @@ export function CourtCard({
             <button
               type="button"
               onClick={() => onUpdateScore(court.courtNumber, Math.max(0, match.scoreA - 1), match.scoreB)}
-              className="h-9 w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+              className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-white text-black font-black text-xl sm:text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
               title="Kurang 1 Poin"
             >
               -
@@ -139,7 +139,7 @@ export function CourtCard({
             <button
               type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA + 1, match.scoreB)}
-              className="h-9 w-9 rounded-lg bg-[#ccff00] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+              className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-[#ccff00] text-black font-black text-xl sm:text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
               title="Tambah 1 Poin"
             >
               +
@@ -186,7 +186,7 @@ export function CourtCard({
             <button
               type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA, Math.max(0, match.scoreB - 1))}
-              className="h-9 w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+              className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-white text-black font-black text-xl sm:text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
               title="Kurang 1 Poin"
             >
               -
@@ -206,7 +206,7 @@ export function CourtCard({
             <button
               type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA, match.scoreB + 1)}
-              className="h-9 w-9 rounded-lg bg-[#7dd3fc] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#38bdf8] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+              className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-[#7dd3fc] text-black font-black text-xl sm:text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#38bdf8] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
               title="Tambah 1 Poin"
             >
               +
@@ -228,11 +228,11 @@ export function CourtCard({
 
       {/* Tombol Aksi Lapangan */}
       <div className="flex items-center gap-2 mt-auto">
-        {onAddCockToMatch && (
+        {onAddCockToMatch && sportConfig.equipment.enabled !== false && (
           <button
             onClick={() => onAddCockToMatch(court.courtNumber)}
             title="Tambah pemakaian shuttlecock untuk match ini"
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border-2 border-black bg-[#ffde00] py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border-2 border-black bg-[#ffde00] py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
             <Flame className="h-3.5 w-3.5 fill-black" />
             <span>

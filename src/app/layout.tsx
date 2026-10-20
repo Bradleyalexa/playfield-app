@@ -21,9 +21,13 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "ClubCourt — Pocket Assistant Host Mabar & Pengatur Rotasi Lapangan",
+  title: "Playfield — Pocket Assistant Host Mabar & Pengatur Rotasi Lapangan",
   description:
     "Aplikasi pengatur game untuk host mabar olahraga (Badminton, Tennis, Padel) di Indonesia. Smart WhatsApp list parser, rotasi ganda seimbang, tracker shuttlecock, dan mode TV GOR display.",
+  icons: {
+    icon: "/Playfield_icon.png",
+    apple: "/Playfield_icon.png",
+  },
 };
 
 export default function RootLayout({

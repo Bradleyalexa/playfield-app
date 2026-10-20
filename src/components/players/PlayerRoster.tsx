@@ -214,7 +214,7 @@ export function PlayerRoster({
               </div>
 
               {/* Action Buttons: Pause, Share Story Card & Remove */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
                 {/* Tombol Play/Pause (Tahan / Lanjutkan Pemain) */}
                 <button
                   onClick={() => onTogglePlayerPause(player.id)}
@@ -223,11 +223,11 @@ export function PlayerRoster({
                       ? "Play (Resume): Pemain siap masuk lapangan ronde berikutnya"
                       : "Pause: Tahan pemain (istirahat/toilet/cedera agar dilewati rotasi ronde depan)"
                   }
-                  className={`h-7 w-7 rounded border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ${
+                  className={`h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ${
                     isPaused ? "bg-[#ffde00] text-black" : "bg-white text-black hover:bg-slate-100"
                   }`}
                 >
-                  {isPaused ? <Play className="h-3 w-3 stroke-[3]" /> : <Pause className="h-3 w-3 stroke-[3]" />}
+                  {isPaused ? <Play className="h-3.5 w-3.5 stroke-[3]" /> : <Pause className="h-3.5 w-3.5 stroke-[3]" />}
                 </button>
 
                 {/* Tombol Share (Download/Share IG Story Card Statistik) */}
@@ -235,9 +235,9 @@ export function PlayerRoster({
                   onClick={() => handleGenerateStory(player)}
                   disabled={isGeneratingStory === player.id}
                   title="Share: Buat & Download Story Card profil statistik pemain (Spotify-Wrapped style) untuk WA/IG"
-                  className="h-7 w-7 rounded border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[#ccff00] shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                  className="h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[#ccff00] shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
                 >
-                  <Share2 className="h-3 w-3 stroke-[2.5]" />
+                  <Share2 className="h-3.5 w-3.5 stroke-[2.5]" />
                 </button>
 
                 {/* Tombol Remove Player (Hapus Pemain dari Roster) */}
@@ -249,9 +249,9 @@ export function PlayerRoster({
                       }
                     }}
                     title={`Hapus ${player.name} dari daftar pemain`}
-                    className="h-7 w-7 rounded border-2 border-black bg-white flex items-center justify-center text-rose-600 hover:bg-rose-500 hover:text-white shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    className="h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black bg-white flex items-center justify-center text-rose-600 hover:bg-rose-500 hover:text-white shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
                   >
-                    <Trash2 className="h-3 w-3 stroke-[2.5]" />
+                    <Trash2 className="h-3.5 w-3.5 stroke-[2.5]" />
                   </button>
                 )}
               </div>

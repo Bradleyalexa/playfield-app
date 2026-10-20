@@ -39,10 +39,10 @@ export class StoryCardGenerator {
     ctx.stroke();
 
     // 3. Header: Nama Komunitas & Logo
-    ctx.fillStyle = "#10b981";
-    ctx.font = "bold 38px sans-serif";
+    ctx.fillStyle = "#ccff00";
+    ctx.font = "bold 40px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("CLUBCOURT MABAR RECAP", 540, 260);
+    ctx.fillText("PLAYFIELD MABAR RECAP", 540, 260);
 
     ctx.fillStyle = "#94a3b8";
     ctx.font = "32px sans-serif";
@@ -120,7 +120,7 @@ export class StoryCardGenerator {
     // 8. Footer Watermark
     ctx.fillStyle = "#64748b";
     ctx.font = "26px sans-serif";
-    ctx.fillText("Siap mabar berikutnya? Buka clubcourt.id", 540, 1680);
+    ctx.fillText("Siap mabar berikutnya? Buka playfield.app", 540, 1680);
 
     return canvas.toDataURL("image/png");
   }
@@ -131,7 +131,7 @@ export class StoryCardGenerator {
   public static downloadCard(dataUrl: string, playerName: string): void {
     const a = document.createElement("a");
     a.href = dataUrl;
-    a.download = `ClubCourt-Recap-${playerName.replace(/\s+/g, "_")}.png`;
+    a.download = `Playfield-Recap-${playerName.replace(/\s+/g, "_")}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

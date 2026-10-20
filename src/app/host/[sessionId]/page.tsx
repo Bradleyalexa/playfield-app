@@ -357,10 +357,10 @@ function HostDashboardContent({ params }: HostPageProps) {
     <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col selection:bg-[#ccff00] selection:text-black">
       <Navbar publicSlug={session.publicSlug} />
 
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 sm:px-6 py-6 flex flex-col gap-6">
+      <main className="flex-1 mx-auto max-w-7xl w-full px-3.5 sm:px-6 py-5 sm:py-6 pb-28 sm:pb-8 flex flex-col gap-5 sm:gap-6">
         {/* Banner Sultan jika aktif */}
         {session.sultanSponsor && (
-          <div className="flex items-center justify-between rounded-2xl bg-[#ffde00] border-3 border-black p-4 shadow-[5px_5px_0px_#000]">
+          <div className="flex items-center justify-between rounded-2xl bg-[#ffde00] border-3 border-black p-4 shadow-[4px_4px_0px_#000] sm:shadow-[5px_5px_0px_#000]">
             <div className="flex items-center gap-3">
               <Sparkles className="h-6 w-6 text-black stroke-[3]" />
               <div>
@@ -384,7 +384,7 @@ function HostDashboardContent({ params }: HostPageProps) {
         )}
 
         {/* Top Control Bar: Info Sesi & Tombol Aksi Cepat */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl border-3 border-black bg-white shadow-[6px_6px_0px_#000]">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-3 border-black bg-white shadow-[4px_4px_0px_#000] sm:shadow-[6px_6px_0px_#000]">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="rounded bg-black px-2 py-0.5 text-xs font-black text-[#ccff00] uppercase font-mono">
@@ -438,49 +438,51 @@ function HostDashboardContent({ params }: HostPageProps) {
               <span>Jadwal & Match ({session.estimatedMatchesCount || 26})</span>
             </button>
 
-            {/* Counter Shuttlecock / Bola & Slop Tracker */}
-            <div className="flex items-center rounded-xl bg-[#ffde00] border-2 border-black shadow-[3px_3px_0px_#000] overflow-hidden">
-              <button
-                type="button"
-                onClick={() =>
-                  session.sportConfig.equipment.pricingModel === "per_slop"
-                    ? handleAddSlop(1)
-                    : handleAddCock(1)
-                }
-                className="flex items-center gap-2 px-3.5 py-2 text-xs font-black text-black uppercase tracking-wider hover:bg-[#ebd000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
-                title="Klik untuk tambah pemakaian"
-              >
-                {session.sportConfig.equipment.pricingModel === "per_slop" ? (
-                  <>
-                    <Package className="h-4 w-4 stroke-[2.5]" />
-                    <span>
-                      +1 {session.sport === "badminton" ? "Slop" : "Can"} (
-                      {session.sportConfig.equipment.slopUsed ?? 1})
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Flame className="h-4 w-4 fill-black" />
-                    <span>
-                      +1 {session.sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
-                      {session.sportConfig.equipment.totalUsed})
-                    </span>
-                  </>
-                )}
-                <span className="text-[10px] font-mono text-slate-900 font-black">
-                  ({formatRupiah(totalEquipmentCost)})
-                </span>
-              </button>
+            {/* Counter Shuttlecock / Bola & Slop Tracker (Hanya jika diaktifkan host) */}
+            {session.sportConfig.equipment?.enabled !== false && (
+              <div className="flex items-center rounded-xl bg-[#ffde00] border-2 border-black shadow-[3px_3px_0px_#000] overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() =>
+                    session.sportConfig.equipment.pricingModel === "per_slop"
+                      ? handleAddSlop(1)
+                      : handleAddCock(1)
+                  }
+                  className="flex items-center gap-2 px-3.5 py-2 text-xs font-black text-black uppercase tracking-wider hover:bg-[#ebd000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+                  title="Klik untuk tambah pemakaian"
+                >
+                  {session.sportConfig.equipment.pricingModel === "per_slop" ? (
+                    <>
+                      <Package className="h-4 w-4 stroke-[2.5]" />
+                      <span>
+                        +1 {session.sport === "badminton" ? "Slop" : "Can"} (
+                        {session.sportConfig.equipment.slopUsed ?? 1})
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Flame className="h-4 w-4 fill-black" />
+                      <span>
+                        +1 {session.sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
+                        {session.sportConfig.equipment.totalUsed})
+                      </span>
+                    </>
+                  )}
+                  <span className="text-[10px] font-mono text-slate-900 font-black">
+                    ({formatRupiah(totalEquipmentCost)})
+                  </span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setIsEquipmentModalOpen(true)}
-                className="p-2 border-l-2 border-black hover:bg-black hover:text-[#ffde00] text-black transition-colors cursor-pointer"
-                title="Atur harga custom & ganti model hitung per cock / per slop"
-              >
-                <Settings2 className="h-4 w-4 stroke-[2.5]" />
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEquipmentModalOpen(true)}
+                  className="p-2 border-l-2 border-black hover:bg-black hover:text-[#ffde00] text-black transition-colors cursor-pointer"
+                  title="Atur harga custom & ganti model hitung per cock / per slop"
+                >
+                  <Settings2 className="h-4 w-4 stroke-[2.5]" />
+                </button>
+              </div>
+            )}
 
             {/* Sultan Mode Button */}
             <button

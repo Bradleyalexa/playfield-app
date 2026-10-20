@@ -101,6 +101,7 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
 export type EquipmentPricingModel = "per_unit" | "per_slop";
 
 export interface EquipmentConfig {
+  enabled?: boolean; // false jika paket all-in-one / tanpa hitung cock
   unitName: "shuttlecock" | "ball_can" | "padel_ball";
   totalUsed: number;
   costPerUnit: number;
@@ -112,7 +113,7 @@ export interface EquipmentConfig {
 }
 
 export function calculateEquipmentCost(equipment?: EquipmentConfig): number {
-  if (!equipment) return 0;
+  if (!equipment || equipment.enabled === false) return 0;
   const model = equipment.pricingModel || "per_unit";
 
   if (model === "per_slop") {

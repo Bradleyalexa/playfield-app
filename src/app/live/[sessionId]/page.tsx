@@ -50,7 +50,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
     <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col font-sans selection:bg-[#ccff00] selection:text-black">
       <Navbar publicSlug={session.publicSlug} />
 
-      <main className="flex-1 mx-auto max-w-4xl w-full px-4 sm:px-6 py-6 flex flex-col gap-6">
+      <main className="flex-1 mx-auto max-w-4xl w-full px-3.5 sm:px-6 py-5 sm:py-6 pb-28 sm:pb-8 flex flex-col gap-5 sm:gap-6">
         {/* Banner Sultan jika aktif */}
         {session.sultanSponsor && (
           <div className="flex items-center gap-3 rounded-2xl bg-[#ffde00] border-[3px] border-black p-4 text-center justify-center shadow-[4px_4px_0px_#000]">
