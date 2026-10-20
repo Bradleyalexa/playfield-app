@@ -105,7 +105,7 @@ export function PlayerRoster({
 
       {/* Panduan Ikon Aksi Pemain (Sangat Membantu di Smartphone karena Tidak Bisa Hover) */}
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 p-2 rounded-xl bg-[#faf8f2] border-2 border-black text-[10px] sm:text-xs font-bold text-slate-800 shadow-[2px_2px_0px_#000]">
-        <span className="font-black text-black uppercase bg-black text-[#ccff00] px-1.5 py-0.5 rounded text-[9px] font-mono tracking-wider">
+        <span className="font-black uppercase bg-[#ccff00] text-black px-2.5 py-0.5 rounded-lg border-2 border-black text-[10px] font-mono tracking-wider shadow-[1.5px_1.5px_0px_#000]">
           PANDUAN IKON
         </span>
         <span className="inline-flex items-center gap-1 bg-white border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">

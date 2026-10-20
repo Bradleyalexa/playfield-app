@@ -201,7 +201,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                   >
                     {algo.icon} {algo.shortName}
                   </span>
-                  <span className="bg-black text-[#ccff00] text-[10px] font-black px-2 py-0.5 rounded font-mono">
+                  <span className="bg-black text-white text-[10px] font-black px-2 py-0.5 rounded font-mono border border-black">
                     RONDE #{session.currentRound}
                   </span>
                 </div>

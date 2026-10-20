@@ -201,8 +201,8 @@ export function CompletedSessionRecap({
             🏆
           </div>
           <div>
-            <span className="inline-block rounded bg-black px-2 py-0.5 text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#ccff00]">
-              SESI SELESAI
+            <span className="inline-block rounded-lg bg-black text-white px-2.5 py-0.5 text-[11px] sm:text-xs font-black uppercase tracking-wider border-2 border-black shadow-[1.5px_1.5px_0px_#000]">
+              🏁 SESI RESMI SELESAI
             </span>
             <h2 className="text-xl sm:text-2xl font-black uppercase text-black tracking-tight mt-0.5">
               Rekap Hasil &amp; Podium Mabar
@@ -238,15 +238,17 @@ export function CompletedSessionRecap({
           {secondPlace && (
             <div className="order-2 sm:order-1 flex flex-col items-center rounded-2xl border-3 border-black bg-[#f1f5f9] p-4 shadow-[4px_4px_0px_#000] text-center">
               <span className="text-3xl mb-1">🥈</span>
-              <span className="text-xs font-black uppercase text-slate-600">JUARA 2</span>
-              <h3 className="text-base sm:text-lg font-black text-black uppercase truncate max-w-full mt-1">
+              <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-white text-slate-800 border-2 border-black shadow-[1px_1px_0px_#000]">
+                JUARA 2
+              </span>
+              <h3 className="text-base sm:text-lg font-black text-black uppercase truncate max-w-full mt-1.5">
                 {secondPlace.player.name}
               </h3>
               <div className="flex items-center gap-1.5 mt-2 text-xs font-black font-mono-sport">
-                <span className="bg-white px-2 py-0.5 rounded border border-black">
+                <span className="bg-white px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
                   {secondPlace.won} Menang
                 </span>
-                <span className="bg-slate-200 px-2 py-0.5 rounded border border-black">
+                <span className="bg-slate-200 px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
                   WR {secondPlace.wr}%
                 </span>
               </div>
@@ -256,15 +258,15 @@ export function CompletedSessionRecap({
           {/* Juara 1 (Emas / Champion) */}
           {firstPlace && (
             <div className="order-1 sm:order-2 flex flex-col items-center rounded-2xl border-3 sm:border-4 border-black bg-[#ffde00] p-5 shadow-[6px_6px_0px_#000] text-center sm:-translate-y-2">
-              <div className="relative">
-                <span className="text-4xl mb-1 block">🥇</span>
-                <span className="absolute -top-1 -right-4 rounded-full bg-black text-[#ccff00] text-[9px] font-black px-1.5 py-0.5 border border-black uppercase font-mono">
-                  CHAMPION
+              <span className="text-4xl mb-1 block">🥇</span>
+              <div className="flex flex-col items-center gap-1">
+                <span className="rounded-full bg-black text-white text-[11px] font-black px-3 py-0.5 border-2 border-black uppercase font-mono shadow-[1.5px_1.5px_0px_#000]">
+                  ★ CHAMPION ★
+                </span>
+                <span className="text-xs font-black uppercase tracking-wider text-black">
+                  JUARA 1 (MVP)
                 </span>
               </div>
-              <span className="text-xs font-black uppercase tracking-wider text-black">
-                JUARA 1 (MVP)
-              </span>
               <h3 className="text-lg sm:text-xl font-black text-black uppercase truncate max-w-full mt-1">
                 {firstPlace.player.name}
               </h3>
@@ -283,15 +285,17 @@ export function CompletedSessionRecap({
           {thirdPlace && (
             <div className="order-3 flex flex-col items-center rounded-2xl border-3 border-black bg-[#fef3c7] p-4 shadow-[4px_4px_0px_#000] text-center">
               <span className="text-3xl mb-1">🥉</span>
-              <span className="text-xs font-black uppercase text-amber-800">JUARA 3</span>
-              <h3 className="text-base sm:text-lg font-black text-black uppercase truncate max-w-full mt-1">
+              <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-white text-amber-950 border-2 border-black shadow-[1px_1px_0px_#000]">
+                JUARA 3
+              </span>
+              <h3 className="text-base sm:text-lg font-black text-black uppercase truncate max-w-full mt-1.5">
                 {thirdPlace.player.name}
               </h3>
               <div className="flex items-center gap-1.5 mt-2 text-xs font-black font-mono-sport">
-                <span className="bg-white px-2 py-0.5 rounded border border-black">
+                <span className="bg-white px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
                   {thirdPlace.won} Menang
                 </span>
-                <span className="bg-amber-200 px-2 py-0.5 rounded border border-black">
+                <span className="bg-amber-200 px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
                   WR {thirdPlace.wr}%
                 </span>
               </div>
@@ -565,7 +569,7 @@ export function CompletedSessionRecap({
 
           <Link
             href="/"
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl bg-black text-[#ccff00] border-2 sm:border-3 border-black px-5 py-3 text-xs font-black uppercase tracking-wider shadow-[4px_4px_0px_#000] hover:bg-neutral-800 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl bg-black text-white hover:text-[#ccff00] border-2 sm:border-3 border-black px-5 py-3 text-xs font-black uppercase tracking-wider shadow-[4px_4px_0px_#000] hover:bg-neutral-800 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
           >
             <PlusCircle className="h-4 w-4 stroke-[2.5]" />
             <span>Bikin Sesi Baru</span>

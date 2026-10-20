@@ -779,7 +779,7 @@ function HostDashboardContent({ params }: HostPageProps) {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-3 border-black bg-white shadow-[4px_4px_0px_#000] sm:shadow-[6px_6px_0px_#000]">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="rounded bg-black px-2 py-0.5 text-xs font-black text-[#ccff00] uppercase font-mono">
+              <span className="rounded-lg bg-black px-2.5 py-0.5 text-xs font-black text-white uppercase font-mono border border-black">
                 {session.sport}
               </span>
               <span

@@ -1,8 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { X, Trophy, Flag, AlertTriangle, Users, Package, Award, CreditCard, Building2 } from "lucide-react";
-import { GameSession, SessionBillingConfig, calculateEquipmentCost } from "../../core/entities/session";
+import {
+  X,
+  Trophy,
+  Flag,
+  AlertTriangle,
+  Users,
+  Package,
+  Award,
+  CreditCard,
+  Building2,
+} from "lucide-react";
+import {
+  GameSession,
+  SessionBillingConfig,
+  calculateEquipmentCost,
+} from "../../core/entities/session";
 import { formatRupiah } from "../../lib/utils";
 
 interface FinishSessionModalProps {
@@ -23,23 +37,36 @@ export function FinishSessionModal({
   };
 
   const [courtRentalFee, setCourtRentalFee] = useState<number>(
-    currentBilling.courtRentalFee ?? (session.sportConfig.equipment.enabled ? 160000 : 0)
+    currentBilling.courtRentalFee ??
+      (session.sportConfig.equipment.enabled ? 160000 : 0),
   );
   const [fixedPrice, setFixedPrice] = useState<number>(
-    currentBilling.fixedPricePerPerson ?? 40000
+    currentBilling.fixedPricePerPerson ?? 40000,
   );
-  const [otherFee, setOtherFee] = useState<number>(currentBilling.otherFee ?? 0);
+  const [otherFee, setOtherFee] = useState<number>(
+    currentBilling.otherFee ?? 0,
+  );
   const [otherFeeDesc, setOtherFeeDesc] = useState<string>(
-    currentBilling.otherFeeDescription ?? "Air Mineral"
+    currentBilling.otherFeeDescription ?? "Air Mineral",
   );
-  const [bankName, setBankName] = useState<string>(currentBilling.bankName ?? "BCA");
-  const [accountNumber, setAccountNumber] = useState<string>(currentBilling.accountNumber ?? "");
-  const [accountHolder, setAccountHolder] = useState<string>(currentBilling.accountHolder ?? "");
+  const [bankName, setBankName] = useState<string>(
+    currentBilling.bankName ?? "BCA",
+  );
+  const [accountNumber, setAccountNumber] = useState<string>(
+    currentBilling.accountNumber ?? "",
+  );
+  const [accountHolder, setAccountHolder] = useState<string>(
+    currentBilling.accountHolder ?? "",
+  );
 
   if (!isOpen) return null;
 
-  const completedMatches = session.matches.filter((m) => m.status === "completed");
-  const inProgressMatches = session.matches.filter((m) => m.status === "in_progress");
+  const completedMatches = session.matches.filter(
+    (m) => m.status === "completed",
+  );
+  const inProgressMatches = session.matches.filter(
+    (m) => m.status === "in_progress",
+  );
 
   // Hitung MVP (Paling banyak menang & win rate)
   const playerStats = session.players.map((p) => {
@@ -60,7 +87,9 @@ export function FinishSessionModal({
 
   // Hitung Biaya Equipment
   const equipment = session.sportConfig.equipment;
-  const equipmentCost = equipment.enabled ? calculateEquipmentCost(equipment) : 0;
+  const equipmentCost = equipment.enabled
+    ? calculateEquipmentCost(equipment)
+    : 0;
   const playerCount = session.players.length;
 
   // Hitung Split Bill
@@ -72,8 +101,8 @@ export function FinishSessionModal({
   const costPerPerson = isFixed
     ? fixedPrice
     : playerCount > 0
-    ? Math.ceil(totalCost / playerCount)
-    : 0;
+      ? Math.ceil(totalCost / playerCount)
+      : 0;
 
   const handleConfirm = () => {
     const updatedBilling: SessionBillingConfig = {
@@ -122,10 +151,12 @@ export function FinishSessionModal({
             <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <span className="font-black uppercase block">
-                Perhatian: Ada {inProgressMatches.length} Lapangan Sedang Bermain!
+                Perhatian: Ada {inProgressMatches.length} Lapangan Sedang
+                Bermain!
               </span>
               <span>
-                Jika diselesaikan sekarang, skor yang tercatat saat ini akan langsung dianggap sebagai hasil akhir pertandingan.
+                Jika diselesaikan sekarang, skor yang tercatat saat ini akan
+                langsung dianggap sebagai hasil akhir pertandingan.
               </span>
             </div>
           </div>
@@ -134,14 +165,18 @@ export function FinishSessionModal({
         {/* Ringkasan Statistik Pertandingan */}
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col">
-            <span className="text-[10px] font-black uppercase text-slate-500">Total Match Selesai</span>
+            <span className="text-[10px] font-black uppercase text-slate-500">
+              Total Match Selesai
+            </span>
             <span className="text-lg font-black font-mono-sport text-black mt-0.5">
               {completedMatches.length} Match
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-[#ccff00] border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col">
-            <span className="text-[10px] font-black uppercase text-black/70">Kandidat MVP</span>
+            <span className="text-[10px] font-black uppercase text-black/70">
+              Kandidat MVP
+            </span>
             <span className="text-sm font-black text-black truncate mt-0.5">
               🏆 {mvp ? mvp.player.name : "-"}
             </span>
@@ -156,7 +191,7 @@ export function FinishSessionModal({
           <div className="flex items-center justify-between pb-1.5 border-b border-black/10">
             <span className="text-xs font-black uppercase text-black flex items-center gap-1.5">
               <CreditCard className="h-4 w-4" />
-              <span>Rincian Biaya &amp; Split Bill Patungan</span>
+              <span>&amp; Split Bill Patungan</span>
             </span>
             <span className="text-[10px] font-mono font-bold bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
               {playerCount} Peserta
@@ -168,8 +203,12 @@ export function FinishSessionModal({
             <div className="flex flex-col gap-2.5 text-xs">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-black block">Biaya Sewa Lapangan:</span>
-                  <span className="text-[10px] text-slate-500">Total sewa seluruh lapangan</span>
+                  <span className="font-bold text-black block">
+                    Biaya Sewa Lapangan:
+                  </span>
+                  <span className="text-[10px] text-slate-500">
+                    Total sewa seluruh lapangan
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="font-mono font-bold text-xs">Rp</span>
@@ -178,7 +217,11 @@ export function FinishSessionModal({
                     step="10000"
                     min="0"
                     value={courtRentalFee}
-                    onChange={(e) => setCourtRentalFee(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                    onChange={(e) =>
+                      setCourtRentalFee(
+                        Math.max(0, parseInt(e.target.value, 10) || 0),
+                      )
+                    }
                     className="w-28 text-right font-mono font-black rounded-lg border-2 border-black px-2 py-1 bg-[#faf8f2]"
                   />
                 </div>
@@ -186,19 +229,25 @@ export function FinishSessionModal({
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-black block">Shuttlecock / Bola Terpakai:</span>
+                  <span className="font-bold text-black block">
+                    Shuttlecock / Bola Terpakai:
+                  </span>
                   <span className="text-[10px] text-slate-500">
                     {equipment.pricingModel === "per_slop"
                       ? `${equipment.slopUsed || 1} Slop`
                       : `${equipment.totalUsed || 0} Butir`}
                   </span>
                 </div>
-                <span className="font-mono font-black text-black">{formatRupiah(equipmentCost)}</span>
+                <span className="font-mono font-black text-black">
+                  {formatRupiah(equipmentCost)}
+                </span>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-black block">Biaya Lain-lain (Opsional):</span>
+                  <span className="font-bold text-black block">
+                    Biaya Lain-lain (Opsional):
+                  </span>
                   <input
                     type="text"
                     value={otherFeeDesc}
@@ -214,7 +263,11 @@ export function FinishSessionModal({
                     step="5000"
                     min="0"
                     value={otherFee}
-                    onChange={(e) => setOtherFee(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                    onChange={(e) =>
+                      setOtherFee(
+                        Math.max(0, parseInt(e.target.value, 10) || 0),
+                      )
+                    }
                     className="w-28 text-right font-mono font-black rounded-lg border-2 border-black px-2 py-1 bg-[#faf8f2]"
                   />
                 </div>
@@ -223,8 +276,12 @@ export function FinishSessionModal({
               {/* Total & Split Per Orang */}
               <div className="pt-2 border-t-2 border-black flex items-center justify-between bg-[#ccff00]/20 p-2 rounded-lg border border-black">
                 <div>
-                  <span className="text-[10px] font-black uppercase text-slate-700 block">Total Biaya:</span>
-                  <span className="font-mono font-black text-sm text-black">{formatRupiah(totalCost)}</span>
+                  <span className="text-[10px] font-black uppercase text-slate-700 block">
+                    Total Biaya:
+                  </span>
+                  <span className="font-mono font-black text-sm text-black">
+                    {formatRupiah(totalCost)}
+                  </span>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] font-black uppercase text-emerald-900 block">
@@ -242,7 +299,9 @@ export function FinishSessionModal({
           {isFixed && (
             <div className="flex flex-col gap-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-black">Tarif Tetap Per Orang:</span>
+                <span className="font-bold text-black">
+                  Tarif Tetap Per Orang:
+                </span>
                 <div className="flex items-center gap-1">
                   <span className="font-mono font-bold text-xs">Rp</span>
                   <input
@@ -250,14 +309,20 @@ export function FinishSessionModal({
                     step="5000"
                     min="0"
                     value={fixedPrice}
-                    onChange={(e) => setFixedPrice(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                    onChange={(e) =>
+                      setFixedPrice(
+                        Math.max(0, parseInt(e.target.value, 10) || 0),
+                      )
+                    }
                     className="w-28 text-right font-mono font-black rounded-lg border-2 border-black px-2 py-1 bg-[#faf8f2]"
                   />
                 </div>
               </div>
               <div className="flex items-center justify-between text-slate-700 text-[11px]">
                 <span>Total Terkumpul ({playerCount} Peserta):</span>
-                <span className="font-mono font-bold">{formatRupiah(totalCost)}</span>
+                <span className="font-mono font-bold">
+                  {formatRupiah(totalCost)}
+                </span>
               </div>
             </div>
           )}
