@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, Clock, Volume2, VolumeX, Trophy, MapPin, ExternalLink, Timer } from "lucide-react";
+import { Sparkles, Clock, Volume2, VolumeX, Trophy, MapPin, ExternalLink, Timer, Calendar } from "lucide-react";
 import { GameSession } from "../../core/entities/session";
+import { calculateRentalTimeInfo, RentalTimeInfo } from "../../lib/time-tracker";
 
 interface KioskHeaderProps {
   session: GameSession;
@@ -12,19 +13,9 @@ interface KioskHeaderProps {
 
 export function KioskHeader({ session, isAudioEnabled, onToggleAudio }: KioskHeaderProps) {
   const [currentTime, setCurrentTime] = useState("");
-  const [rentalInfo, setRentalInfo] = useState<{
-    status: "UPCOMING" | "IN_PROGRESS" | "OVERTIME";
-    label: string;
-    formattedTime: string;
-    bgClass: string;
-    textClass: string;
-  }>({
-    status: "IN_PROGRESS",
-    label: "Sisa Sewa",
-    formattedTime: "--:--:--",
-    bgClass: "bg-[#ccff00]",
-    textClass: "text-black",
-  });
+  const [rentalInfo, setRentalInfo] = useState<RentalTimeInfo>(() =>
+    calculateRentalTimeInfo(session)
+  );
 
   useEffect(() => {
     const update = () => {
@@ -37,64 +28,13 @@ export function KioskHeader({ session, isAudioEnabled, onToggleAudio }: KioskHea
         })
       );
 
-      // Hitung Sisa Waktu Sewa Lapangan
-      try {
-        const [h, m] = (session.startTime || "19:00").split(":").map(Number);
-        const start = new Date();
-        start.setHours(h, m, 0, 0);
-
-        const durationMs = (session.durationHours || 2) * 3600 * 1000;
-        const end = new Date(start.getTime() + durationMs);
-
-        const nowMs = now.getTime();
-        const startMs = start.getTime();
-        const endMs = end.getTime();
-
-        const formatDiff = (diffMs: number) => {
-          const totalSec = Math.max(0, Math.floor(diffMs / 1000));
-          const hours = Math.floor(totalSec / 3600);
-          const minutes = Math.floor((totalSec % 3600) / 60);
-          const seconds = totalSec % 60;
-          return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-        };
-
-        if (nowMs < startMs) {
-          // Belum masuk jam mulai sewa
-          setRentalInfo({
-            status: "UPCOMING",
-            label: "Mulai dlm",
-            formattedTime: formatDiff(startMs - nowMs),
-            bgClass: "bg-[#00e5ff]",
-            textClass: "text-black",
-          });
-        } else if (nowMs <= endMs) {
-          // Sedang dalam jam sewa
-          setRentalInfo({
-            status: "IN_PROGRESS",
-            label: "Sisa Sewa",
-            formattedTime: formatDiff(endMs - nowMs),
-            bgClass: "bg-[#ccff00]",
-            textClass: "text-black",
-          });
-        } else {
-          // Waktu sewa lapangan sudah habis (Overtime)
-          setRentalInfo({
-            status: "OVERTIME",
-            label: "Overtime",
-            formattedTime: `+${formatDiff(nowMs - endMs)}`,
-            bgClass: "bg-[#ff0055]",
-            textClass: "text-white animate-pulse",
-          });
-        }
-      } catch (err) {
-        console.error("Error calculating rental time:", err);
-      }
+      setRentalInfo(calculateRentalTimeInfo(session, now));
     };
 
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [session.startTime, session.durationHours]);
+  }, [session]);
 
   return (
     <div className="flex flex-col gap-2 sm:gap-3 pb-2.5 sm:pb-3 border-b-2 sm:border-b-3 border-black shrink-0">
@@ -180,7 +120,7 @@ export function KioskHeader({ session, isAudioEnabled, onToggleAudio }: KioskHea
           {/* Sisa Waktu Sewa Lapangan */}
           <div
             className={`flex items-center gap-1 rounded-lg ${rentalInfo.bgClass} ${rentalInfo.textClass} border-2 border-black px-2 sm:px-3 py-1 font-mono-sport text-[11px] sm:text-xs font-black shadow-[2px_2px_0px_#000]`}
-            title={`Hitungan waktu sewa: Mulai ${session.startTime} selama ${session.durationHours} jam`}
+            title={rentalInfo.description}
           >
             <Timer className="h-3 w-3 sm:h-3.5 sm:w-3.5 stroke-[2.5]" />
             <span className="hidden xs:inline uppercase text-[9px] font-sans font-bold">{rentalInfo.label}:</span>

@@ -242,6 +242,7 @@ export interface GameSession {
   currentRound: number;
 
   // Waktu sewa & Prediksi Algoritma Mabar
+  sessionDate?: string; // contoh "2026-10-21"
   startTime: string; // contoh "19:00"
   durationHours: number; // contoh 1, 2, 3, atau angka desimal custom
   matchDurationMinutes: number; // estimasi 1 match (contoh 12, 15, 20, atau custom menit)

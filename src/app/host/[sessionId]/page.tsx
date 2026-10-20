@@ -28,6 +28,8 @@ import {
   Lightbulb,
   Lock,
   QrCode,
+  Timer,
+  Clock,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
@@ -43,6 +45,7 @@ import { FinishSessionModal } from "../../../components/schedule/FinishSessionMo
 import { CompletedSessionRecap } from "../../../components/schedule/CompletedSessionRecap";
 import { DonateCreatorModal } from "../../../components/common/DonateCreatorModal";
 import { SpectatorQrModal } from "../../../components/common/SpectatorQrModal";
+import { calculateRentalTimeInfo, RentalTimeInfo } from "../../../lib/time-tracker";
 import { Match } from "../../../core/entities/match";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
 import {
@@ -85,6 +88,12 @@ function HostDashboardContent({ params }: HostPageProps) {
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
   const [isSpectatorQrOpen, setIsSpectatorQrOpen] = useState(false);
+
+  // Waktu & Countdown Sewa Lapangan
+  const [currentTime, setCurrentTime] = useState("");
+  const [rentalInfo, setRentalInfo] = useState<RentalTimeInfo>(() =>
+    calculateRentalTimeInfo(null)
+  );
 
   // Tips Praktis Host Mabar (Collapsible)
   const [isHostTipsOpen, setIsHostTipsOpen] = useState(false);
@@ -156,6 +165,26 @@ function HostDashboardContent({ params }: HostPageProps) {
     window.addEventListener("clubcourt:session_updated", handleSync);
     return () => window.removeEventListener("clubcourt:session_updated", handleSync);
   }, [sessionId]);
+
+  // Hitung Waktu Sewa Lapangan Realtime untuk Host
+  useEffect(() => {
+    if (!session) return;
+    const update = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+      setRentalInfo(calculateRentalTimeInfo(session, now));
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   if (!session) {
     return (
@@ -852,8 +881,13 @@ function HostDashboardContent({ params }: HostPageProps) {
                 {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"]).icon}{" "}
                 {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"]).shortName}
               </span>
-              <span className="text-[11px] font-mono font-bold text-black/60 bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
-                {session.startTime || "19:00"} ({session.durationHours || 2} Jam) • ~{session.matchDurationMinutes || 15}m/Match
+              {rentalInfo.dayDateLabel && (
+                <span className="text-[11px] font-mono font-black text-black bg-[#ccff00] px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
+                  📅 {rentalInfo.dayDateLabel}
+                </span>
+              )}
+              <span className="text-[11px] font-mono font-bold text-black/70 bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
+                🕒 Sewa: {rentalInfo.scheduleLabel} ({rentalInfo.durationLabel})
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-black uppercase tracking-wide">
@@ -881,8 +915,36 @@ function HostDashboardContent({ params }: HostPageProps) {
             )}
           </div>
 
-          {/* Quick Action Badges */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Quick Action Badges & Time Tracker */}
+          <div className="flex flex-col md:items-end gap-2.5">
+            {/* Waktu Sekarang & Countdown Sewa */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Jam Dinding Sekarang */}
+              <div
+                className="flex items-center gap-1.5 rounded-xl bg-[#ffde00] border-2 border-black px-3 py-1.5 font-mono-sport text-xs font-black text-black shadow-[2px_2px_0px_#000]"
+                title="Waktu Lokal Sekarang"
+              >
+                <Clock className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>{currentTime || "--:--:--"}</span>
+              </div>
+
+              {/* Sisa Waktu Sewa Lapangan */}
+              <div
+                className={`flex items-center gap-1.5 rounded-xl ${rentalInfo.bgClass} ${rentalInfo.textClass} border-2 border-black px-3 py-1.5 font-mono-sport text-xs font-black shadow-[2px_2px_0px_#000]`}
+                title={rentalInfo.description}
+              >
+                <Timer className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span className="uppercase text-[9px] font-sans font-bold">{rentalInfo.label}:</span>
+                <span>{rentalInfo.formattedTime}</span>
+              </div>
+            </div>
+
+            {/* Deskripsi Jelas Status Waktu Sewa */}
+            <p className="text-[11px] font-bold text-slate-600 md:text-right max-w-xs leading-tight">
+              ℹ️ {rentalInfo.description}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2">
             {/* Tombol Lihat Jadwal & Proyeksi Match */}
             <button
               onClick={() => setIsAllMatchesModalOpen(true)}
@@ -1007,6 +1069,7 @@ function HostDashboardContent({ params }: HostPageProps) {
                 <span>Selesaikan Mabar 🏁</span>
               </button>
             )}
+            </div>
           </div>
         </div>
 

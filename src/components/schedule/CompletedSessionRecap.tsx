@@ -26,6 +26,7 @@ import {
 import { formatRupiah } from "../../lib/utils";
 import { getTierLabel } from "../../core/entities/player";
 import { DonateCreatorModal } from "../common/DonateCreatorModal";
+import { formatIndonesianDate } from "../../lib/time-tracker";
 
 interface CompletedSessionRecapProps {
   session: GameSession;
@@ -106,8 +107,13 @@ export function CompletedSessionRecap({
   // Format pesan WhatsApp super lengkap & rapi
   const generateWaSummary = () => {
     let text = `🏸 *HASIL AKHIR MABAR PLAYFIELD*\n` +
-      `🏢 *Sesi:* ${session.title}\n` +
-      `📅 *Ronde:* #${session.currentRound} (${completedMatches.length} Match Selesai)\n` +
+      `🏢 *Sesi:* ${session.title}\n`;
+
+    if (session.sessionDate) {
+      text += `📅 *Hari/Tanggal:* ${formatIndonesianDate(session.sessionDate)}\n`;
+    }
+
+    text += `📅 *Ronde:* #${session.currentRound} (${completedMatches.length} Match Selesai)\n` +
       `👥 *Total Peserta:* ${session.players.length} Pemain\n`;
 
     if (session.courtLocation) {
@@ -207,9 +213,16 @@ export function CompletedSessionRecap({
             <h2 className="text-xl sm:text-2xl font-black uppercase text-black tracking-tight mt-0.5">
               Rekap Hasil &amp; Podium Mabar
             </h2>
-            <p className="text-xs font-bold text-slate-800">
-              {completedMatches.length} Pertandingan Selesai • {session.players.length} Pemain Berpartisipasi
-            </p>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-800 mt-1">
+              {session.sessionDate && (
+                <span className="bg-[#ccff00] text-black px-2 py-0.5 rounded border border-black font-mono shadow-[1px_1px_0px_#000]">
+                  📅 {formatIndonesianDate(session.sessionDate)}
+                </span>
+              )}
+              <span>{completedMatches.length} Pertandingan Selesai</span>
+              <span>•</span>
+              <span>{session.players.length} Pemain Berpartisipasi</span>
+            </div>
           </div>
         </div>
 

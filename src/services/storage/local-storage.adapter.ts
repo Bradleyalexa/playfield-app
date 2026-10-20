@@ -150,6 +150,7 @@ export class LocalStorageAdapter {
       courts,
       matches: initialMatches.matches,
       currentRound: 1,
+      sessionDate: new Date().toISOString().split("T")[0],
       startTime: "19:00",
       durationHours: 2,
       matchDurationMinutes: 15,

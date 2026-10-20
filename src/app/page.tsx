@@ -45,11 +45,13 @@ import {
 import { SportRegistry } from "../core/sports/sport-registry";
 import { LocalStorageAdapter } from "../services/storage/local-storage.adapter";
 import { Court, Match } from "../core/entities/match";
+import { formatIndonesianDate } from "../lib/time-tracker";
 
 export default function HomePage() {
   const router = useRouter();
   const [selectedSport, setSelectedSport] = useState<SportType>("badminton");
   const [sessionTitle, setSessionTitle] = useState("");
+  const [sessionDate, setSessionDate] = useState("");
   const [courtLocation, setCourtLocation] = useState("");
   const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [courtCount, setCourtCount] = useState(2);
@@ -246,6 +248,7 @@ export default function HomePage() {
 
     const demo = LocalStorageAdapter.createDemoSession(selectedSport);
     demo.title = title;
+    demo.sessionDate = sessionDate.trim() || undefined;
     demo.courtCount = courtCount;
     demo.startTime = startTime;
     demo.durationHours = effectiveDurationHours;
@@ -479,7 +482,68 @@ export default function HomePage() {
                 />
               </div>
 
-              {/* 2b. Alamat Lapangan & Link Google Maps (Opsional untuk Penonton & Kiosk) */}
+              {/* 2b. Hari & Tanggal Mabar (Opsional) */}
+              <div className="p-4 rounded-2xl bg-[#faf8f2] border-2 border-black shadow-[3px_3px_0px_#000]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-black flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4 text-emerald-600 stroke-[2.5]" />
+                    <span>Hari & Tanggal Mabar (Opsional)</span>
+                  </label>
+                  {sessionDate && (
+                    <span className="text-xs font-mono font-black text-black bg-[#ccff00] px-2.5 py-0.5 rounded-lg border border-black shadow-[1px_1px_0px_#000]">
+                      📅 {formatIndonesianDate(sessionDate)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="date"
+                    value={sessionDate}
+                    onChange={(e) => setSessionDate(e.target.value)}
+                    className="flex-1 min-w-[180px] rounded-xl bg-white border-2 border-black px-3.5 py-2.5 text-xs font-bold text-black focus:outline-none shadow-[2px_2px_0px_#000] font-mono cursor-pointer"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const now = new Date();
+                        const yyyy = now.getFullYear();
+                        const mm = String(now.getMonth() + 1).padStart(2, "0");
+                        const dd = String(now.getDate()).padStart(2, "0");
+                        setSessionDate(`${yyyy}-${mm}-${dd}`);
+                      }}
+                      className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border-2 border-black text-xs font-black text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                    >
+                      Hari Ini
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const tmr = new Date(Date.now() + 86400000);
+                        const yyyy = tmr.getFullYear();
+                        const mm = String(tmr.getMonth() + 1).padStart(2, "0");
+                        const dd = String(tmr.getDate()).padStart(2, "0");
+                        setSessionDate(`${yyyy}-${mm}-${dd}`);
+                      }}
+                      className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border-2 border-black text-xs font-black text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                    >
+                      Besok
+                    </button>
+                    {sessionDate && (
+                      <button
+                        type="button"
+                        onClick={() => setSessionDate("")}
+                        className="px-3 py-2 rounded-xl bg-rose-200 hover:bg-rose-300 border-2 border-black text-xs font-black text-rose-900 shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                        title="Hapus tanggal"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2c. Alamat Lapangan & Link Google Maps (Opsional untuk Penonton & Kiosk) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 rounded-2xl bg-[#faf8f2] border-2 border-black shadow-[3px_3px_0px_#000]">
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5 flex items-center gap-1.5">

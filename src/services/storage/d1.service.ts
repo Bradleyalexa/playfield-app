@@ -71,14 +71,15 @@ class D1DatabaseService {
       INSERT INTO game_sessions (
         id, public_slug, admin_secret_key, title, sport_type, 
         court_count, rule_preset, target_points, status, 
-        session_data, start_time, duration_hours, court_location, google_maps_url, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        session_data, session_date, start_time, duration_hours, court_location, google_maps_url, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         public_slug = excluded.public_slug,
         title = excluded.title,
         court_count = excluded.court_count,
         status = excluded.status,
         session_data = excluded.session_data,
+        session_date = excluded.session_date,
         updated_at = CURRENT_TIMESTAMP;
     `;
 
@@ -93,6 +94,7 @@ class D1DatabaseService {
       session.sportConfig?.targetPoints || 21,
       session.status,
       JSON.stringify(session),
+      session.sessionDate || "",
       session.startTime || "19:00",
       session.durationHours || 2,
       session.courtLocation || "",

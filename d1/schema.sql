@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     status TEXT NOT NULL DEFAULT 'active',            -- 'active' | 'completed' | 'archived'
     session_data TEXT,                                -- Full JSON snapshot data sesi
     r2_snapshot_url TEXT,                             -- Backup URL snapshot JSON di Cloudflare R2
+    session_date TEXT,                                -- "2026-10-21"
     start_time TEXT,                                  -- "19:00"
     duration_hours REAL DEFAULT 2,                    -- 2 jam
     court_location TEXT,                              -- "GOR Tomang Barat, Lapangan 1-2"
