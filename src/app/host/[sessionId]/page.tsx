@@ -15,14 +15,16 @@ import {
   Check,
   AlertCircle,
   Plus,
+  Calendar,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
 import { CourtCard } from "../../../components/court/CourtCard";
 import { PlayerRoster } from "../../../components/players/PlayerRoster";
 import { WaPasteModal } from "../../../components/players/WaPasteModal";
+import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
-import { GameSession } from "../../../core/entities/session";
+import { ALGORITHM_REGISTRY, GameSession } from "../../../core/entities/session";
 import { generateBalancedMatches } from "../../../core/matchmaking/balanced-queue";
 import { formatRupiah } from "../../../lib/utils";
 import { AudioAnnouncer } from "../../../services/audio/announcer";
@@ -38,6 +40,7 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   const [session, setSession] = useState<GameSession | null>(null);
   const [isWaModalOpen, setIsWaModalOpen] = useState(false);
+  const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Load session dari local storage atau fallback create demo jika tidak ditemukan
@@ -161,7 +164,13 @@ function HostDashboardContent({ params }: HostPageProps) {
   // 4. Mulai Ronde Berikutnya (Algoritma Penyeimbang Otomatis)
   const handleNextRound = () => {
     const nextRoundNumber = session.currentRound + 1;
-    const result = generateBalancedMatches(session.players, session.courtCount, nextRoundNumber);
+    const result = generateBalancedMatches(
+      session.players,
+      session.courtCount,
+      nextRoundNumber,
+      session.algorithm || "fair_playtime",
+      session.matches
+    );
 
     if (result.matches.length === 0) {
       alert("Pemain aktif kurang dari 4 orang untuk membentuk match ganda!");
@@ -292,25 +301,45 @@ function HostDashboardContent({ params }: HostPageProps) {
         {/* Top Control Bar: Info Sesi & Tombol Aksi Cepat */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl border-3 border-black bg-white shadow-[6px_6px_0px_#000]">
           <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl sm:text-2xl font-black text-black uppercase tracking-wide">
-                {session.title}
-              </h1>
-              <span className="rounded bg-black px-2 py-0.5 text-xs font-black text-[#ccff00] uppercase font-mono-sport">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="rounded bg-black px-2 py-0.5 text-xs font-black text-[#ccff00] uppercase font-mono">
                 {session.sport}
               </span>
+              <span
+                className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border-2 border-black ${
+                  (ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"]).badgeColor
+                }`}
+              >
+                {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"]).icon}{" "}
+                {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"]).shortName}
+              </span>
+              <span className="text-[11px] font-mono font-bold text-black/60 bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
+                {session.startTime || "19:00"} ({session.durationHours || 2} Jam) • ~{session.matchDurationMinutes || 15}m/Match
+              </span>
             </div>
-            <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-wider font-mono-sport">
+            <h1 className="text-xl sm:text-2xl font-black text-black uppercase tracking-wide">
+              {session.title}
+            </h1>
+            <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-wider font-mono">
               RONDE #{session.currentRound} • {session.courtCount} LAPANGAN • {session.players.length} PEMAIN TERDAFTAR
             </p>
           </div>
 
           {/* Quick Action Badges */}
           <div className="flex flex-wrap items-center gap-2.5">
+            {/* Tombol Lihat Jadwal & Proyeksi Match */}
+            <button
+              onClick={() => setIsAllMatchesModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-white border-2 border-black px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#faf8f2] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+            >
+              <Calendar className="h-4 w-4 stroke-[2.5]" />
+              <span>Jadwal & Match ({session.estimatedMatchesCount || 26})</span>
+            </button>
+
             {/* Counter Shuttlecock / Bola */}
             <button
               onClick={handleAddCock}
-              className="flex items-center gap-2 rounded-xl bg-[#ffde00] border-2 border-black px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all"
+              className="flex items-center gap-2 rounded-xl bg-[#ffde00] border-2 border-black px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
               title="Klik tiap kali buka cock/bola baru"
             >
               <Flame className="h-4 w-4 fill-black" />
@@ -318,13 +347,13 @@ function HostDashboardContent({ params }: HostPageProps) {
                 +1 {session.sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
                 {session.sportConfig.equipment.totalUsed})
               </span>
-              <span className="text-[10px] font-mono-sport text-slate-800">({formatRupiah(totalEquipmentCost)})</span>
+              <span className="text-[10px] font-mono text-slate-800">({formatRupiah(totalEquipmentCost)})</span>
             </button>
 
             {/* Sultan Mode Button */}
             <button
               onClick={handleSultanMode}
-              className="flex items-center gap-1.5 rounded-xl bg-[#f472b6] border-2 border-black px-3.5 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all"
+              className="flex items-center gap-1.5 rounded-xl bg-[#f472b6] border-2 border-black px-3.5 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
             >
               <Sparkles className="h-4 w-4 stroke-[2.5]" />
               <span>Sultan Mode</span>
@@ -333,7 +362,7 @@ function HostDashboardContent({ params }: HostPageProps) {
             {/* Mulai Ronde Berikutnya */}
             <button
               onClick={handleNextRound}
-              className="flex items-center gap-2 rounded-xl bg-[#ccff00] px-5 py-2.5 text-xs font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all"
+              className="flex items-center gap-2 rounded-xl bg-[#ccff00] px-5 py-2.5 text-xs font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
             >
               <FastForward className="h-4 w-4 stroke-[3]" />
               <span>Ronde Berikutnya</span>
@@ -411,6 +440,13 @@ function HostDashboardContent({ params }: HostPageProps) {
         isOpen={isWaModalOpen}
         onClose={() => setIsWaModalOpen(false)}
         onImportPlayers={handleImportWaPlayers}
+      />
+
+      {/* Modal Keseluruhan Match & Jadwal Proyeksi */}
+      <AllMatchesModal
+        isOpen={isAllMatchesModalOpen}
+        onClose={() => setIsAllMatchesModalOpen(false)}
+        session={session}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Clipboard, Check } from "lucide-react";
+import { X, Clipboard, Check, Users } from "lucide-react";
 import { getTierFromSkill, getTierLabel, Player } from "../../core/entities/player";
 import { createPlayersFromParsed, parseWhatsAppList } from "../../core/matchmaking/wa-parser";
 
@@ -13,23 +13,46 @@ interface WaPasteModalProps {
 
 export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalProps) {
   const [rawText, setRawText] = useState("");
-  const parsed = parseWhatsAppList(rawText);
+  const [overrideGenders, setOverrideGenders] = useState<Record<number, "M" | "F">>({});
+
+  const baseParsed = parseWhatsAppList(rawText);
+  const parsed = baseParsed.map((p, idx) => ({
+    ...p,
+    gender: overrideGenders[idx] !== undefined ? overrideGenders[idx] : p.gender,
+  }));
 
   if (!isOpen) return null;
+
+  const toggleGender = (idx: number) => {
+    const current = parsed[idx].gender;
+    setOverrideGenders((prev) => ({
+      ...prev,
+      [idx]: current === "M" ? "F" : "M",
+    }));
+  };
 
   const handleImport = () => {
     if (parsed.length === 0) return;
     const players = createPlayersFromParsed(parsed);
     onImportPlayers(players);
     setRawText("");
+    setOverrideGenders({});
     onClose();
   };
 
-  const sampleText = `Absen Mabar Badminton Rabu GOR Tomang:\n1. Hendra Setiawan (Pro)\n2. Kevin Sanjaya [Pro - L]\n3. Siti Rahmawati (Beg - Putri) - Lunas\n4. Budi Santoso (Inter)\n5. Rian Ardianto\n6. Dewi Lestari (Beg)\n7. Fajar Alfian (Inter)\n8. Agus Pratama (Hore)`;
+  const sampleText = `Absen Mabar Badminton Rabu GOR Tomang:
+1. Hendra Setiawan (Pro)
+2. Kevin Sanjaya [Pro - L]
+3. Siti Rahmawati (Beg - Putri)
+4. Budi Santoso (Inter)
+5. Rian Ardianto (M)
+6. Dewi Lestari (Beg - PI)
+7. Fajar Alfian (Inter)
+8. Agus Pratama (Hore)`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border-4 border-black bg-white p-6 shadow-[8px_8px_0px_#000]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-3xl border-4 border-black bg-white p-6 shadow-[8px_8px_0px_#000]">
         {/* Header Modal */}
         <div className="flex items-center justify-between pb-3 border-b-3 border-black">
           <div className="flex items-center gap-2.5">
@@ -40,13 +63,15 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
               <h3 className="text-base font-black text-black uppercase tracking-wide">
                 Smart WhatsApp List Parser
               </h3>
-              <p className="text-xs font-bold text-slate-600">Paste chat absen grup WA Anda di bawah ini</p>
+              <p className="text-xs font-bold text-slate-600">
+                Deteksi otomatis nama, jenis kelamin (PA/PI), dan tier keahlian
+              </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-black hover:bg-slate-100 border-2 border-black transition-colors"
+            className="rounded-lg p-1.5 text-black hover:bg-slate-100 border-2 border-black transition-colors cursor-pointer"
           >
             <X className="h-5 w-5 stroke-[3]" />
           </button>
@@ -55,21 +80,27 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
         {/* Input Textarea */}
         <div className="my-4">
           <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5">
-            <span className="uppercase tracking-wider">Teks Chat WA</span>
+            <span className="uppercase tracking-wider">Teks Chat Grup WA</span>
             <button
               type="button"
-              onClick={() => setRawText(sampleText)}
-              className="bg-[#ccff00] text-black px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] font-black uppercase text-[10px] hover:bg-[#b8e600]"
+              onClick={() => {
+                setRawText(sampleText);
+                setOverrideGenders({});
+              }}
+              className="bg-[#ccff00] text-black px-2.5 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] font-black uppercase text-[10px] hover:bg-[#b8e600] cursor-pointer"
             >
               Coba Contoh Teks
             </button>
           </div>
           <textarea
-            rows={6}
+            rows={5}
             value={rawText}
-            onChange={(e) => setRawText(e.target.value)}
+            onChange={(e) => {
+              setRawText(e.target.value);
+              setOverrideGenders({});
+            }}
             placeholder="Contoh:\n1. Hendra\n2. Budi (L)\n3. Siti (P - Beg)..."
-            className="w-full rounded-xl bg-[#faf8f2] border-3 border-black p-3.5 text-xs font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white shadow-[3px_3px_0px_#000] font-mono-sport"
+            className="w-full rounded-xl bg-[#faf8f2] border-3 border-black p-3.5 text-xs font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white shadow-[3px_3px_0px_#000] font-mono"
           />
         </div>
 
@@ -79,12 +110,17 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
             <span className="text-xs font-black uppercase tracking-wider text-black">
               Hasil Deteksi ({parsed.length} Pemain):
             </span>
+            <span className="text-[10px] font-bold text-black/50">
+              💡 Klik label PA/PI untuk ubah gender
+            </span>
           </div>
 
           {parsed.length === 0 ? (
-            <p className="text-xs font-bold text-slate-500 italic">Belum ada nama terdeteksi. Silakan paste teks absen.</p>
+            <p className="text-xs font-bold text-slate-500 italic">
+              Belum ada nama terdeteksi. Silakan paste teks list absen mabar dari WhatsApp.
+            </p>
           ) : (
-            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
+            <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
               {parsed.map((p, idx) => {
                 const tier = getTierLabel(getTierFromSkill(p.skillLevel));
                 return (
@@ -93,7 +129,18 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
                     className="flex items-center gap-1.5 rounded-lg bg-white border-2 border-black px-2.5 py-1 text-xs shadow-[2px_2px_0px_#000]"
                   >
                     <span className="font-extrabold text-black">{p.name}</span>
-                    <span className="text-[10px] font-bold text-slate-600 font-mono-sport">({p.gender})</span>
+                    <button
+                      type="button"
+                      onClick={() => toggleGender(idx)}
+                      title="Klik untuk ubah gender Cowo/Cewe"
+                      className={`text-[9px] font-mono font-black px-1.5 py-0.2 rounded border cursor-pointer ${
+                        p.gender === "M"
+                          ? "bg-blue-100 text-blue-900 border-blue-400"
+                          : "bg-pink-100 text-pink-900 border-pink-400"
+                      }`}
+                    >
+                      {p.gender === "M" ? "PA" : "PI"}
+                    </button>
                     <span className={`text-[9px] px-1 py-0.2 rounded ${tier.badgeColor}`}>
                       {tier.label.replace("Tier ", "")}
                     </span>
@@ -108,14 +155,14 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
         <div className="flex items-center justify-end gap-2.5 pt-2 border-t-2 border-black">
           <button
             onClick={onClose}
-            className="rounded-xl border-2 border-black bg-white px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-slate-100"
+            className="rounded-xl border-2 border-black bg-white px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-slate-100 cursor-pointer"
           >
             Batal
           </button>
           <button
             onClick={handleImport}
             disabled={parsed.length === 0}
-            className="flex items-center gap-1.5 rounded-xl bg-[#ccff00] px-5 py-2 text-xs font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-1.5 rounded-xl bg-[#ccff00] px-5 py-2 text-xs font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
             <Check className="h-4 w-4 stroke-[3]" />
             <span>Masukkan {parsed.length} Pemain</span>

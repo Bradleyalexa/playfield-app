@@ -2,8 +2,10 @@
 
 import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
+import { Calendar } from "lucide-react";
 import { KioskCourtCard } from "../../../components/kiosk/KioskCourtCard";
 import { KioskHeader } from "../../../components/kiosk/KioskHeader";
+import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { GameSession } from "../../../core/entities/session";
 import { LocalStorageAdapter } from "../../../services/storage/local-storage.adapter";
 
@@ -17,6 +19,7 @@ function KioskContent({ params }: KioskPageProps) {
 
   const [session, setSession] = useState<GameSession | null>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
 
   useEffect(() => {
     let current = LocalStorageAdapter.getSession(sessionId);
@@ -36,7 +39,7 @@ function KioskContent({ params }: KioskPageProps) {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono-sport font-black text-lg">
+      <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono font-black text-lg">
         MEMUAT TAMPILAN GOR KIOSK...
       </div>
     );
@@ -89,20 +92,37 @@ function KioskContent({ params }: KioskPageProps) {
                   key={p.id}
                   className="rounded-lg bg-[#ccff00] border-2 border-black px-3 py-1 text-xs font-black text-black shadow-[2px_2px_0px_#000]"
                 >
-                  {p.name}
+                  {p.name} ({p.gender === "M" ? "PA" : "PI"})
                 </span>
               ))
             )}
           </div>
 
-          <Link
-            href={`/host/${session.publicSlug}`}
-            className="text-xs font-black uppercase text-black hover:text-slate-600 underline font-mono-sport transition-colors"
-          >
-            Kembali ke Host
-          </Link>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setIsAllMatchesModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-black text-white px-3.5 py-1 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            >
+              <Calendar className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>Jadwal Seluruh Match</span>
+            </button>
+
+            <Link
+              href={`/host/${session.publicSlug}`}
+              className="text-xs font-black uppercase text-black hover:text-slate-600 underline font-mono transition-colors"
+            >
+              Kembali ke Host
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* Modal Keseluruhan Match & Prediksi Jadwal */}
+      <AllMatchesModal
+        isOpen={isAllMatchesModalOpen}
+        onClose={() => setIsAllMatchesModalOpen(false)}
+        session={session}
+      />
     </div>
   );
 }
@@ -111,7 +131,7 @@ export default function KioskDisplayPage({ params }: KioskPageProps) {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono-sport font-black text-lg">
+        <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono font-black text-lg">
           MEMUAT TAMPILAN GOR KIOSK...
         </div>
       }

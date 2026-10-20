@@ -3,9 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Play, Sparkles, BookOpen } from "lucide-react";
+import { Plus, Play, Sparkles, BookOpen, Clock, Calendar, Users, Trophy, Flame } from "lucide-react";
 import { Navbar } from "../components/common/Navbar";
-import { SportType } from "../core/entities/session";
+import {
+  ALGORITHM_REGISTRY,
+  MatchmakingAlgorithm,
+  SportType,
+} from "../core/entities/session";
 import { SportRegistry } from "../core/sports/sport-registry";
 import { LocalStorageAdapter } from "../services/storage/local-storage.adapter";
 
@@ -14,6 +18,13 @@ export default function HomePage() {
   const [selectedSport, setSelectedSport] = useState<SportType>("badminton");
   const [sessionTitle, setSessionTitle] = useState("");
   const [courtCount, setCourtCount] = useState(2);
+
+  // Waktu sewa & Algoritma Mabar
+  const [startTime, setStartTime] = useState("19:00");
+  const [durationHours, setDurationHours] = useState(2);
+  const [matchDurationMinutes, setMatchDurationMinutes] = useState(15);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<MatchmakingAlgorithm>("fair_playtime");
+
   const [recentSessions, setRecentSessions] = useState<
     { id: string; publicSlug: string; title: string; sport: SportType; updatedAt: string; playerCount: number }[]
   >([]);
@@ -24,13 +35,28 @@ export default function HomePage() {
 
   const sports = SportRegistry.getAllSports();
 
+  // Kalkulasi estimasi ronde & match
+  const totalRentalMinutes = durationHours * 60;
+  const estimatedRounds = Math.max(1, Math.ceil(totalRentalMinutes / matchDurationMinutes));
+  const baseMatchesCount = estimatedRounds * courtCount;
+  const extraMatchesCount = 10;
+  const totalProjectedMatches = baseMatchesCount + extraMatchesCount;
+
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
     const title =
-      sessionTitle.trim() || `Mabar ${selectedSport.toUpperCase()} - ${new Date().toLocaleDateString("id-ID")}`;
+      sessionTitle.trim() ||
+      `Mabar ${selectedSport.toUpperCase()} - ${new Date().toLocaleDateString("id-ID")}`;
+
     const demo = LocalStorageAdapter.createDemoSession(selectedSport);
     demo.title = title;
     demo.courtCount = courtCount;
+    demo.startTime = startTime;
+    demo.durationHours = durationHours;
+    demo.matchDurationMinutes = matchDurationMinutes;
+    demo.algorithm = selectedAlgorithm;
+    demo.estimatedMatchesCount = totalProjectedMatches;
+
     LocalStorageAdapter.saveSession(demo);
     router.push(`/host/${demo.publicSlug}?key=${demo.adminKey}`);
   };
@@ -41,7 +67,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col selection:bg-[#ccff00] selection:text-black">
+    <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col selection:bg-[#ccff00] selection:text-black font-sans">
       <Navbar />
 
       <main className="flex-1 mx-auto max-w-6xl w-full px-4 sm:px-6 py-8 sm:py-12 flex flex-col gap-10">
@@ -60,14 +86,14 @@ export default function HomePage() {
           </h1>
 
           <p className="text-base sm:text-lg font-bold text-slate-800 max-w-2xl leading-relaxed mt-2">
-            Pasangan ganda otomatis seimbang, panggil giliran via speaker Bluetooth, counter shuttlecock/bola,
-            dan display TV GOR secara instan tanpa perlu akun pemain.
+            Pasangan ganda otomatis seimbang, prediksi durasi sewa, panggil giliran via speaker Bluetooth,
+            counter shuttlecock/bola, dan display TV GOR secara instan tanpa perlu akun pemain.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3.5 mt-3">
             <button
               onClick={handleLaunchDemo}
-              className="flex items-center gap-2 rounded-xl bg-[#ccff00] px-6 py-3.5 text-sm font-black text-black uppercase tracking-wider border-3 border-black shadow-[5px_5px_0px_#000] hover:bg-[#b8e600] active:translate-x-1 active:translate-y-1 active:shadow-[1px_1px_0px_#000] transition-all"
+              className="flex items-center gap-2 rounded-xl bg-[#ccff00] px-6 py-3.5 text-sm font-black text-black uppercase tracking-wider border-3 border-black shadow-[5px_5px_0px_#000] hover:bg-[#b8e600] active:translate-x-1 active:translate-y-1 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
             >
               <Play className="h-5 w-5 fill-black stroke-[2.5]" />
               <span>Coba Demo Langsung (1-Klik)</span>
@@ -91,12 +117,14 @@ export default function HomePage() {
               </div>
               <div>
                 <h2 className="text-xl font-black text-black uppercase tracking-wide">Buat Sesi Mabar Baru</h2>
-                <p className="text-xs font-bold text-slate-600">Tanpa registrasi akun, langsung siap dipakai di lapangan</p>
+                <p className="text-xs font-bold text-slate-600">
+                  Konfigurasikan jam sewa & algoritma matchmaking mabar
+                </p>
               </div>
             </div>
 
             <form onSubmit={handleCreateSession} className="flex flex-col gap-6">
-              {/* Pilihan Sport Neo-Brutalist */}
+              {/* 1. Pilihan Sport Neo-Brutalist */}
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-black mb-2.5">
                   1. Pilih Cabang Olahraga
@@ -116,7 +144,7 @@ export default function HomePage() {
                         type="button"
                         key={s.type}
                         onClick={() => setSelectedSport(s.type)}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border-3 border-black transition-all text-center ${
+                        className={`flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border-3 border-black transition-all text-center cursor-pointer ${
                           isSelected
                             ? `${bgAccent} shadow-[4px_4px_0px_#000] translate-x-[-1px] translate-y-[-1px]`
                             : "bg-[#faf8f2] text-black hover:bg-white hover:shadow-[3px_3px_0px_#000]"
@@ -130,7 +158,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Nama Sesi / Komunitas */}
+              {/* 2. Nama Sesi / Komunitas */}
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-black mb-2.5">
                   2. Nama Sesi / Komunitas
@@ -144,7 +172,7 @@ export default function HomePage() {
                 />
               </div>
 
-              {/* Jumlah Lapangan */}
+              {/* 3. Jumlah Lapangan */}
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-black mb-2.5">
                   3. Jumlah Lapangan yang Disewa
@@ -155,7 +183,7 @@ export default function HomePage() {
                       type="button"
                       key={num}
                       onClick={() => setCourtCount(num)}
-                      className={`h-12 w-12 rounded-xl text-base font-black border-3 border-black transition-all ${
+                      className={`h-12 w-12 rounded-xl text-base font-black border-3 border-black transition-all cursor-pointer ${
                         courtCount === num
                           ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] translate-x-[-1px] translate-y-[-1px]"
                           : "bg-white text-black hover:bg-slate-100 shadow-[2px_2px_0px_#000]"
@@ -167,12 +195,148 @@ export default function HomePage() {
                 </div>
               </div>
 
+              {/* 4. Durasi Sewa Lapangan & Estimasi Match */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-[#faf8f2] border-3 border-black shadow-[4px_4px_0px_#000] flex flex-col gap-4">
+                <div className="flex items-center gap-2 pb-2 border-b-2 border-black">
+                  <Clock className="h-4 w-4 stroke-[3]" />
+                  <span className="text-xs font-black uppercase tracking-wider text-black">
+                    4. Waktu Sewa Lapangan & Durasi Match
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  {/* Jam Mulai */}
+                  <div>
+                    <label className="block text-[11px] font-black uppercase text-black/70 mb-1.5">
+                      Jam Mulai Main
+                    </label>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="w-full rounded-xl bg-white border-2 border-black px-3 py-2 text-sm font-mono font-black text-black shadow-[2px_2px_0px_#000]"
+                    />
+                  </div>
+
+                  {/* Durasi Sewa (Jam) */}
+                  <div>
+                    <label className="block text-[11px] font-black uppercase text-black/70 mb-1.5">
+                      Durasi Sewa Lapangan
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[1.5, 2, 3].map((hrs) => (
+                        <button
+                          type="button"
+                          key={hrs}
+                          onClick={() => setDurationHours(hrs)}
+                          className={`py-2 rounded-lg text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                            durationHours === hrs
+                              ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                              : "bg-white text-black hover:bg-slate-50"
+                          }`}
+                        >
+                          {hrs} Jam
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Estimasi 1 Match (Menit) */}
+                  <div>
+                    <label className="block text-[11px] font-black uppercase text-black/70 mb-1.5">
+                      Estimasi 1 Match/Ronde
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[12, 15, 20].map((mins) => (
+                        <button
+                          type="button"
+                          key={mins}
+                          onClick={() => setMatchDurationMinutes(mins)}
+                          className={`py-2 rounded-lg text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                            matchDurationMinutes === mins
+                              ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                              : "bg-white text-black hover:bg-slate-50"
+                          }`}
+                        >
+                          {mins}m
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Match & Round Prediction Preview Box */}
+                <div className="p-3.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                  <div>
+                    <span className="font-mono font-black text-[11px] uppercase text-emerald-800 bg-[#ccff00] px-2 py-0.5 rounded border border-black inline-block mb-1">
+                      Kalkulasi Prediksi Match
+                    </span>
+                    <p className="font-bold text-black leading-snug">
+                      Perkiraan sewa: <strong>{startTime} - {new Date(new Date(`2000-01-01T${startTime}:00`).getTime() + durationHours * 3600000).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</strong> ({durationHours} Jam).
+                    </p>
+                    <p className="font-medium text-black/70">
+                      ~{estimatedRounds} Ronde Reguler ({baseMatchesCount} Match) + <strong>10 Match Cadangan Ekstra</strong>.
+                    </p>
+                  </div>
+
+                  <div className="text-right sm:text-right shrink-0">
+                    <span className="text-[10px] uppercase font-bold text-black/50 block">Total Match Siap Tanding</span>
+                    <span className="font-mono font-black text-2xl text-black">
+                      {totalProjectedMatches} Match
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Pilihan Algoritma Mabar */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-black mb-2.5">
+                  5. Pilih Algoritma Rotasi Lapangan & Matchmaking
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Object.values(ALGORITHM_REGISTRY).map((algo) => {
+                    const isSelected = selectedAlgorithm === algo.id;
+                    return (
+                      <div
+                        key={algo.id}
+                        onClick={() => setSelectedAlgorithm(algo.id)}
+                        className={`p-3.5 rounded-2xl border-3 border-black transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? "bg-[#ccff00]/25 shadow-[4px_4px_0px_#000] ring-2 ring-black -translate-y-0.5"
+                            : "bg-[#faf8f2] hover:bg-white shadow-[2px_2px_0px_#000]"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <span className="font-black text-sm text-black flex items-center gap-1.5">
+                              <span>{algo.icon}</span>
+                              <span>{algo.shortName}</span>
+                            </span>
+                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border-2 border-black ${algo.badgeColor}`}>
+                              {algo.badge}
+                            </span>
+                          </div>
+                          <p className="text-xs font-medium text-black/80 leading-relaxed mb-2">
+                            {algo.description}
+                          </p>
+                        </div>
+                        <span className="text-[10px] font-mono font-bold text-black/60 pt-2 border-t border-black/15">
+                          🎯 Cocok untuk: {algo.bestFor}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Submit Button */}
               <button
                 type="submit"
-                className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-[#ccff00] py-4 text-sm font-black text-black uppercase tracking-wider border-3 border-black shadow-[5px_5px_0px_#000] hover:bg-[#b8e600] active:translate-x-1 active:translate-y-1 active:shadow-[1px_1px_0px_#000] transition-all"
+                className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-[#ccff00] py-4 text-sm font-black text-black uppercase tracking-wider border-3 border-black shadow-[5px_5px_0px_#000] hover:bg-[#b8e600] active:translate-x-1 active:translate-y-1 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
               >
                 <Plus className="h-5 w-5 stroke-[3]" />
-                <span>Mulai Atur Lapangan Sekarang</span>
+                <span>Mulai Atur Lapangan & Tampilkan Jadwal</span>
               </button>
             </form>
           </div>

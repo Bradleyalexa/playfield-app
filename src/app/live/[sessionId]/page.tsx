@@ -2,10 +2,11 @@
 
 import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
-import { Trophy, Users, ShieldCheck, Flame, Sparkles, RefreshCw, Radio } from "lucide-react";
+import { Trophy, Users, ShieldCheck, Flame, Sparkles, RefreshCw, Radio, Calendar } from "lucide-react";
 import { Navbar } from "../../../components/common/Navbar";
+import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { getTierLabel } from "../../../core/entities/player";
-import { GameSession } from "../../../core/entities/session";
+import { ALGORITHM_REGISTRY, GameSession } from "../../../core/entities/session";
 import { LocalStorageAdapter } from "../../../services/storage/local-storage.adapter";
 
 interface LivePageProps {
@@ -17,6 +18,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
   const sessionId = resolvedParams.sessionId;
 
   const [session, setSession] = useState<GameSession | null>(null);
+  const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
 
   useEffect(() => {
     let current = LocalStorageAdapter.getSession(sessionId);
@@ -42,6 +44,8 @@ function LiveSpectatorContent({ params }: LivePageProps) {
     );
   }
 
+  const algo = ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"];
+
   return (
     <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col font-sans selection:bg-[#ccff00] selection:text-black">
       <Navbar publicSlug={session.publicSlug} />
@@ -60,9 +64,12 @@ function LiveSpectatorContent({ params }: LivePageProps) {
         {/* Header Sesi */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border-[3px] border-black bg-white shadow-[5px_5px_0px_#000]">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="font-mono text-xs uppercase px-2.5 py-0.5 rounded-full bg-[#ccff00] border-2 border-black font-black">
                 {session.sport.toUpperCase()}
+              </span>
+              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border-2 border-black ${algo.badgeColor}`}>
+                {algo.icon} {algo.shortName}
               </span>
               <span className="font-mono text-xs font-bold text-black/60">
                 KODE: {session.publicSlug || session.id.slice(0, 8)}
@@ -70,13 +77,23 @@ function LiveSpectatorContent({ params }: LivePageProps) {
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-black tracking-tight">{session.title}</h1>
             <p className="text-xs font-bold text-black/70 mt-1 font-mono">
-              Ronde {session.currentRound} • {session.courtCount} Lapangan • {session.players.length} Pemain Terdaftar
+              Ronde #{session.currentRound} • {session.courtCount} Lapangan • {session.players.length} Pemain • {session.startTime || "19:00"} ({session.durationHours || 2} Jam)
             </p>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#ccff00] border-2 border-black shadow-[2px_2px_0px_#000]">
-            <Radio className="h-4 w-4 text-black animate-pulse" />
-            <span className="text-xs font-black text-black font-mono tracking-wider">LIVE SPECTATOR</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setIsAllMatchesModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-black border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#ccff00] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            >
+              <Calendar className="h-4 w-4 stroke-[2.5]" />
+              <span>Semua Match & Jadwal</span>
+            </button>
+
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#ccff00] border-2 border-black shadow-[2px_2px_0px_#000]">
+              <Radio className="h-4 w-4 text-black animate-pulse" />
+              <span className="text-xs font-black text-black font-mono tracking-wider">LIVE</span>
+            </div>
           </div>
         </div>
 
@@ -87,7 +104,12 @@ function LiveSpectatorContent({ params }: LivePageProps) {
               <span className="inline-block w-2.5 h-2.5 bg-[#ff5500] border border-black rounded-full" />
               Pertandingan Sedang Berlangsung
             </h2>
-            <span className="text-[11px] font-mono font-bold text-black/50">Auto-Refresh Live</span>
+            <button
+              onClick={() => setIsAllMatchesModalOpen(true)}
+              className="text-xs font-mono font-black text-black underline hover:text-black/60 cursor-pointer"
+            >
+              Lihat Proyeksi Ronde Selanjutnya →
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -126,8 +148,11 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                         </span>
                         <div className="space-y-1">
                           {match.teamA.map((p) => (
-                            <p key={p.id} className="text-xs font-bold text-black truncate">
-                              {p.name}
+                            <p key={p.id} className="text-xs font-bold text-black truncate flex items-center justify-between">
+                              <span>{p.name}</span>
+                              <span className="text-[9px] font-mono text-black/60">
+                                {p.gender === "M" ? "PA" : "PI"}
+                              </span>
                             </p>
                           ))}
                         </div>
@@ -147,8 +172,11 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                         </span>
                         <div className="space-y-1">
                           {match.teamB.map((p) => (
-                            <p key={p.id} className="text-xs font-bold text-black truncate">
-                              {p.name}
+                            <p key={p.id} className="text-xs font-bold text-black truncate flex items-center justify-between">
+                              <span>{p.name}</span>
+                              <span className="text-[9px] font-mono text-black/60">
+                                {p.gender === "M" ? "PA" : "PI"}
+                              </span>
                             </p>
                           ))}
                         </div>
@@ -189,6 +217,9 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                     <div className="flex items-center gap-2 truncate">
                       <span className="font-mono font-black text-black/40 text-[11px] w-4">{idx + 1}.</span>
                       <span className="font-extrabold text-black truncate">{p.name}</span>
+                      <span className="text-[9px] font-mono font-bold text-black/60">
+                        ({p.gender === "M" ? "PA" : "PI"})
+                      </span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold border-2 border-black ${tier.badgeColor}`}>
                         {tier.label.replace("Tier ", "")}
                       </span>
@@ -202,6 +233,13 @@ function LiveSpectatorContent({ params }: LivePageProps) {
           </div>
         </div>
       </main>
+
+      {/* Modal Keseluruhan Match & Jadwal Proyeksi untuk Penonton / Pemain */}
+      <AllMatchesModal
+        isOpen={isAllMatchesModalOpen}
+        onClose={() => setIsAllMatchesModalOpen(false)}
+        session={session}
+      />
     </div>
   );
 }

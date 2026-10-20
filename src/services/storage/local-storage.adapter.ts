@@ -118,6 +118,11 @@ export class LocalStorageAdapter {
       courts,
       matches: initialMatches.matches,
       currentRound: 1,
+      startTime: "19:00",
+      durationHours: 2,
+      matchDurationMinutes: 15,
+      algorithm: "fair_playtime",
+      estimatedMatchesCount: Math.ceil((2 * 60 / 15) * courtCount) + 10,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
