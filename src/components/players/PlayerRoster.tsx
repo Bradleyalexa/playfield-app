@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Pause, Play, Share2, ClipboardPaste, Plus, UserCheck, Shield, Trash2 } from "lucide-react";
 import { getTierLabel, Player } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
-import { StoryCardGenerator } from "../../services/share/story-card";
+import { PlayerShareModal } from "./PlayerShareModal";
 
 interface PlayerRosterProps {
   session: GameSession;
@@ -24,7 +24,7 @@ export function PlayerRoster({
   const [quickName, setQuickName] = useState("");
   const [selectedGender, setSelectedGender] = useState<"M" | "F">("M");
   const [selectedSkill, setSelectedSkill] = useState<1 | 2 | 3>(2);
-  const [isGeneratingStory, setIsGeneratingStory] = useState<string | null>(null);
+  const [sharingPlayer, setSharingPlayer] = useState<Player | null>(null);
 
   // Cari siapa saja yang sedang bermain di lapangan
   const activePlayingIds = new Set<string>();
@@ -43,43 +43,6 @@ export function PlayerRoster({
     if (!quickName.trim()) return;
     onAddSinglePlayer(quickName.trim(), selectedGender, selectedSkill);
     setQuickName("");
-  };
-
-  const handleGenerateStory = async (player: Player) => {
-    setIsGeneratingStory(player.id);
-    try {
-      let matchesPlayed = player.gamesPlayed;
-      let matchesWon = 0;
-      let totalPoints = 0;
-
-      session.matches.forEach((m) => {
-        const inTeamA = m.teamA.some((p) => p.id === player.id);
-        const inTeamB = m.teamB.some((p) => p.id === player.id);
-
-        if (inTeamA) {
-          totalPoints += m.scoreA;
-          if (m.scoreA > m.scoreB && m.status === "completed") matchesWon++;
-        } else if (inTeamB) {
-          totalPoints += m.scoreB;
-          if (m.scoreB > m.scoreA && m.status === "completed") matchesWon++;
-        }
-      });
-
-      const dataUrl = await StoryCardGenerator.generateCard(session, {
-        player,
-        matchesPlayed: Math.max(matchesPlayed, 1),
-        matchesWon,
-        totalPoints,
-        badgeTitle: matchesWon >= 3 ? "Suhu Lapangan GOR" : "Spesialis Reli Panjang",
-        bestPartnerName: "Hendra & Budi",
-      });
-
-      StoryCardGenerator.downloadCard(dataUrl, player.name);
-    } catch (err) {
-      console.error("Gagal generate IG Story:", err);
-    } finally {
-      setIsGeneratingStory(null);
-    }
   };
 
   return (
@@ -230,12 +193,11 @@ export function PlayerRoster({
                   {isPaused ? <Play className="h-3.5 w-3.5 stroke-[3]" /> : <Pause className="h-3.5 w-3.5 stroke-[3]" />}
                 </button>
 
-                {/* Tombol Share (Download/Share IG Story Card Statistik) */}
+                {/* Tombol Share (Buka Modal Share Rekap Pemain) */}
                 <button
-                  onClick={() => handleGenerateStory(player)}
-                  disabled={isGeneratingStory === player.id}
-                  title="Share: Buat & Download Story Card profil statistik pemain (Spotify-Wrapped style) untuk WA/IG"
-                  className="h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[#ccff00] shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                  onClick={() => setSharingPlayer(player)}
+                  title={`Bagikan rekap mabar & Story Card ${player.name}`}
+                  className="h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black bg-[#00e5ff] flex items-center justify-center text-black hover:bg-[#00cce6] shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
                 >
                   <Share2 className="h-3.5 w-3.5 stroke-[2.5]" />
                 </button>
@@ -259,6 +221,14 @@ export function PlayerRoster({
           );
         })}
       </div>
+
+      {/* Modal Share Pemain (Neo-Brutalism & WhatsApp Share) */}
+      <PlayerShareModal
+        isOpen={!!sharingPlayer}
+        onClose={() => setSharingPlayer(null)}
+        player={sharingPlayer}
+        session={session}
+      />
     </div>
   );
 }

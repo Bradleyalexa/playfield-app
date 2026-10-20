@@ -108,6 +108,30 @@ export default function HomePage() {
       eloRating: 1300,
       createdAt: "2026-01-01T00:00:00.000Z",
     },
+    {
+      id: "p3",
+      name: "Greysia Polii",
+      gender: "F",
+      skillLevel: 3,
+      publicTier: "suhu",
+      gamesPlayed: 0,
+      lastPlayedRound: 0,
+      status: "active",
+      eloRating: 1290,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    {
+      id: "p4",
+      name: "Apriyani Rahayu",
+      gender: "F",
+      skillLevel: 3,
+      publicTier: "suhu",
+      gamesPlayed: 0,
+      lastPlayedRound: 0,
+      status: "active",
+      eloRating: 1280,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
   ]);
   const [isWaModalOpen, setIsWaModalOpen] = useState(false);
   const [quickPlayerName, setQuickPlayerName] = useState("");
@@ -141,16 +165,12 @@ export default function HomePage() {
     setInitialPlayers((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handleLoadDemo8Players = () => {
+  const handleLoadDemo4Players = () => {
     setInitialPlayers([
       { id: `p-${Date.now()}-1`, name: "Hendra Setiawan", gender: "M", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1300, createdAt: new Date().toISOString() },
       { id: `p-${Date.now()}-2`, name: "Kevin Sanjaya", gender: "M", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1320, createdAt: new Date().toISOString() },
       { id: `p-${Date.now()}-3`, name: "Greysia Polii", gender: "F", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1290, createdAt: new Date().toISOString() },
       { id: `p-${Date.now()}-4`, name: "Apriyani Rahayu", gender: "F", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1280, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-5`, name: "Fajar Alfian", gender: "M", skillLevel: 2, publicTier: "hore", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1100, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-6`, name: "Rian Ardianto", gender: "M", skillLevel: 2, publicTier: "hore", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1100, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-7`, name: "Siti Fadia", gender: "F", skillLevel: 2, publicTier: "hore", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1050, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-8`, name: "Budi Pemula", gender: "M", skillLevel: 1, publicTier: "kentang", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 900, createdAt: new Date().toISOString() },
     ]);
   };
 
@@ -741,10 +761,10 @@ export default function HomePage() {
 
                   <button
                     type="button"
-                    onClick={handleLoadDemo8Players}
+                    onClick={handleLoadDemo4Players}
                     className="flex items-center gap-1 rounded-xl bg-white border-2 border-black px-3 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
                   >
-                    <span>⚡ Isi 8 Pemain Contoh</span>
+                    <span>⚡ Isi 4 Pemain Contoh</span>
                   </button>
 
                   {initialPlayers.length > 0 && (

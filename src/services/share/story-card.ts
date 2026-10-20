@@ -10,9 +10,48 @@ export interface StoryStats {
   badgeTitle: string;
 }
 
+function drawNeoBox(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  bgColor: string,
+  shadowOffset = 14,
+  radius = 24,
+  borderWidth = 8
+) {
+  // Hard offset black shadow (Neo-Brutalism)
+  if (shadowOffset > 0) {
+    ctx.fillStyle = "#000000";
+    ctx.beginPath();
+    if (typeof (ctx as any).roundRect === "function") {
+      (ctx as any).roundRect(x + shadowOffset, y + shadowOffset, w, h, radius);
+    } else {
+      ctx.rect(x + shadowOffset, y + shadowOffset, w, h);
+    }
+    ctx.fill();
+  }
+
+  // Box fill
+  ctx.fillStyle = bgColor;
+  ctx.beginPath();
+  if (typeof (ctx as any).roundRect === "function") {
+    (ctx as any).roundRect(x, y, w, h, radius);
+  } else {
+    ctx.rect(x, y, w, h);
+  }
+  ctx.fill();
+
+  // Box thick border
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = borderWidth;
+  ctx.stroke();
+}
+
 export class StoryCardGenerator {
   /**
-   * Menghasilkan Canvas 1080 x 1920 (Rasio 9:16) bergaya Spotify-Wrapped
+   * Menghasilkan Canvas 1080 x 1920 (Rasio 9:16) bergaya Neo-Brutalism Playfield
    */
   public static async generateCard(session: GameSession, stats: StoryStats): Promise<string> {
     const canvas = document.createElement("canvas");
@@ -21,106 +60,131 @@ export class StoryCardGenerator {
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas context 2D not supported");
 
-    // 1. Background Gradient Gelap & Elegan (Taste Guidelines)
-    const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
-    bgGrad.addColorStop(0, "#090d16");
-    bgGrad.addColorStop(0.5, "#0f172a");
-    bgGrad.addColorStop(1, "#020617");
-    ctx.fillStyle = bgGrad;
+    // 1. Background Kanvas: Warm Off-White (#faf8f2)
+    ctx.fillStyle = "#faf8f2";
     ctx.fillRect(0, 0, 1080, 1920);
 
-    // 2. Garis Lapangan Abstrak (Neon Accents)
-    ctx.strokeStyle = "rgba(16, 185, 129, 0.15)";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(80, 160, 920, 1600);
-    ctx.beginPath();
-    ctx.moveTo(80, 960);
-    ctx.lineTo(1000, 960);
-    ctx.stroke();
-
-    // 3. Header: Nama Komunitas & Logo
-    ctx.fillStyle = "#ccff00";
-    ctx.font = "bold 40px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("PLAYFIELD MABAR RECAP", 540, 260);
-
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "32px sans-serif";
-    ctx.fillText(session.title.toUpperCase(), 540, 320);
-
-    // 4. Kartu Utama Pemain
-    ctx.fillStyle = "rgba(30, 41, 59, 0.7)";
-    ctx.beginPath();
-    ctx.roundRect(140, 420, 800, 1140, 40);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Nama Pemain
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 72px sans-serif";
-    ctx.fillText(stats.player.name, 540, 560);
-
-    // Badge Title (e.g. "Raja Lapangan 1" / "Suhu GOR")
-    ctx.fillStyle = "#f59e0b";
-    ctx.font = "600 36px sans-serif";
-    ctx.fillText(`🏆 ${stats.badgeTitle.toUpperCase()}`, 540, 640);
-
-    // Garis Pemisah
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-    ctx.beginPath();
-    ctx.moveTo(220, 710);
-    ctx.lineTo(860, 710);
-    ctx.stroke();
-
-    // 5. Statistik Match (3 Grid Angka)
-    // Match Dimainkan
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "28px sans-serif";
-    ctx.fillText("TOTAL MATCH", 320, 800);
-    ctx.fillStyle = "#38bdf8";
-    ctx.font = "bold 84px sans-serif";
-    ctx.fillText(`${stats.matchesPlayed}`, 320, 890);
-
-    // Win Rate
-    const winRate = stats.matchesPlayed > 0 ? Math.round((stats.matchesWon / stats.matchesPlayed) * 100) : 0;
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "28px sans-serif";
-    ctx.fillText("WIN RATE", 760, 800);
-    ctx.fillStyle = "#10b981";
-    ctx.font = "bold 84px sans-serif";
-    ctx.fillText(`${winRate}%`, 760, 890);
-
-    // 6. Best Partner Highlight
-    if (stats.bestPartnerName) {
-      ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
+    // Grid Garis Lapangan Lembut Abstrak
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.lineWidth = 3;
+    for (let x = 60; x < 1080; x += 100) {
       ctx.beginPath();
-      ctx.roundRect(220, 970, 640, 140, 24);
-      ctx.fill();
-
-      ctx.fillStyle = "#a7f3d0";
-      ctx.font = "26px sans-serif";
-      ctx.fillText("🔥 DUET MAUT TERBAIK MALAM INI", 540, 1020);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 40px sans-serif";
-      ctx.fillText(stats.bestPartnerName, 540, 1075);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 1920);
+      ctx.stroke();
+    }
+    for (let y = 60; y < 1920; y += 100) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(1080, y);
+      ctx.stroke();
     }
 
-    // 7. Tier Kasta GOR
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "30px sans-serif";
-    ctx.fillText("KASTA GOR SAAT INI", 540, 1200);
+    // Outer Thick Frame Border (Neo-Brutalist Frame)
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 14;
+    ctx.strokeRect(30, 30, 1020, 1860);
 
-    ctx.fillStyle = "#c084fc";
-    ctx.font = "bold 56px sans-serif";
-    ctx.fillText(stats.player.publicTier.toUpperCase(), 540, 1280);
+    // 2. Header Bar: Playfield Recap
+    drawNeoBox(ctx, 70, 70, 940, 180, "#ccff00", 14, 28, 8);
+    ctx.fillStyle = "#000000";
+    ctx.font = "900 52px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("⚡ PLAYFIELD RECAP", 540, 145);
 
-    // 8. Footer Watermark
-    ctx.fillStyle = "#64748b";
-    ctx.font = "26px sans-serif";
-    ctx.fillText("Siap mabar berikutnya? Buka playfield.app", 540, 1680);
+    ctx.fillStyle = "#1e293b";
+    ctx.font = "800 26px system-ui, -apple-system, sans-serif";
+    ctx.fillText(session.title.toUpperCase(), 540, 205);
+
+    // 3. Kartu Profil Pemain (White Neo Box)
+    drawNeoBox(ctx, 70, 290, 940, 410, "#ffffff", 14, 28, 8);
+
+    // Nama Pemain
+    ctx.fillStyle = "#000000";
+    ctx.font = "900 76px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(stats.player.name, 540, 400);
+
+    // Gender Pill (Men / Women) & Tier Pill
+    const isMen = stats.player.gender === "M";
+    const genderBg = isMen ? "#bfdbfe" : "#fbcfe8";
+    const genderText = isMen ? "👦 MEN (M)" : "👧 WOMEN (W)";
+
+    // Gender Box
+    drawNeoBox(ctx, 160, 445, 340, 70, genderBg, 8, 16, 6);
+    ctx.fillStyle = "#000000";
+    ctx.font = "900 28px system-ui, -apple-system, sans-serif";
+    ctx.fillText(genderText, 330, 490);
+
+    // Tier Box
+    const tierBg = "#fef08a";
+    const tierText = `🏆 TIER ${stats.player.publicTier.toUpperCase()}`;
+    drawNeoBox(ctx, 540, 445, 380, 70, tierBg, 8, 16, 6);
+    ctx.fillStyle = "#000000";
+    ctx.font = "900 28px system-ui, -apple-system, sans-serif";
+    ctx.fillText(tierText, 730, 490);
+
+    // Gelar / Badge Mabar
+    drawNeoBox(ctx, 130, 560, 820, 90, "#00e5ff", 8, 20, 6);
+    ctx.fillStyle = "#000000";
+    ctx.font = "900 36px system-ui, -apple-system, sans-serif";
+    ctx.fillText(`🔥 ${stats.badgeTitle.toUpperCase()}`, 540, 618);
+
+    // 4. Dua Box Statistik Utama (Total Match & Win Rate)
+    // Box Match Dimainkan
+    drawNeoBox(ctx, 70, 740, 450, 310, "#ccff00", 14, 24, 8);
+    ctx.fillStyle = "#000000";
+    ctx.font = "800 28px system-ui, -apple-system, sans-serif";
+    ctx.fillText("TOTAL MATCH", 295, 810);
+
+    ctx.font = "900 100px system-ui, -apple-system, sans-serif";
+    ctx.fillText(`${stats.matchesPlayed}`, 295, 925);
+
+    ctx.font = "800 24px system-ui, -apple-system, sans-serif";
+    ctx.fillText("GAMES DIMAINKAN", 295, 990);
+
+    // Box Win Rate
+    const winRate = stats.matchesPlayed > 0 ? Math.round((stats.matchesWon / stats.matchesPlayed) * 100) : 0;
+    drawNeoBox(ctx, 560, 740, 450, 310, "#00e5ff", 14, 24, 8);
+    ctx.fillStyle = "#000000";
+    ctx.font = "800 28px system-ui, -apple-system, sans-serif";
+    ctx.fillText("WIN RATE", 785, 810);
+
+    ctx.font = "900 100px system-ui, -apple-system, sans-serif";
+    ctx.fillText(`${winRate}%`, 785, 925);
+
+    ctx.font = "800 24px system-ui, -apple-system, sans-serif";
+    ctx.fillText(`${stats.matchesWon} KALI MENANG`, 785, 990);
+
+    // 5. Total Poin di Lapangan (Yellow Box)
+    drawNeoBox(ctx, 70, 1090, 940, 190, "#ffde00", 14, 24, 8);
+    ctx.fillStyle = "#000000";
+    ctx.font = "800 28px system-ui, -apple-system, sans-serif";
+    ctx.fillText("TOTAL POIN DICETAK DI SEMUA LAPANGAN", 540, 1150);
+
+    ctx.font = "900 72px system-ui, -apple-system, sans-serif";
+    ctx.fillText(`${stats.totalPoints} POIN`, 540, 1235);
+
+    // 6. Best Partner Highlight Box
+    const partner = stats.bestPartnerName || "Belum Ada Partner Tetap";
+    drawNeoBox(ctx, 70, 1320, 940, 220, "#ffffff", 14, 24, 8);
+    ctx.fillStyle = "#ff007f";
+    ctx.font = "900 26px system-ui, -apple-system, sans-serif";
+    ctx.fillText("✨ DUET PARTNER TERBAIK MALAM INI", 540, 1385);
+
+    ctx.fillStyle = "#000000";
+    ctx.font = "900 48px system-ui, -apple-system, sans-serif";
+    ctx.fillText(partner, 540, 1460);
+
+    // 7. Footer Watermark & Branding Neo-Brutalist
+    drawNeoBox(ctx, 70, 1580, 940, 190, "#000000", 14, 24, 8);
+    ctx.fillStyle = "#ccff00";
+    ctx.font = "900 36px system-ui, -apple-system, sans-serif";
+    ctx.fillText("PLAYFIELD • ROTASI MABAR OTOMATIS", 540, 1655);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 24px system-ui, -apple-system, sans-serif";
+    ctx.fillText("Mabar adil, tanpa ribet, live score real-time!", 540, 1715);
 
     return canvas.toDataURL("image/png");
   }

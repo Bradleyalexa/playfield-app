@@ -56,41 +56,51 @@ function KioskContent({ params }: KioskPageProps) {
   const onDeckPlayers = session.players.filter((p) => p.status === "active" && !activePlayingIds.has(p.id));
 
   return (
-    <div className="min-h-screen bg-[#faf8f2] text-black p-6 sm:p-10 flex flex-col justify-between selection:bg-[#ccff00] selection:text-black font-sans">
-      <div className="flex flex-col gap-6">
-        {/* Header Kiosk */}
-        <KioskHeader
-          session={session}
-          isAudioEnabled={isAudioEnabled}
-          onToggleAudio={() => setIsAudioEnabled(!isAudioEnabled)}
-        />
+    <div className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-[#faf8f2] text-black p-2 sm:p-4 md:p-6 flex flex-col justify-between selection:bg-[#ccff00] selection:text-black font-sans">
+      {/* Header Kiosk */}
+      <KioskHeader
+        session={session}
+        isAudioEnabled={isAudioEnabled}
+        onToggleAudio={() => setIsAudioEnabled(!isAudioEnabled)}
+      />
 
-        {/* Grid Lapangan (Layar TV Besar) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 my-4">
+      {/* Grid Lapangan (Layar TV Besar / Full Viewport Fit) */}
+      <div className="flex-1 min-h-0 my-1.5 sm:my-3 flex flex-col justify-center overflow-hidden">
+        <div
+          className={`h-full w-full gap-2 sm:gap-4 items-stretch ${
+            session.courts.length === 1
+              ? "grid grid-cols-1 max-w-3xl mx-auto"
+              : session.courts.length === 2
+              ? "grid grid-cols-1 md:grid-cols-2"
+              : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 overflow-y-auto"
+          }`}
+        >
           {session.courts.map((court) => (
             <KioskCourtCard key={court.id} court={court} match={court.currentMatch} />
           ))}
         </div>
       </div>
 
-      {/* Sisi Bawah: Bar Antrean Bersiap (On-Deck Ticker) */}
-      <div className="mt-8 rounded-2xl border-3 border-black bg-white p-5 shadow-[6px_6px_0px_#000]">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-3 w-3 rounded-full bg-[#ff5500] animate-ping" />
-            <span className="text-xs font-black uppercase tracking-wider text-black">
-              Bersiap Ronde Berikutnya ({onDeckPlayers.length} Pemain):
+      {/* Sisi Bawah: Bar Antrean Bersiap (On-Deck Ticker Compact) */}
+      <div className="shrink-0 rounded-xl sm:rounded-2xl border-2 sm:border-3 border-black bg-white p-2 sm:p-3 shadow-[3px_3px_0px_#000]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-[#ff5500] animate-ping" />
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-black whitespace-nowrap">
+              Bersiap ({onDeckPlayers.length}):
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto flex-nowrap py-0.5 no-scrollbar max-w-full">
             {onDeckPlayers.length === 0 ? (
-              <span className="text-xs font-bold text-slate-500 italic">Semua pemain sedang berada di lapangan.</span>
+              <span className="text-[11px] font-bold text-slate-500 italic whitespace-nowrap">
+                Semua pemain sedang bertanding di lapangan.
+              </span>
             ) : (
               onDeckPlayers.map((p) => (
                 <span
                   key={p.id}
-                  className="rounded-lg bg-[#ccff00] border-2 border-black px-3 py-1 text-xs font-black text-black shadow-[2px_2px_0px_#000]"
+                  className="rounded-lg bg-[#ccff00] border border-black px-2 py-0.5 text-[10px] sm:text-xs font-black text-black shadow-[1px_1px_0px_#000] shrink-0 whitespace-nowrap"
                 >
                   {p.name} ({p.gender === "M" ? "M" : "W"})
                 </span>
@@ -98,20 +108,20 @@ function KioskContent({ params }: KioskPageProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-end gap-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
             <button
               onClick={() => setIsAllMatchesModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg bg-black text-white px-3.5 py-1 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              className="flex items-center gap-1 rounded-lg bg-black text-white px-2.5 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wider border border-black shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer whitespace-nowrap"
             >
-              <Calendar className="h-3.5 w-3.5 stroke-[2.5]" />
-              <span>Jadwal Seluruh Match</span>
+              <Calendar className="h-3 w-3 stroke-[2.5]" />
+              <span>Jadwal</span>
             </button>
 
             <Link
               href={`/host/${session.publicSlug}`}
-              className="text-xs font-black uppercase text-black hover:text-slate-600 underline font-mono transition-colors"
+              className="text-[10px] sm:text-xs font-black uppercase text-black hover:text-slate-600 underline font-mono transition-colors whitespace-nowrap"
             >
-              Kembali ke Host
+              Host
             </Link>
           </div>
         </div>
