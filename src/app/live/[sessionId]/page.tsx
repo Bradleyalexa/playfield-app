@@ -151,7 +151,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                             <p key={p.id} className="text-xs font-bold text-black truncate flex items-center justify-between">
                               <span>{p.name}</span>
                               <span className="text-[9px] font-mono text-black/60">
-                                {p.gender === "M" ? "PA" : "PI"}
+                                {p.gender === "M" ? "M" : "W"}
                               </span>
                             </p>
                           ))}
@@ -175,7 +175,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                             <p key={p.id} className="text-xs font-bold text-black truncate flex items-center justify-between">
                               <span>{p.name}</span>
                               <span className="text-[9px] font-mono text-black/60">
-                                {p.gender === "M" ? "PA" : "PI"}
+                                {p.gender === "M" ? "M" : "W"}
                               </span>
                             </p>
                           ))}
@@ -218,7 +218,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                       <span className="font-mono font-black text-black/40 text-[11px] w-4">{idx + 1}.</span>
                       <span className="font-extrabold text-black truncate">{p.name}</span>
                       <span className="text-[9px] font-mono font-bold text-black/60">
-                        ({p.gender === "M" ? "PA" : "PI"})
+                        ({p.gender === "M" ? "M" : "W"})
                       </span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold border-2 border-black ${tier.badgeColor}`}>
                         {tier.label.replace("Tier ", "")}

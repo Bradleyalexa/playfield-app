@@ -289,6 +289,7 @@ export default function HomePage() {
                       Jam Mulai Main (Klik untuk Atur)
                     </label>
 
+                    {/* Input Jam Box */}
                     <div
                       onClick={(e) => {
                         const input = e.currentTarget.querySelector("input");
@@ -308,27 +309,29 @@ export default function HomePage() {
                           } catch {}
                         }}
                         onChange={(e) => setStartTime(e.target.value)}
-                        className="bg-transparent border-none text-base sm:text-lg font-mono font-black text-black focus:outline-none cursor-pointer w-28"
+                        className="bg-transparent border-none text-xl font-mono font-black text-black focus:outline-none cursor-pointer w-full"
                       />
+                      <Clock className="h-4 w-4 text-black/50 shrink-0" />
+                    </div>
 
-                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          onClick={() => adjustStartTime(-60)}
-                          title="Kurangi 1 Jam"
-                          className="px-2 py-1 rounded-lg bg-[#faf8f2] border-2 border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-                        >
-                          -1 Jam
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => adjustStartTime(60)}
-                          title="Tambah 1 Jam"
-                          className="px-2 py-1 rounded-lg bg-[#faf8f2] border-2 border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-                        >
-                          +1 Jam
-                        </button>
-                      </div>
+                    {/* Tombol Step -1 Jam & +1 Jam (Baris Sendiri Rapi, Tidak Nabrak Border) */}
+                    <div className="grid grid-cols-2 gap-1.5 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => adjustStartTime(-60)}
+                        title="Kurangi 1 Jam"
+                        className="py-1.5 px-2 rounded-lg bg-white border-2 border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                      >
+                        -1 Jam
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => adjustStartTime(60)}
+                        title="Tambah 1 Jam"
+                        className="py-1.5 px-2 rounded-lg bg-white border-2 border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                      >
+                        +1 Jam
+                      </button>
                     </div>
 
                     {/* Quick Presets Jam */}

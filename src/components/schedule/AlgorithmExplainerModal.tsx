@@ -22,14 +22,15 @@ interface DetailedAlgoInfo {
 const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   fair_playtime: {
     id: "fair_playtime",
-    formula: "Priority Score = (Games Played × 100) - (Current Round - Last Played Round)",
+    formula: "Main Paling Sedikit + Duduk Paling Lama = Masuk Lapangan Duluan",
     howItWorks: [
       "Pemain dengan jumlah jam terbang (games played) paling sedikit berada di prioritas teratas antrean.",
       "Jika ada beberapa pemain dengan games played sama, pemain yang paling lama duduk istirahat didahulukan masuk lapangan.",
-      "4 pemain terpilih diurutkan dari skill tertinggi ke terendah [S0, S1, S2, S3]. Sistem memasangkan S0 (Terkuat) + S3 (Pemula) melawan S1 (Menengah) + S2 (Menengah) agar kekuatan tim seimbang."
+      "4 pemain terpilih diurutkan dari skill tertinggi ke terendah [Suhu, Hore, Hore, Kentang]. Sistem memasangkan Suhu + Kentang melawan 2 pemain Hore agar kekuatan tim berimbang.",
+      "Pemain pria (M) dan wanita (W) tetap berpeluang main bersama secara alami jika gilirannya tiba."
     ],
     exampleScenario:
-      "Ada 10 pemain di 2 lapangan (8 main, 2 istirahat). Pada ronde berikutnya, 2 orang yang istirahat dijamin 100% langsung masuk ke lapangan menggantikan 2 pemain yang paling banyak bermain.",
+      "Ada 10 pemain di 2 lapangan (8 main, 2 istirahat). Pada ronde berikutnya, 2 orang yang sedang istirahat dijamin 100% langsung masuk ke lapangan menggantikan 2 pemain yang sudah paling banyak bermain.",
     advantages: [
       "Tidak ada pemain yang dianaktirikan atau kelamaan duduk bengong.",
       "Uang sewa lapangan terasa adil karena semua peserta dapat giliran main yang sama.",
@@ -38,27 +39,28 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   },
   mixed_doubles: {
     id: "mixed_doubles",
-    formula: "Court Composition = Maximize(1 Male + 1 Female per side)",
+    formula: "1 Pria (M) + 1 Wanita (W) per Tim di Tiap Lapangan",
     howItWorks: [
-      "Sistem memisahkan antrean siap main menjadi pool Putra (PA) dan pool Putri (PI).",
-      "Pada setiap lapangan diupayakan format murni Ganda Campuran: Tim A (1 PA + 1 PI) vs Tim B (1 PA + 1 PI).",
-      "Jika jumlah putri ganjil (misal 1 PI dan 3 PA dalam 1 lapangan), PI akan dipasangkan dengan PA berkemampuan tertinggi (Suhu) untuk melawan 2 PA berkemampuan menengah agar adil."
+      "Sistem memisahkan antrean siap main menjadi pool Pria (M) dan pool Wanita (W).",
+      "Pada setiap lapangan diupayakan format murni Ganda Campuran: Tim A (1 M + 1 W) vs Tim B (1 M + 1 W).",
+      "Jika jumlah wanita ganjil (misal 1 W dan 3 M dalam 1 lapangan), pemain wanita akan dipasangkan dengan pria berkemampuan tertinggi (Suhu) untuk melawan 2 pria berkemampuan menengah agar adil."
     ],
     exampleScenario:
-      "Dalam mabar terdapat 6 Putra dan 4 Putri di 2 lapangan. Sistem akan membagi 2 PA + 2 PI di Lapangan 1 (XD vs XD) dan 2 PA + 2 PI di Lapangan 2 (XD vs XD), sementara 2 PA sisanya menunggu giliran.",
+      "Dalam mabar terdapat 6 Pria (M) dan 4 Wanita (W) di 2 lapangan. Sistem akan membagi 2 M + 2 W di Lapangan 1 (XD vs XD) dan 2 M + 2 W di Lapangan 2 (XD vs XD), sementara 2 M sisanya menunggu giliran.",
     advantages: [
       "Menghindari situasi canggung di mana 2 pemain cowo smash keras ke 2 pemain cewe pemula.",
-      "Memberikan panggung yang nyaman dan inklusif bagi pemain putri.",
+      "Memberikan panggung yang nyaman dan inklusif bagi pemain wanita.",
       "Rotasi pasangan ganda campuran berjalan dinamis tiap ronde."
     ],
   },
   skill_tiered: {
     id: "skill_tiered",
-    formula: "|Sum(Skill Team A) - Sum(Skill Team B)| <= 1",
+    formula: "Suhu + Kentang Lawan Sepasang Hore (Total Level Tim Berimbang)",
     howItWorks: [
       "Sistem membaca tier keahlian pemain: Kentang (Level 1), Hore (Level 2), dan Suhu (Level 3).",
       "Sistem melarang pasangan Suhu + Suhu bermain melawan Kentang + Kentang.",
-      "Kombinasi tim wajib memiliki total skor keahlian yang berimbang, contohnya Suhu (3) + Kentang (1) = Total 4 melawan Hore (2) + Hore (2) = Total 4."
+      "Kombinasi tim wajib memiliki total skor keahlian yang seimbang, contohnya Suhu (3) + Kentang (1) = Total 4 melawan Hore (2) + Hore (2) = Total 4.",
+      "Pria (M) dan wanita (W) bebas dipasangkan selama level kekuatannya berimbang."
     ],
     exampleScenario:
       "Jika mantan atlet (Suhu) bermain, dia akan dipasangkan dengan pemain pemula (Kentang) untuk menghadapi dua pemain menengah (Hore). Pertandingan menjadi sengit karena reli tetap hidup.",
@@ -70,7 +72,7 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   },
   king_of_court: {
     id: "king_of_court",
-    formula: "Court 1 Winner = Defend Throne | Court 2 Winner = Challenge Court 1",
+    formula: "Menang Tetap di Lapangan 1, Penantang Naik Lapangan, Kalah Keluar",
     howItWorks: [
       "Lapangan 1 dinobatkan sebagai 'Tahta Utama GOR'.",
       "Pasangan yang menang di Lapangan 1 tetap bertahan di Lapangan 1 sebagai 'Raja Lapangan' untuk ronde selanjutnya.",
@@ -78,7 +80,7 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
       "Pasangan yang kalah turun ke antrean cadangan atau berpindah ke lapangan bawah."
     ],
     exampleScenario:
-      "Budi & Hendra menang di Lapangan 1. Mereka tetap di Lapangan 1. Di Lapangan 2, Kevin & Agus menang. Kevin & Agus langsung naik ke Lapangan 1 untuk menantang Budi & Hendra di ronde berikutnya!",
+      "Budi & Hendra menang di Lapangan 1. Mereka tetap di Lapangan 1. Di Lapangan 2, Kevin & Maya menang. Kevin & Maya langsung naik ke Lapangan 1 untuk menantang Budi & Hendra di ronde berikutnya!",
     advantages: [
       "Membangkitkan adrenalin dan atmosfer kompetitif yang sangat seru.",
       "Ada gengsi mempertahankan Tahta Lapangan 1 sepanjang malam.",
@@ -87,11 +89,11 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   },
   americano: {
     id: "americano",
-    formula: "Individual Points Leaderboard = Sum of all game points across rotating partners",
+    formula: "Partner Berganti Tiap Ronde, Poin Game Masuk Klasemen Individu",
     howItWorks: [
-      "Format resmi yang sangat populer di olahraga Padel dan Badminton Eropa.",
-      "Setiap ronde, setiap pemain berganti rekan pasangan baru secara acak/terjadwal (semua orang merasakan berpasangan dengan semua orang).",
-      "Skor poin yang didapat tim dicatat sebagai poin individu masing-masing pemain ke papan klasemen (*Leaderboard*)."
+      "Format turnamen resmi yang populer di Padel dan sangat digemari di Badminton komunitas.",
+      "Setiap ronde, setiap pemain berganti rekan pasangan baru secara terjadwal (semua orang merasakan berpasangan dengan semua orang).",
+      "Skor poin yang didapat tim dicatat sebagai poin individu masing-masing pemain ke papan klasemen (Leaderboard)."
     ],
     exampleScenario:
       "Di Ronde 1, Budi berpasangan dengan Andi dan menang 21-15. Budi dan Andi masing-masing mendapat 21 poin. Di Ronde 2, Budi berpasangan dengan Siti dan menang 21-18. Poin individu Budi menjadi 21 + 21 = 42 poin.",
@@ -103,7 +105,7 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   },
   random_fun: {
     id: "random_fun",
-    formula: "Fisher-Yates Pure Shuffle(Active Players)",
+    formula: "Kocok Acak Murni Tanpa Syarat & Statistik (Main Santai)",
     howItWorks: [
       "Sistem mengocok seluruh pemain aktif secara acak murni tanpa memandang tier, gender, maupun jatah main.",
       "4 orang pertama masuk Lapangan 1, 4 orang berikutnya ke Lapangan 2, dst.",
@@ -119,10 +121,10 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   },
   custom_manual: {
     id: "custom_manual",
-    formula: "Host Manual Selection (100% User Control)",
+    formula: "100% Ditentukan Manual oleh Host (Bebas Pilih Pemain & Lapangan)",
     howItWorks: [
       "Host memegang kendali penuh 100% untuk menentukan pertandingan.",
-      "Host bebas memilih berapa match awal yang ingin di-initialize (misal 4, 8, atau jumlah custom berapapun).",
+      "Host bebas memilih berapa match awal yang ingin disiapkan (misal 4, 8, atau isi bebas berapa saja).",
       "Host dapat menentukan secara manual siapa pemain 1 & 2 di Tim A melawan pemain 1 & 2 di Tim B melalui modal pembuat match.",
       "Host bebas menambahkan match baru kapan saja di tengah sesi berjalan."
     ],
@@ -238,12 +240,12 @@ export function AlgorithmExplainerModal({
               {algoBase.description}
             </p>
 
-            {/* Formula / Aturan Kunci */}
-            <div className="p-3.5 rounded-xl bg-[#faf8f2] border-2 border-black flex flex-col gap-1">
+            {/* Formula / Aturan Kunci (Bahasa Manusiawi yang Mudah Dipahami) */}
+            <div className="p-3.5 rounded-xl bg-[#faf8f2] border-2 border-black flex flex-col gap-1 shadow-[2px_2px_0px_#000]">
               <span className="text-[10px] font-mono font-black uppercase tracking-wider text-black/50">
-                Formula / Prinsip Logika Algoritma:
+                Prinsip Kunci Algoritma:
               </span>
-              <span className="font-mono font-black text-xs sm:text-sm text-black">
+              <span className="font-heading font-black text-xs sm:text-sm text-black">
                 {algoDetail.formula}
               </span>
             </div>
@@ -318,7 +320,7 @@ export function AlgorithmExplainerModal({
         {/* Footer Modal */}
         <div className="p-4 bg-white border-t-[3px] border-black flex items-center justify-between gap-3 text-xs shrink-0">
           <span className="font-bold text-black/60 text-xs hidden sm:inline">
-            💡 Tip: Anda bisa mengganti algoritma ini kapan saja selama sesi mabar berlangsung.
+            💡 Catatan: Pria (M) dan Wanita (W) tetap bisa berpasangan di semua algoritma jika terpilih dalam ronde tersebut.
           </span>
           <button
             onClick={onClose}

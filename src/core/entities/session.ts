@@ -38,13 +38,13 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
   },
   mixed_doubles: {
     id: "mixed_doubles",
-    name: "Ganda Campuran (Cowo + Cewe / Mixed)",
+    name: "Ganda Campuran (Men + Women / Mixed)",
     shortName: "Ganda Campuran",
     badge: "GENDER BALANCED",
     badgeColor: "bg-[#f472b6] text-black",
     icon: "👫",
-    description: "Memasangkan 1 Pemain Putra (PA) + 1 Pemain Putri (PI) di tiap kubu (XD vs XD) atau menyeimbangkan komposisi gender per lapangan.",
-    bestFor: "Mabar yang dihadiri pemain cowo dan cewe agar tidak terjadi timpang pasangan.",
+    description: "Memasangkan 1 Pemain Men (M) + 1 Pemain Women (W) di tiap kubu (XD vs XD) atau menyeimbangkan komposisi gender per lapangan.",
+    bestFor: "Mabar yang dihadiri pemain Men dan Women agar tidak terjadi timpang pasangan.",
   },
   skill_tiered: {
     id: "skill_tiered",

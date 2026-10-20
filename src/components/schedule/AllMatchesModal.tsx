@@ -231,7 +231,7 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                                             : "bg-pink-100 text-pink-900 border-pink-400"
                                         }`}
                                       >
-                                        {p.gender === "M" ? "PA" : "PI"}
+                                        {p.gender === "M" ? "M" : "W"}
                                       </span>
                                     </div>
                                   );
@@ -263,7 +263,7 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                                             : "bg-pink-100 text-pink-900 border-pink-400"
                                         }`}
                                       >
-                                        {p.gender === "M" ? "PA" : "PI"}
+                                        {p.gender === "M" ? "M" : "W"}
                                       </span>
                                     </div>
                                   );
@@ -293,7 +293,7 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                           className="font-bold text-black/80 bg-white border border-black px-2 py-0.5 rounded text-[11px] flex items-center gap-1"
                         >
                           {p.name}
-                          <span className="text-[9px] text-black/50">({p.gender === "M" ? "PA" : "PI"})</span>
+                          <span className="text-[9px] text-black/50">({p.gender === "M" ? "M" : "W"})</span>
                         </span>
                       ))}
                     </div>

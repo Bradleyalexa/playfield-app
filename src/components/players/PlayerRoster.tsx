@@ -93,7 +93,7 @@ export function PlayerRoster({
               {activePlayingIds.size} DI LAPANGAN
             </span>
             <span className="font-mono text-xs font-bold text-black/70 bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
-              {maleCount} Cowo (PA) • {femaleCount} Cewe (PI)
+              {maleCount} Men (M) • {femaleCount} Women (W)
             </span>
           </div>
           <p className="text-xs font-bold text-slate-600 mt-0.5">
@@ -110,7 +110,7 @@ export function PlayerRoster({
         </button>
       </div>
 
-      {/* Form Tambah Pemain dengan Pilihan Gender (Cowo/Cewe) & Skill Tier */}
+      {/* Form Tambah Pemain dengan Pilihan Gender (Men/Women) & Skill Tier */}
       <form onSubmit={handleQuickAdd} className="flex flex-col sm:flex-row gap-2 mb-4 p-3 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000]">
         <div className="flex-1 flex gap-2">
           <input
@@ -122,7 +122,7 @@ export function PlayerRoster({
           />
         </div>
 
-        {/* Gender Toggle: Cowo (PA) vs Cewe (PI) */}
+        {/* Gender Toggle: Men (M) vs Women (W) */}
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -133,7 +133,7 @@ export function PlayerRoster({
                 : "bg-white text-slate-600 hover:bg-slate-50"
             }`}
           >
-            👦 Cowo (PA)
+            👦 Men (M)
           </button>
           <button
             type="button"
@@ -144,7 +144,7 @@ export function PlayerRoster({
                 : "bg-white text-slate-600 hover:bg-slate-50"
             }`}
           >
-            👧 Cewe (PI)
+            👧 Women (W)
           </button>
         </div>
 
@@ -198,7 +198,7 @@ export function PlayerRoster({
                         : "bg-pink-100 text-pink-900 border-pink-400"
                     }`}
                   >
-                    {player.gender === "M" ? "PA" : "PI"}
+                    {player.gender === "M" ? "M" : "W"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-1">

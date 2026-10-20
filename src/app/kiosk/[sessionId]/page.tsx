@@ -92,7 +92,7 @@ function KioskContent({ params }: KioskPageProps) {
                   key={p.id}
                   className="rounded-lg bg-[#ccff00] border-2 border-black px-3 py-1 text-xs font-black text-black shadow-[2px_2px_0px_#000]"
                 >
-                  {p.name} ({p.gender === "M" ? "PA" : "PI"})
+                  {p.name} ({p.gender === "M" ? "M" : "W"})
                 </span>
               ))
             )}

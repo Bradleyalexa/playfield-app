@@ -33,9 +33,9 @@ export function parseWhatsAppList(rawText: string): ParsedPlayerResult[] {
     let cleanLine = trimmed.replace(/^(\d+[\.\)\-\]]|\-\s*|•\s*|\[\d+\])\s*/i, "").trim();
     if (!cleanLine) continue;
 
-    // 2. Deteksi Gender (L / P / M / F / Cowok / Cewek / Pria / Wanita)
+    // 2. Deteksi Gender (M / W / Men / Women / L / P / Cowok / Cewek / Pria / Wanita)
     let gender: Gender = "M";
-    if (/\b(p|putri|cewek|wanita|female|f)\b/i.test(cleanLine)) {
+    if (/\b(w|woman|women|p|putri|cewek|wanita|female|f|pi)\b/i.test(cleanLine)) {
       gender = "F";
     }
 

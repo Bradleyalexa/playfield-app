@@ -163,7 +163,7 @@ export function CreateCustomMatchModal({
                         value={p.id}
                         disabled={selectedIds.has(p.id) && teamAPlayer1Id !== p.id}
                       >
-                        {p.name} ({p.gender === "M" ? "PA" : "PI"} - {tier.label.replace("Tier ", "")})
+                        {p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
                       </option>
                     );
                   })}
@@ -188,7 +188,7 @@ export function CreateCustomMatchModal({
                         value={p.id}
                         disabled={selectedIds.has(p.id) && teamAPlayer2Id !== p.id}
                       >
-                        {p.name} ({p.gender === "M" ? "PA" : "PI"} - {tier.label.replace("Tier ", "")})
+                        {p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
                       </option>
                     );
                   })}
@@ -220,7 +220,7 @@ export function CreateCustomMatchModal({
                         value={p.id}
                         disabled={selectedIds.has(p.id) && teamBPlayer1Id !== p.id}
                       >
-                        {p.name} ({p.gender === "M" ? "PA" : "PI"} - {tier.label.replace("Tier ", "")})
+                        {p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
                       </option>
                     );
                   })}
@@ -245,7 +245,7 @@ export function CreateCustomMatchModal({
                         value={p.id}
                         disabled={selectedIds.has(p.id) && teamBPlayer2Id !== p.id}
                       >
-                        {p.name} ({p.gender === "M" ? "PA" : "PI"} - {tier.label.replace("Tier ", "")})
+                        {p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
                       </option>
                     );
                   })}

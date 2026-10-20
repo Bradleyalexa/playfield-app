@@ -64,7 +64,7 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
                 Smart WhatsApp List Parser
               </h3>
               <p className="text-xs font-bold text-slate-600">
-                Deteksi otomatis nama, jenis kelamin (PA/PI), dan tier keahlian
+                Deteksi otomatis nama, jenis kelamin (M/W), dan tier keahlian
               </p>
             </div>
           </div>
@@ -111,7 +111,7 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
               Hasil Deteksi ({parsed.length} Pemain):
             </span>
             <span className="text-[10px] font-bold text-black/50">
-              💡 Klik label PA/PI untuk ubah gender
+              💡 Klik label M/W untuk ubah gender
             </span>
           </div>
 
@@ -132,14 +132,14 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
                     <button
                       type="button"
                       onClick={() => toggleGender(idx)}
-                      title="Klik untuk ubah gender Cowo/Cewe"
+                      title="Klik untuk ubah gender Men (M) / Women (W)"
                       className={`text-[9px] font-mono font-black px-1.5 py-0.2 rounded border cursor-pointer ${
                         p.gender === "M"
                           ? "bg-blue-100 text-blue-900 border-blue-400"
                           : "bg-pink-100 text-pink-900 border-pink-400"
                       }`}
                     >
-                      {p.gender === "M" ? "PA" : "PI"}
+                      {p.gender === "M" ? "M" : "W"}
                     </button>
                     <span className={`text-[9px] px-1 py-0.2 rounded ${tier.badgeColor}`}>
                       {tier.label.replace("Tier ", "")}
