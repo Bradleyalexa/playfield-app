@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-ground: #faf8f2;
+    --ink-black: #0a0a0a;
+    --volt-lime: #ccff00;
+    --court-orange: #ff5500;
+    --padel-cyan: #00e5ff;
+    --canary-yellow: #ffde00;
+    --surface-card: #ffffff;
+    --surface-dark: #121820;
+    --border-dark: #0a0a0a;
+  }
+
+  body {
+    background-color: var(--bg-ground);
+    color: var(--ink-black);
+    font-family: var(--font-space), -apple-system, BlinkMacSystemFont, sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Neo-Brutalist Custom Utilities */
+.neo-border {
+  border: 3px solid #0a0a0a;
+}
+
+.neo-border-2 {
+  border: 2px solid #0a0a0a;
+}
+
+.neo-border-4 {
+  border: 4px solid #0a0a0a;
+}
+
+.neo-shadow {
+  box-shadow: 4px 4px 0px #0a0a0a;
+}
+
+.neo-shadow-lg {
+  box-shadow: 6px 6px 0px #0a0a0a;
+}
+
+.neo-shadow-sm {
+  box-shadow: 2px 2px 0px #0a0a0a;
+}
+
+.neo-btn {
+  border: 3px solid #0a0a0a;
+  box-shadow: 4px 4px 0px #0a0a0a;
+  transition: all 0.1s ease;
+  font-weight: 800;
+}
+
+.neo-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #0a0a0a;
+}
+
+.neo-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #0a0a0a;
+}
+
+.neo-tag {
+  border: 2px solid #0a0a0a;
+  box-shadow: 2px 2px 0px #0a0a0a;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.neo-card {
+  border: 3px solid #0a0a0a;
+  box-shadow: 5px 5px 0px #0a0a0a;
+  background-color: #ffffff;
+}
+
+.neo-card-dark {
+  border: 3px solid #0a0a0a;
+  box-shadow: 5px 5px 0px #0a0a0a;
+  background-color: #121820;
+  color: #ffffff;
+}
+
+.font-mono-sport {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
 }

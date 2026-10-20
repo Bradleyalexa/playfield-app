@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
-import { Trophy, Users, ShieldCheck, Flame, Sparkles, RefreshCw } from "lucide-react";
+import { Trophy, Users, ShieldCheck, Flame, Sparkles, RefreshCw, Radio } from "lucide-react";
 import { Navbar } from "../../../components/common/Navbar";
 import { getTierLabel } from "../../../core/entities/player";
 import { GameSession } from "../../../core/entities/session";
@@ -36,47 +36,59 @@ function LiveSpectatorContent({ params }: LivePageProps) {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
-        Memuat papan pertandingan...
+      <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono font-bold text-base">
+        MEMUAT PAPAN PERTANDINGAN...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col font-sans selection:bg-[#ccff00] selection:text-black">
       <Navbar publicSlug={session.publicSlug} />
 
       <main className="flex-1 mx-auto max-w-4xl w-full px-4 sm:px-6 py-6 flex flex-col gap-6">
         {/* Banner Sultan jika aktif */}
         {session.sultanSponsor && (
-          <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/40 p-4 text-center justify-center">
-            <Sparkles className="h-5 w-5 text-amber-400" />
-            <span className="font-extrabold text-amber-300 text-xs sm:text-sm uppercase tracking-wide">
-              👑 Mabar Malam Ini Disponsori Penuh oleh {session.sultanSponsor}!
+          <div className="flex items-center gap-3 rounded-2xl bg-[#ffde00] border-[3px] border-black p-4 text-center justify-center shadow-[4px_4px_0px_#000]">
+            <Sparkles className="h-6 w-6 text-black shrink-0 animate-bounce" />
+            <span className="font-black text-black text-xs sm:text-sm uppercase tracking-wider">
+              👑 MABAR MALAM INI DISPONSORI PENUH OLEH {session.sultanSponsor}!
             </span>
           </div>
         )}
 
         {/* Header Sesi */}
-        <div className="flex items-center justify-between p-5 rounded-3xl border border-slate-800 bg-slate-900/80">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border-[3px] border-black bg-white shadow-[5px_5px_0px_#000]">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-white">{session.title}</h1>
-            <p className="text-xs text-slate-400 mt-1">
-              Ronde {session.currentRound} • {session.courtCount} Lapangan • {session.players.length} Pemain
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-mono text-xs uppercase px-2.5 py-0.5 rounded-full bg-[#ccff00] border-2 border-black font-black">
+                {session.sport.toUpperCase()}
+              </span>
+              <span className="font-mono text-xs font-bold text-black/60">
+                KODE: {session.publicSlug || session.id.slice(0, 8)}
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-black tracking-tight">{session.title}</h1>
+            <p className="text-xs font-bold text-black/70 mt-1 font-mono">
+              Ronde {session.currentRound} • {session.courtCount} Lapangan • {session.players.length} Pemain Terdaftar
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-xs font-bold text-emerald-400 font-mono">LIVE MATCH</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#ccff00] border-2 border-black shadow-[2px_2px_0px_#000]">
+            <Radio className="h-4 w-4 text-black animate-pulse" />
+            <span className="text-xs font-black text-black font-mono tracking-wider">LIVE SPECTATOR</span>
           </div>
         </div>
 
         {/* Lapangan Sedang Berlangsung */}
         <div className="flex flex-col gap-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-            Pertandingan Berjalan di Lapangan
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black uppercase tracking-wider text-black flex items-center gap-2">
+              <span className="inline-block w-2.5 h-2.5 bg-[#ff5500] border border-black rounded-full" />
+              Pertandingan Sedang Berlangsung
+            </h2>
+            <span className="text-[11px] font-mono font-bold text-black/50">Auto-Refresh Live</span>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {session.courts.map((court) => {
@@ -85,10 +97,10 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                 return (
                   <div
                     key={court.id}
-                    className="flex flex-col items-center justify-center p-6 rounded-2xl border border-slate-800 bg-slate-900/40 text-center"
+                    className="flex flex-col items-center justify-center p-6 rounded-2xl border-[3px] border-dashed border-black/30 bg-white/60 text-center"
                   >
-                    <span className="text-sm font-bold text-slate-400">{court.courtName}</span>
-                    <span className="text-xs text-slate-600 mt-1">Sedang Istirahat</span>
+                    <span className="text-sm font-black text-black/50 uppercase font-mono">{court.courtName}</span>
+                    <span className="text-xs font-bold text-black/40 mt-1">Lapangan Sedang Kosong / Istirahat</span>
                   </div>
                 );
               }
@@ -96,36 +108,56 @@ function LiveSpectatorContent({ params }: LivePageProps) {
               return (
                 <div
                   key={court.id}
-                  className="flex flex-col rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-5 shadow-lg"
+                  className="flex flex-col rounded-2xl border-[3px] border-black bg-white p-5 shadow-[5px_5px_0px_#000]"
                 >
-                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
-                    <span className="font-bold text-xs text-emerald-400 uppercase tracking-wide">
+                  <div className="flex items-center justify-between pb-3 border-b-2 border-black mb-3">
+                    <span className="font-black text-xs uppercase px-2 py-0.5 rounded bg-[#ccff00] border-2 border-black font-mono">
                       {court.courtName}
                     </span>
-                    <span className="text-[11px] text-slate-400 font-mono">Ronde {match.roundNumber}</span>
+                    <span className="text-xs text-black font-mono font-bold">Ronde #{match.roundNumber}</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 items-center">
+                  <div className="grid grid-cols-2 gap-3 items-stretch">
                     {/* Tim A */}
-                    <div className="flex flex-col rounded-xl bg-slate-800/40 p-3">
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase mb-1">Tim A</span>
-                      {match.teamA.map((p) => (
-                        <span key={p.id} className="text-xs font-semibold text-white truncate">
-                          {p.name}
+                    <div className="flex flex-col justify-between rounded-xl bg-[#f0fdf4] border-2 border-black p-3.5 shadow-[2px_2px_0px_#000]">
+                      <div>
+                        <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider mb-1 block">
+                          TIM A
                         </span>
-                      ))}
-                      <span className="mt-2 text-3xl font-black text-emerald-400 font-mono">{match.scoreA}</span>
+                        <div className="space-y-1">
+                          {match.teamA.map((p) => (
+                            <p key={p.id} className="text-xs font-bold text-black truncate">
+                              {p.name}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-2 border-t-2 border-black/10 text-center">
+                        <span className="text-4xl font-black text-black font-mono tracking-tighter">
+                          {match.scoreA}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Tim B */}
-                    <div className="flex flex-col rounded-xl bg-slate-800/40 p-3">
-                      <span className="text-[10px] font-bold text-blue-400 uppercase mb-1">Tim B</span>
-                      {match.teamB.map((p) => (
-                        <span key={p.id} className="text-xs font-semibold text-white truncate">
-                          {p.name}
+                    <div className="flex flex-col justify-between rounded-xl bg-[#f0f9ff] border-2 border-black p-3.5 shadow-[2px_2px_0px_#000]">
+                      <div>
+                        <span className="text-[10px] font-black text-sky-800 uppercase tracking-wider mb-1 block">
+                          TIM B
                         </span>
-                      ))}
-                      <span className="mt-2 text-3xl font-black text-blue-400 font-mono">{match.scoreB}</span>
+                        <div className="space-y-1">
+                          {match.teamB.map((p) => (
+                            <p key={p.id} className="text-xs font-bold text-black truncate">
+                              {p.name}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-2 border-t-2 border-black/10 text-center">
+                        <span className="text-4xl font-black text-black font-mono tracking-tighter">
+                          {match.scoreB}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -135,29 +167,35 @@ function LiveSpectatorContent({ params }: LivePageProps) {
         </div>
 
         {/* Klasemen & Jatah Bermain Pemain */}
-        <div className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg">
-          <h2 className="text-sm font-bold text-white flex items-center justify-between pb-2 border-b border-slate-800">
-            <span>Daftar Giliran & Jatah Main</span>
-            <span className="text-xs text-slate-400 font-normal">Diurutkan berdasarkan jatah main</span>
-          </h2>
+        <div className="flex flex-col gap-3 rounded-2xl border-[3px] border-black bg-white p-5 shadow-[5px_5px_0px_#000]">
+          <div className="flex items-center justify-between pb-3 border-b-2 border-black">
+            <h2 className="text-sm font-black uppercase text-black flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-black" />
+              <span>Daftar Giliran & Jam Terbang</span>
+            </h2>
+            <span className="text-xs font-mono font-bold text-black/60">Prioritas Main Rata</span>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
             {[...session.players]
               .sort((a, b) => a.gamesPlayed - b.gamesPlayed)
-              .map((p) => {
+              .map((p, idx) => {
                 const tier = getTierLabel(p.publicTier);
                 return (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs"
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#faf8f2] border-2 border-black text-xs shadow-[2px_2px_0px_#000]"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white">{p.name}</span>
-                      <span className={`text-[9px] px-1.5 py-0.2 rounded border font-mono ${tier.badgeColor}`}>
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="font-mono font-black text-black/40 text-[11px] w-4">{idx + 1}.</span>
+                      <span className="font-extrabold text-black truncate">{p.name}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold border-2 border-black ${tier.badgeColor}`}>
                         {tier.label.replace("Tier ", "")}
                       </span>
                     </div>
-                    <span className="font-mono text-emerald-400 font-bold">{p.gamesPlayed}x Main</span>
+                    <span className="font-mono text-black font-black bg-[#ccff00] border-2 border-black px-2 py-0.5 rounded text-xs ml-2 shrink-0">
+                      {p.gamesPlayed}x Main
+                    </span>
                   </div>
                 );
               })}
@@ -172,8 +210,8 @@ export default function LiveSpectatorPage({ params }: LivePageProps) {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 font-mono">
-          Memuat papan penonton...
+        <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono font-black text-base">
+          MEMUAT PAPAN PENONTON...
         </div>
       }
     >

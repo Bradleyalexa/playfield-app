@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserCheck, Pause, Play, Share2, ClipboardPaste, Plus, UserMinus } from "lucide-react";
+import { Pause, Play, Share2, ClipboardPaste, Plus } from "lucide-react";
 import { getTierLabel, Player } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
 import { StoryCardGenerator } from "../../services/share/story-card";
@@ -41,7 +41,6 @@ export function PlayerRoster({
   const handleGenerateStory = async (player: Player) => {
     setIsGeneratingStory(player.id);
     try {
-      // Hitung statistik player dari riwayat matches
       let matchesPlayed = player.gamesPlayed;
       let matchesWon = 0;
       let totalPoints = 0;
@@ -77,26 +76,28 @@ export function PlayerRoster({
   };
 
   return (
-    <div className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg">
+    <div className="flex flex-col rounded-2xl border-3 border-black bg-white p-5 shadow-[5px_5px_0px_#000]">
       {/* Header Roster */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+      <div className="flex items-center justify-between pb-3 border-b-3 border-black mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-white">Daftar Pemain ({session.players.length})</h3>
-            <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
-              {activePlayingIds.size} Di Lapangan
+            <h3 className="text-base font-black text-black uppercase tracking-wide">
+              Daftar Pemain ({session.players.length})
+            </h3>
+            <span className="rounded bg-[#ccff00] px-2 py-0.5 text-[11px] font-black text-black border-2 border-black shadow-[2px_2px_0px_#000]">
+              {activePlayingIds.size} DI LAPANGAN
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs font-bold text-slate-600 mt-0.5">
             Pemain cadangan otomatis dirotasi pada ronde berikutnya berdasarkan jatah main.
           </p>
         </div>
 
         <button
           onClick={onOpenWaModal}
-          className="flex items-center gap-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/30 px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-600/30 active:scale-95 transition-all"
+          className="flex items-center gap-1.5 rounded-lg bg-[#ccff00] border-2 border-black px-3.5 py-1.5 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all"
         >
-          <ClipboardPaste className="h-3.5 w-3.5" />
+          <ClipboardPaste className="h-4 w-4 stroke-[2.5]" />
           <span>Paste Chat WA</span>
         </button>
       </div>
@@ -107,20 +108,20 @@ export function PlayerRoster({
           type="text"
           value={quickName}
           onChange={(e) => setQuickName(e.target.value)}
-          placeholder="Tambah nama pemain (contoh: Joko, Agus)..."
-          className="flex-1 rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/70"
+          placeholder="Ketik nama pemain dummy (contoh: Joko, Agus)..."
+          className="flex-1 rounded-xl bg-[#faf8f2] border-2 border-black px-3.5 py-2 text-xs font-bold text-black placeholder-slate-500 focus:outline-none focus:bg-white shadow-[2px_2px_0px_#000]"
         />
         <button
           type="submit"
-          className="flex items-center gap-1 rounded-xl bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 active:scale-95 transition-colors border border-slate-700"
+          className="flex items-center gap-1 rounded-xl bg-black text-white px-4 py-2 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-4 w-4 stroke-[3]" />
           <span>Tambah</span>
         </button>
       </form>
 
-      {/* List Pemain */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
+      {/* Grid Pemain */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[380px] overflow-y-auto pr-1">
         {session.players.map((player) => {
           const isPlaying = activePlayingIds.has(player.id);
           const isPaused = player.status === "paused";
@@ -129,24 +130,26 @@ export function PlayerRoster({
           return (
             <div
               key={player.id}
-              className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+              className={`flex items-center justify-between p-2.5 rounded-xl border-2 border-black transition-all ${
                 isPlaying
-                  ? "bg-emerald-950/20 border-emerald-500/30 text-white"
+                  ? "bg-[#ccff00]/25 shadow-[3px_3px_0px_#000] translate-x-[-1px] translate-y-[-1px]"
                   : isPaused
-                  ? "bg-slate-950/60 border-slate-800/80 opacity-60 text-slate-500"
-                  : "bg-slate-800/40 border-slate-700/40 text-slate-200 hover:border-slate-600"
+                  ? "bg-slate-200/60 opacity-60 shadow-none"
+                  : "bg-[#faf8f2] hover:bg-white shadow-[2px_2px_0px_#000]"
               }`}
             >
               <div className="flex flex-col min-w-0 pr-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-xs truncate text-white">{player.name}</span>
-                  <span className="text-[10px] text-slate-400">({player.gender})</span>
+                  <span className="font-black text-xs truncate text-black">{player.name}</span>
+                  <span className="text-[10px] font-bold text-slate-500">({player.gender})</span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded border font-mono ${tier.badgeColor}`}>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
                     {tier.label.replace("Tier ", "")}
                   </span>
-                  <span className="text-[10px] text-slate-400">{player.gamesPlayed}x Main</span>
+                  <span className="text-[10px] font-bold text-slate-700 font-mono-sport">
+                    {player.gamesPlayed}x Main
+                  </span>
                 </div>
               </div>
 
@@ -154,23 +157,21 @@ export function PlayerRoster({
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => onTogglePlayerPause(player.id)}
-                  title={isPaused ? "Lanjutkan main (Resume)" : "Tahan pemain (Pause: kram/telat/istirahat)"}
-                  className={`h-7 w-7 rounded-lg flex items-center justify-center transition-colors ${
-                    isPaused
-                      ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-                      : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                  title={isPaused ? "Lanjutkan main (Resume)" : "Tahan pemain (Pause)"}
+                  className={`h-7 w-7 rounded border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all ${
+                    isPaused ? "bg-[#ffde00] text-black" : "bg-white text-black hover:bg-slate-100"
                   }`}
                 >
-                  {isPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+                  {isPaused ? <Play className="h-3 w-3 stroke-[3]" /> : <Pause className="h-3 w-3 stroke-[3]" />}
                 </button>
 
                 <button
                   onClick={() => handleGenerateStory(player)}
                   disabled={isGeneratingStory === player.id}
                   title="Generate Spotify-Wrapped IG Story Card"
-                  className="h-7 w-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:bg-slate-700 transition-colors"
+                  className="h-7 w-7 rounded border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[#ccff00] shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                 >
-                  <Share2 className="h-3 w-3" />
+                  <Share2 className="h-3 w-3 stroke-[2.5]" />
                 </button>
               </div>
             </div>

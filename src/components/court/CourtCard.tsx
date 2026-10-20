@@ -1,6 +1,6 @@
 "use client";
 
-import { Volume2, CheckCircle2, RotateCcw, Flame } from "lucide-react";
+import { Volume2, CheckCircle2, Flame } from "lucide-react";
 import { Court, Match } from "../../core/entities/match";
 import { getTierLabel } from "../../core/entities/player";
 import { SportConfig } from "../../core/entities/session";
@@ -26,12 +26,12 @@ export function CourtCard({
 }: CourtCardProps) {
   if (!match) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
-        <div className="h-12 w-12 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-500 mb-3">
+      <div className="flex flex-col items-center justify-center rounded-2xl border-3 border-dashed border-black bg-white/70 p-8 text-center shadow-[4px_4px_0px_#000]">
+        <div className="h-14 w-14 rounded-xl bg-black flex items-center justify-center text-[#ccff00] font-black text-xl mb-3 border-2 border-black">
           #{court.courtNumber}
         </div>
-        <h3 className="font-bold text-white text-base">{court.courtName}</h3>
-        <p className="text-xs text-slate-500 mt-1">Lapangan sedang kosong. Klik 'Mulai Ronde Berikutnya' untuk rotasi.</p>
+        <h3 className="font-black text-black text-lg uppercase tracking-wide">{court.courtName}</h3>
+        <p className="text-xs font-bold text-slate-600 mt-1">Lapangan sedang kosong. Klik &apos;Ronde Berikutnya&apos; untuk rotasi.</p>
       </div>
     );
   }
@@ -51,45 +51,51 @@ export function CourtCard({
   };
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-800/90 bg-gradient-to-b from-slate-900 to-slate-950 p-5 shadow-xl transition-all hover:border-slate-700/80">
-      {/* Header Lapangan */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-xs font-bold text-emerald-400 border border-emerald-500/30">
-            {court.courtNumber}
+    <div className="flex flex-col overflow-hidden rounded-2xl border-3 border-black bg-white p-5 shadow-[6px_6px_0px_#000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[7px_7px_0px_#000]">
+      {/* Header Lapangan Neo-Brutalist */}
+      <div className="flex items-center justify-between pb-3 border-b-3 border-black">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#ccff00] text-sm font-black text-black border-2 border-black shadow-[2px_2px_0px_#000]">
+            #{court.courtNumber}
           </span>
           <div>
-            <h3 className="text-sm font-bold text-white tracking-wide">{court.courtName}</h3>
-            <span className="text-[11px] text-slate-400">Ronde {match.roundNumber}</span>
+            <h3 className="text-sm font-black text-black tracking-wide uppercase">{court.courtName}</h3>
+            <span className="text-[11px] font-bold text-slate-700 uppercase font-mono-sport">
+              RONDE #{match.roundNumber}
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={handleAnnounce}
-            title="Panggil lewat speaker Bluetooth"
-            className="flex items-center gap-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 px-2.5 py-1.5 text-xs text-slate-300 transition-colors"
+            title="Panggil via Bluetooth Speaker GOR"
+            className="flex items-center gap-1.5 rounded-lg bg-black text-[#ccff00] px-3 py-1.5 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
           >
-            <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
+            <Volume2 className="h-3.5 w-3.5 stroke-[2.5]" />
             <span className="hidden sm:inline">Panggil</span>
           </button>
         </div>
       </div>
 
-      {/* Area Pertandingan: Tim A vs Tim B */}
-      <div className="grid grid-cols-2 gap-4 my-4">
+      {/* Grid Tim: Duel Lapangan */}
+      <div className="grid grid-cols-2 gap-3.5 my-4">
         {/* Tim A */}
-        <div className="flex flex-col rounded-xl bg-slate-800/40 border border-slate-700/40 p-3.5">
-          <span className="text-[10px] font-semibold tracking-wider uppercase text-emerald-400 mb-1.5">
-            Tim A (Sisi Kiri)
-          </span>
+        <div className="flex flex-col rounded-xl bg-[#e6fffa] border-2 border-black p-3.5 shadow-[3px_3px_0px_#000]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-black bg-[#ccff00] px-1.5 py-0.5 rounded border border-black">
+              TIM A
+            </span>
+            <span className="text-[10px] font-bold text-slate-600">Sisi Kiri</span>
+          </div>
+
           <div className="flex flex-col gap-1.5 mb-3 flex-1">
             {match.teamA.map((p) => {
               const tier = getTierLabel(p.publicTier);
               return (
                 <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
-                  <span className="font-medium text-white truncate">{p.name}</span>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded border font-mono ${tier.badgeColor}`}>
+                  <span className="font-extrabold text-black truncate">{p.name}</span>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
                     {tier.label.replace("Tier ", "")}
                   </span>
                 </div>
@@ -97,18 +103,20 @@ export function CourtCard({
             })}
           </div>
 
-          {/* Pengatur Skor Tim A */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-700/50">
+          {/* Skor Tim A */}
+          <div className="flex items-center justify-between pt-2 border-t-2 border-black">
             <button
               onClick={() => onUpdateScore(court.courtNumber, Math.max(0, match.scoreA - 1), match.scoreB)}
-              className="h-8 w-8 rounded-lg bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 active:scale-95 text-sm"
+              className="h-9 w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             >
               -
             </button>
-            <span className="text-3xl font-extrabold text-white font-mono tracking-tight">{match.scoreA}</span>
+            <span className="text-4xl font-black text-black font-mono-sport tracking-tight">
+              {match.scoreA}
+            </span>
             <button
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA + 1, match.scoreB)}
-              className="h-8 w-8 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-500 active:scale-95 text-sm shadow-md shadow-emerald-600/30"
+              className="h-9 w-9 rounded-lg bg-[#ccff00] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             >
               +
             </button>
@@ -116,17 +124,21 @@ export function CourtCard({
         </div>
 
         {/* Tim B */}
-        <div className="flex flex-col rounded-xl bg-slate-800/40 border border-slate-700/40 p-3.5">
-          <span className="text-[10px] font-semibold tracking-wider uppercase text-blue-400 mb-1.5">
-            Tim B (Sisi Kanan)
-          </span>
+        <div className="flex flex-col rounded-xl bg-[#eff6ff] border-2 border-black p-3.5 shadow-[3px_3px_0px_#000]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-black bg-[#7dd3fc] px-1.5 py-0.5 rounded border border-black">
+              TIM B
+            </span>
+            <span className="text-[10px] font-bold text-slate-600">Sisi Kanan</span>
+          </div>
+
           <div className="flex flex-col gap-1.5 mb-3 flex-1">
             {match.teamB.map((p) => {
               const tier = getTierLabel(p.publicTier);
               return (
                 <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
-                  <span className="font-medium text-white truncate">{p.name}</span>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded border font-mono ${tier.badgeColor}`}>
+                  <span className="font-extrabold text-black truncate">{p.name}</span>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
                     {tier.label.replace("Tier ", "")}
                   </span>
                 </div>
@@ -134,18 +146,20 @@ export function CourtCard({
             })}
           </div>
 
-          {/* Pengatur Skor Tim B */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-700/50">
+          {/* Skor Tim B */}
+          <div className="flex items-center justify-between pt-2 border-t-2 border-black">
             <button
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA, Math.max(0, match.scoreB - 1))}
-              className="h-8 w-8 rounded-lg bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 active:scale-95 text-sm"
+              className="h-9 w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             >
               -
             </button>
-            <span className="text-3xl font-extrabold text-white font-mono tracking-tight">{match.scoreB}</span>
+            <span className="text-4xl font-black text-black font-mono-sport tracking-tight">
+              {match.scoreB}
+            </span>
             <button
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA, match.scoreB + 1)}
-              className="h-8 w-8 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-500 active:scale-95 text-sm shadow-md shadow-blue-600/30"
+              className="h-9 w-9 rounded-lg bg-[#7dd3fc] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#38bdf8] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             >
               +
             </button>
@@ -153,13 +167,13 @@ export function CourtCard({
         </div>
       </div>
 
-      {/* Status Bar / Deuce Info */}
-      <div className="flex items-center justify-between text-xs py-2 px-3 rounded-lg bg-slate-950 border border-slate-800 mb-3">
-        <span className="text-slate-400 truncate text-[11px]">{validation.statusText}</span>
+      {/* Status Bar */}
+      <div className="flex items-center justify-between text-xs py-2 px-3 rounded-lg bg-[#faf8f2] border-2 border-black mb-3">
+        <span className="font-bold text-slate-800 text-[11px] truncate uppercase">{validation.statusText}</span>
         {validation.isFinished && (
-          <span className="flex items-center gap-1 text-emerald-400 font-semibold text-[11px]">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Match Selesai
+          <span className="flex items-center gap-1 font-black text-black text-[11px] bg-[#ccff00] px-2 py-0.5 rounded border border-black">
+            <CheckCircle2 className="h-3 w-3 stroke-[3]" />
+            SELESAI
           </span>
         )}
       </div>
@@ -170,22 +184,22 @@ export function CourtCard({
           <button
             onClick={() => onAddCockToMatch(court.courtNumber)}
             title="Tambah pemakaian shuttlecock untuk match ini"
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 active:scale-95 transition-all"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border-2 border-black bg-[#ffde00] py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
           >
-            <Flame className="h-3.5 w-3.5 text-amber-400" />
+            <Flame className="h-3.5 w-3.5 fill-black" />
             <span>+1 Cock ({match.equipmentUsedCount || 1})</span>
           </button>
         )}
 
         <button
           onClick={() => onFinishMatch(court.courtNumber)}
-          className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all active:scale-95 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all ${
             validation.isFinished
-              ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20"
-              : "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+              ? "bg-[#ccff00] text-black"
+              : "bg-black text-white hover:bg-neutral-800"
           }`}
         >
-          <CheckCircle2 className="h-3.5 w-3.5" />
+          <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.5]" />
           <span>Selesaikan Match</span>
         </button>
       </div>

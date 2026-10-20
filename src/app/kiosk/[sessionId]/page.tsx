@@ -36,7 +36,7 @@ function KioskContent({ params }: KioskPageProps) {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono">
+      <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono-sport font-black text-lg">
         MEMUAT TAMPILAN GOR KIOSK...
       </div>
     );
@@ -53,7 +53,7 @@ function KioskContent({ params }: KioskPageProps) {
   const onDeckPlayers = session.players.filter((p) => p.status === "active" && !activePlayingIds.has(p.id));
 
   return (
-    <div className="min-h-screen bg-[#040711] text-white p-6 sm:p-10 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950 font-sans">
+    <div className="min-h-screen bg-[#faf8f2] text-black p-6 sm:p-10 flex flex-col justify-between selection:bg-[#ccff00] selection:text-black font-sans">
       <div className="flex flex-col gap-6">
         {/* Header Kiosk */}
         <KioskHeader
@@ -71,23 +71,23 @@ function KioskContent({ params }: KioskPageProps) {
       </div>
 
       {/* Sisi Bawah: Bar Antrean Bersiap (On-Deck Ticker) */}
-      <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-950/80 p-4 shadow-xl">
+      <div className="mt-8 rounded-2xl border-3 border-black bg-white p-5 shadow-[6px_6px_0px_#000]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-3 w-3 rounded-full bg-[#ff5500] animate-ping" />
+            <span className="text-xs font-black uppercase tracking-wider text-black">
               Bersiap Ronde Berikutnya ({onDeckPlayers.length} Pemain):
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {onDeckPlayers.length === 0 ? (
-              <span className="text-xs text-slate-500 italic">Semua pemain sedang berada di lapangan.</span>
+              <span className="text-xs font-bold text-slate-500 italic">Semua pemain sedang berada di lapangan.</span>
             ) : (
               onDeckPlayers.map((p) => (
                 <span
                   key={p.id}
-                  className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1 text-xs font-bold text-slate-200"
+                  className="rounded-lg bg-[#ccff00] border-2 border-black px-3 py-1 text-xs font-black text-black shadow-[2px_2px_0px_#000]"
                 >
                   {p.name}
                 </span>
@@ -97,7 +97,7 @@ function KioskContent({ params }: KioskPageProps) {
 
           <Link
             href={`/host/${session.publicSlug}`}
-            className="text-[11px] text-slate-500 hover:text-slate-300 font-mono transition-colors"
+            className="text-xs font-black uppercase text-black hover:text-slate-600 underline font-mono-sport transition-colors"
           >
             Kembali ke Host
           </Link>
@@ -111,7 +111,7 @@ export default function KioskDisplayPage({ params }: KioskPageProps) {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#040711] flex items-center justify-center text-slate-500 font-mono">
+        <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono-sport font-black text-lg">
           MEMUAT TAMPILAN GOR KIOSK...
         </div>
       }

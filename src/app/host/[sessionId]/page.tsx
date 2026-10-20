@@ -59,7 +59,7 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono font-bold">
         Memuat sesi mabar...
       </div>
     );
@@ -260,20 +260,20 @@ function HostDashboardContent({ params }: HostPageProps) {
   const totalEquipmentCost = session.sportConfig.equipment.totalUsed * session.sportConfig.equipment.costPerUnit;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col selection:bg-[#ccff00] selection:text-black">
       <Navbar publicSlug={session.publicSlug} />
 
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 sm:px-6 py-6 flex flex-col gap-6">
         {/* Banner Sultan jika aktif */}
         {session.sultanSponsor && (
-          <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/40 p-3.5 shadow-lg">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="h-5 w-5 text-amber-400" />
+          <div className="flex items-center justify-between rounded-2xl bg-[#ffde00] border-3 border-black p-4 shadow-[5px_5px_0px_#000]">
+            <div className="flex items-center gap-3">
+              <Sparkles className="h-6 w-6 text-black stroke-[3]" />
               <div>
-                <span className="font-extrabold text-amber-300 text-sm uppercase tracking-wide">
-                  👑 SULTAN MODE AKTIF: Disponsori oleh {session.sultanSponsor}!
+                <span className="font-black text-black text-sm uppercase tracking-wider block">
+                  👑 SULTAN MODE AKTIF: Disponsori Penuh oleh {session.sultanSponsor}!
                 </span>
-                <p className="text-xs text-amber-200/80">Tagihan seluruh peserta sesi ini dipotong Rp 0.</p>
+                <p className="text-xs font-bold text-slate-800">Tagihan seluruh peserta sesi ini dipotong Rp 0.</p>
               </div>
             </div>
             <button
@@ -282,7 +282,7 @@ function HostDashboardContent({ params }: HostPageProps) {
                 setSession(updated);
                 LocalStorageAdapter.saveSession(updated);
               }}
-              className="text-xs text-amber-400/80 hover:text-amber-200 underline"
+              className="text-xs font-black uppercase tracking-wider text-black underline hover:text-slate-700"
             >
               Matikan
             </button>
@@ -290,16 +290,18 @@ function HostDashboardContent({ params }: HostPageProps) {
         )}
 
         {/* Top Control Bar: Info Sesi & Tombol Aksi Cepat */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl border-3 border-black bg-white shadow-[6px_6px_0px_#000]">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-white">{session.title}</h1>
-              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20 font-mono">
-                {session.sport.toUpperCase()}
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-black text-black uppercase tracking-wide">
+                {session.title}
+              </h1>
+              <span className="rounded bg-black px-2 py-0.5 text-xs font-black text-[#ccff00] uppercase font-mono-sport">
+                {session.sport}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Ronde {session.currentRound} • {session.courtCount} Lapangan • {session.players.length} Pemain Terdaftar
+            <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-wider font-mono-sport">
+              RONDE #{session.currentRound} • {session.courtCount} LAPANGAN • {session.players.length} PEMAIN TERDAFTAR
             </p>
           </div>
 
@@ -308,32 +310,32 @@ function HostDashboardContent({ params }: HostPageProps) {
             {/* Counter Shuttlecock / Bola */}
             <button
               onClick={handleAddCock}
-              className="flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 px-3.5 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/25 active:scale-95 transition-all shadow-sm"
+              className="flex items-center gap-2 rounded-xl bg-[#ffde00] border-2 border-black px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all"
               title="Klik tiap kali buka cock/bola baru"
             >
-              <Flame className="h-4 w-4 text-amber-400 fill-current" />
+              <Flame className="h-4 w-4 fill-black" />
               <span>
                 +1 {session.sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
                 {session.sportConfig.equipment.totalUsed})
               </span>
-              <span className="text-[10px] text-amber-400/80 font-mono">({formatRupiah(totalEquipmentCost)})</span>
+              <span className="text-[10px] font-mono-sport text-slate-800">({formatRupiah(totalEquipmentCost)})</span>
             </button>
 
             {/* Sultan Mode Button */}
             <button
               onClick={handleSultanMode}
-              className="flex items-center gap-1.5 rounded-xl bg-purple-500/15 border border-purple-500/30 px-3 py-2 text-xs font-bold text-purple-300 hover:bg-purple-500/25 active:scale-95 transition-all"
+              className="flex items-center gap-1.5 rounded-xl bg-[#f472b6] border-2 border-black px-3.5 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all"
             >
-              <Sparkles className="h-4 w-4 text-purple-400" />
+              <Sparkles className="h-4 w-4 stroke-[2.5]" />
               <span>Sultan Mode</span>
             </button>
 
             {/* Mulai Ronde Berikutnya */}
             <button
               onClick={handleNextRound}
-              className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-extrabold text-slate-950 hover:bg-emerald-400 active:scale-95 transition-all shadow-lg shadow-emerald-500/20"
+              className="flex items-center gap-2 rounded-xl bg-[#ccff00] px-5 py-2.5 text-xs font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all"
             >
-              <FastForward className="h-4 w-4" />
+              <FastForward className="h-4 w-4 stroke-[3]" />
               <span>Ronde Berikutnya</span>
             </button>
           </div>
@@ -341,30 +343,30 @@ function HostDashboardContent({ params }: HostPageProps) {
 
         {/* Sub-bar Tombol Tautan Kiosk & Papan Penonton */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Link
               href={`/kiosk/${session.publicSlug}`}
               target="_blank"
-              className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg border-2 border-black bg-white px-3.5 py-1.5 font-black uppercase text-black hover:bg-slate-100 shadow-[2px_2px_0px_#000] transition-all"
             >
-              <Tv className="h-3.5 w-3.5 text-emerald-400" />
+              <Tv className="h-4 w-4 stroke-[2.5]" />
               <span>Buka Mode TV GOR (Kiosk Layar Penuh)</span>
             </Link>
             <Link
               href={`/live/${session.publicSlug}`}
               target="_blank"
-              className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg border-2 border-black bg-white px-3.5 py-1.5 font-black uppercase text-black hover:bg-slate-100 shadow-[2px_2px_0px_#000] transition-all"
             >
-              <Users className="h-3.5 w-3.5 text-blue-400" />
+              <Users className="h-4 w-4 stroke-[2.5]" />
               <span>Buka Papan Penonton</span>
             </Link>
           </div>
 
           <button
             onClick={handleCopySpectatorLink}
-            className="flex items-center gap-1.5 text-slate-400 hover:text-emerald-400 font-mono"
+            className="flex items-center gap-1.5 font-black uppercase text-black hover:text-slate-600 font-mono-sport bg-[#ccff00] px-3 py-1.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000]"
           >
-            {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+            {copiedLink ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <Copy className="h-3.5 w-3.5 stroke-[2.5]" />}
             <span>{copiedLink ? "Link Tersalin!" : "Salin Link Penonton"}</span>
           </button>
         </div>
@@ -418,7 +420,7 @@ export default function HostDashboardPage({ params }: HostPageProps) {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 font-mono">
+        <div className="min-h-screen bg-[#faf8f2] flex items-center justify-center text-black font-mono font-bold">
           Memuat sesi mabar...
         </div>
       }

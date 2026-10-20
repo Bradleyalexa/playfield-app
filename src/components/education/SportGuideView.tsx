@@ -9,80 +9,107 @@ export function SportGuideView() {
   const [activeSport, setActiveSport] = useState<SportType>("badminton");
   const guide = SPORT_GUIDES[activeSport];
 
-  const sportsList: { type: SportType; label: string; icon: string }[] = [
-    { type: "badminton", label: "Badminton", icon: "🏸" },
-    { type: "tennis", label: "Tennis Lapangan", icon: "🎾" },
-    { type: "padel", label: "Padel Tennis", icon: "🏓" },
+  const sportsList: { type: SportType; label: string; icon: string; accent: string }[] = [
+    { type: "badminton", label: "Badminton", icon: "🏸", accent: "bg-[#ccff00]" },
+    { type: "tennis", label: "Tennis Lapangan", icon: "🎾", accent: "bg-[#ff5500] text-white" },
+    { type: "padel", label: "Padel Tennis", icon: "🏓", accent: "bg-[#00e5ff]" },
   ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto py-4">
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto py-2">
       {/* Sport Selector Tabs */}
-      <div className="flex items-center justify-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800">
-        {sportsList.map((s) => (
-          <button
-            key={s.type}
-            onClick={() => setActiveSport(s.type)}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
-              activeSport === s.type
-                ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 scale-102"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
-            }`}
-          >
-            <span className="text-lg">{s.icon}</span>
-            <span>{s.label}</span>
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {sportsList.map((s) => {
+          const isActive = activeSport === s.type;
+          return (
+            <button
+              key={s.type}
+              onClick={() => setActiveSport(s.type)}
+              className={`flex items-center gap-2.5 rounded-xl px-5 py-3 text-sm font-black transition-all cursor-pointer border-[3px] border-black ${
+                isActive
+                  ? `${s.accent} shadow-[4px_4px_0px_#000] -translate-y-0.5`
+                  : "bg-white text-black hover:bg-[#faf8f2] shadow-[2px_2px_0px_#000]"
+              }`}
+            >
+              <span className="text-xl">{s.icon}</span>
+              <span className="font-heading uppercase tracking-wide">{s.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Guide Header Banner */}
-      <div className="rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 p-6 sm:p-8 shadow-xl">
-        <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
+      <div className="rounded-2xl border-[3px] border-black bg-white p-6 sm:p-8 shadow-[6px_6px_0px_#000]">
+        <div className="inline-block rounded-full bg-[#ccff00] px-3.5 py-1 text-xs font-black text-black border-2 border-black font-mono uppercase tracking-wider mb-3">
           {guide.badge}
-        </span>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-3 mb-2">{guide.title}</h2>
-        <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-3xl">{guide.overview}</p>
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-black text-black tracking-tight mb-2">
+          {guide.title}
+        </h2>
+        <p className="text-sm sm:text-base font-medium text-black/80 leading-relaxed max-w-3xl">
+          {guide.overview}
+        </p>
       </div>
 
       {/* Grid 2 Kolom: Aturan Skor & Formasi Lapangan */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Aturan & Sistem Skor */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800 mb-4">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+        <div className="rounded-2xl border-[3px] border-black bg-white p-6 shadow-[5px_5px_0px_#000] flex flex-col">
+          <div className="flex items-center gap-3 pb-3 border-b-2 border-black mb-4">
+            <div className="p-2 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000]">
               <Zap className="h-5 w-5" />
             </div>
-            <h3 className="text-base font-bold text-white">Peraturan & Sistem Skor</h3>
+            <div>
+              <h3 className="text-base font-black text-black uppercase tracking-wide">
+                Peraturan & Sistem Skor
+              </h3>
+              <span className="text-[11px] font-mono font-bold text-black/50">Aturan Resmi & Variasi Mabar</span>
+            </div>
           </div>
           <ul className="flex flex-col gap-3">
             {guide.scoringRules.map((rule, idx) => (
-              <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>{rule}</span>
+              <li
+                key={idx}
+                className="flex items-start gap-2.5 text-xs sm:text-sm font-semibold text-black bg-[#faf8f2] p-3 rounded-xl border-2 border-black shadow-[2px_2px_0px_#000]"
+              >
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span className="leading-snug">{rule}</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* Posisi & Formasi Ganda */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800 mb-4">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+        <div className="rounded-2xl border-[3px] border-black bg-white p-6 shadow-[5px_5px_0px_#000] flex flex-col">
+          <div className="flex items-center gap-3 pb-3 border-b-2 border-black mb-4">
+            <div className="p-2 rounded-xl bg-[#00e5ff] text-black border-2 border-black shadow-[2px_2px_0px_#000]">
               <Compass className="h-5 w-5" />
             </div>
-            <h3 className="text-base font-bold text-white">Posisi & Formasi Ganda</h3>
+            <div>
+              <h3 className="text-base font-black text-black uppercase tracking-wide">
+                Posisi & Formasi Ganda
+              </h3>
+              <span className="text-[11px] font-mono font-bold text-black/50">Court Positioning Guide</span>
+            </div>
           </div>
           <div className="flex flex-col gap-3.5">
             {guide.courtPositions.map((pos, idx) => (
-              <div key={idx} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+              <div
+                key={idx}
+                className="rounded-xl border-2 border-black bg-[#faf8f2] p-4 shadow-[2px_2px_0px_#000]"
+              >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-sm text-white">{pos.title}</span>
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                  <span className="font-black text-sm text-black">{pos.title}</span>
+                  <span className="text-[10px] font-black uppercase font-mono px-2 py-0.5 rounded bg-white text-black border-2 border-black shadow-[1px_1px_0px_#000]">
                     {pos.tag}
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-slate-400 block mb-1">{pos.subtitle}</span>
-                <p className="text-xs text-slate-300 leading-relaxed">{pos.description}</p>
+                <span className="text-xs font-bold text-black/60 block mb-1 font-mono">
+                  {pos.subtitle}
+                </span>
+                <p className="text-xs font-medium text-black/80 leading-relaxed">
+                  {pos.description}
+                </p>
               </div>
             ))}
           </div>
@@ -90,38 +117,53 @@ export function SportGuideView() {
       </div>
 
       {/* Tips & Trik Bermain */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg">
-        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800 mb-4">
-          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+      <div className="rounded-2xl border-[3px] border-black bg-white p-6 shadow-[5px_5px_0px_#000]">
+        <div className="flex items-center gap-3 pb-3 border-b-2 border-black mb-4">
+          <div className="p-2 rounded-xl bg-[#ffde00] text-black border-2 border-black shadow-[2px_2px_0px_#000]">
             <BookOpen className="h-5 w-5" />
           </div>
-          <h3 className="text-base font-bold text-white">Tips & Trik Pro untuk Mabar</h3>
+          <div>
+            <h3 className="text-base font-black text-black uppercase tracking-wide">
+              Tips & Trik Pro untuk Mabar
+            </h3>
+            <span className="text-[11px] font-mono font-bold text-black/50">Level Up Permainan Tim</span>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {guide.tipsAndTricks.map((tip, idx) => (
-            <div key={idx} className="flex flex-col rounded-xl border border-slate-800 bg-slate-950 p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 font-mono">
+            <div
+              key={idx}
+              className="flex flex-col rounded-xl border-2 border-black bg-[#faf8f2] p-4 shadow-[3px_3px_0px_#000]"
+            >
+              <div className="mb-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[#ffde00] border-2 border-black px-2 py-0.5 rounded font-mono inline-block">
                   {tip.category}
                 </span>
               </div>
-              <h4 className="font-bold text-sm text-white mb-1.5">{tip.title}</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">{tip.description}</p>
+              <h4 className="font-black text-sm text-black mb-1.5">{tip.title}</h4>
+              <p className="text-xs font-medium text-black/70 leading-relaxed">{tip.description}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Etika Lapangan & GOR */}
-      <div className="rounded-2xl border border-slate-800/80 bg-slate-950 p-5 shadow-lg">
-        <div className="flex items-center gap-2 mb-3">
-          <ShieldAlert className="h-4 w-4 text-emerald-400" />
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Etika Lapangan & GOR</h4>
+      <div className="rounded-2xl border-[3px] border-black bg-white p-6 shadow-[5px_5px_0px_#000]">
+        <div className="flex items-center gap-2.5 mb-3 pb-2 border-b-2 border-black">
+          <div className="p-1.5 rounded-lg bg-[#ff5500] text-white border-2 border-black">
+            <ShieldAlert className="h-4 w-4" />
+          </div>
+          <h4 className="text-xs font-black uppercase tracking-wider text-black font-mono">
+            Etika Lapangan & Budaya GOR (Penting!)
+          </h4>
         </div>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-400">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-semibold text-black/80">
           {guide.etiquette.map((item, idx) => (
-            <li key={idx} className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+            <li
+              key={idx}
+              className="flex items-center gap-2 bg-[#faf8f2] p-2.5 rounded-lg border-2 border-black"
+            >
+              <span className="h-2 w-2 rounded-full bg-[#ccff00] border border-black shrink-0" />
               <span>{item}</span>
             </li>
           ))}
