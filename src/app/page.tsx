@@ -3,8 +3,23 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Play, Sparkles, BookOpen, Clock, Calendar, Users, Trophy, Flame, Edit3 } from "lucide-react";
+import {
+  Plus,
+  Play,
+  Sparkles,
+  BookOpen,
+  Clock,
+  Calendar,
+  Users,
+  Trophy,
+  Flame,
+  Edit3,
+  HelpCircle,
+  ChevronRight,
+  Minus,
+} from "lucide-react";
 import { Navbar } from "../components/common/Navbar";
+import { AlgorithmExplainerModal } from "../components/schedule/AlgorithmExplainerModal";
 import {
   ALGORITHM_REGISTRY,
   MatchmakingAlgorithm,
@@ -12,6 +27,7 @@ import {
 } from "../core/entities/session";
 import { SportRegistry } from "../core/sports/sport-registry";
 import { LocalStorageAdapter } from "../services/storage/local-storage.adapter";
+import { Match } from "../core/entities/match";
 
 export default function HomePage() {
   const router = useRouter();
@@ -33,6 +49,10 @@ export default function HomePage() {
   // Algoritma & Jumlah Match Manual
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<MatchmakingAlgorithm>("fair_playtime");
   const [customInitialMatchesCount, setCustomInitialMatchesCount] = useState(6);
+  const [isCustomMatchesCountInput, setIsCustomMatchesCountInput] = useState(false);
+
+  // Modal Penjelasan Algoritma
+  const [isAlgoExplainerOpen, setIsAlgoExplainerOpen] = useState(false);
 
   const [recentSessions, setRecentSessions] = useState<
     { id: string; publicSlug: string; title: string; sport: SportType; updatedAt: string; playerCount: number }[]
@@ -52,6 +72,15 @@ export default function HomePage() {
   const effectiveMatchDurationMinutes = isCustomMatchDuration
     ? Math.max(5, parseInt(customMatchDurationInput, 10) || 15)
     : matchDurationMinutes;
+
+  // Helper penyesuaian jam mulai (+15m / -15m)
+  const adjustStartTime = (deltaMinutes: number) => {
+    const [hStr, mStr] = startTime.split(":");
+    const totalMinutes = (parseInt(hStr, 10) * 60 + parseInt(mStr, 10) + deltaMinutes + 24 * 60) % (24 * 60);
+    const newH = Math.floor(totalMinutes / 60).toString().padStart(2, "0");
+    const newM = (totalMinutes % 60).toString().padStart(2, "0");
+    setStartTime(`${newH}:${newM}`);
+  };
 
   // Kalkulasi estimasi ronde & match
   const totalRentalMinutes = effectiveDurationHours * 60;
@@ -77,6 +106,34 @@ export default function HomePage() {
     demo.matchDurationMinutes = effectiveMatchDurationMinutes;
     demo.algorithm = selectedAlgorithm;
     demo.estimatedMatchesCount = totalProjectedMatches;
+
+    // Jika user memilih custom manual, buat N custom matches awal siap pakai
+    if (selectedAlgorithm === "custom_manual") {
+      const customMatches: Match[] = [];
+      const totalToInit = customInitialMatchesCount || 4;
+      for (let i = 0; i < totalToInit; i++) {
+        const cNum = (i % courtCount) + 1;
+        const rNum = Math.floor(i / courtCount) + 1;
+        const four = demo.players.slice(0, 4);
+        customMatches.push({
+          id: `custom-init-${i + 1}-${Date.now()}`,
+          courtNumber: cNum,
+          roundNumber: rNum,
+          teamA: [four[0], four[1]],
+          teamB: [four[2], four[3]],
+          scoreA: 0,
+          scoreB: 0,
+          status: "in_progress",
+          startedAt: new Date().toISOString(),
+          equipmentUsedCount: 1,
+        });
+      }
+      demo.matches = customMatches;
+      demo.courts = demo.courts.map((c) => ({
+        ...c,
+        currentMatch: customMatches.find((m) => m.courtNumber === c.courtNumber && m.roundNumber === 1),
+      }));
+    }
 
     LocalStorageAdapter.saveSession(demo);
     router.push(`/host/${demo.publicSlug}?key=${demo.adminKey}`);
@@ -216,35 +273,90 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* 4. Durasi Sewa Lapangan & Estimasi Match (Dukungan Preset & Custom) */}
+              {/* 4. Durasi Sewa Lapangan & Estimasi Match (Dukungan Preset & Custom Rapi) */}
               <div className="p-4 sm:p-5 rounded-2xl bg-[#faf8f2] border-3 border-black shadow-[4px_4px_0px_#000] flex flex-col gap-4">
                 <div className="flex items-center gap-2 pb-2 border-b-2 border-black">
                   <Clock className="h-4 w-4 stroke-[3]" />
                   <span className="text-xs font-black uppercase tracking-wider text-black">
-                    4. Waktu Sewa Lapangan & Durasi Match (Preset / Custom)
+                    4. Waktu Sewa Lapangan & Durasi Match
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  {/* Jam Mulai */}
-                  <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Jam Mulai - Klik angka langsung adjust & ada tombol step */}
+                  <div className="flex flex-col justify-between">
                     <label className="block text-[11px] font-black uppercase text-black/70 mb-1.5">
-                      Jam Mulai Main
+                      Jam Mulai Main (Klik untuk Atur)
                     </label>
-                    <input
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full rounded-xl bg-white border-2 border-black px-3 py-2 text-sm font-mono font-black text-black shadow-[2px_2px_0px_#000]"
-                    />
+
+                    <div
+                      onClick={(e) => {
+                        const input = e.currentTarget.querySelector("input");
+                        try {
+                          (input as any)?.showPicker();
+                        } catch {}
+                      }}
+                      className="p-2.5 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-yellow-50/50 cursor-pointer transition-all flex items-center justify-between"
+                    >
+                      <input
+                        type="time"
+                        value={startTime}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          try {
+                            (e.currentTarget as any).showPicker();
+                          } catch {}
+                        }}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="bg-transparent border-none text-base sm:text-lg font-mono font-black text-black focus:outline-none cursor-pointer w-28"
+                      />
+
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => adjustStartTime(-15)}
+                          title="Kurangi 15 Menit"
+                          className="h-7 w-7 rounded-lg bg-[#faf8f2] border border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer"
+                        >
+                          -15
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => adjustStartTime(15)}
+                          title="Tambah 15 Menit"
+                          className="h-7 w-7 rounded-lg bg-[#faf8f2] border border-black flex items-center justify-center font-mono font-black text-xs hover:bg-[#ccff00] cursor-pointer"
+                        >
+                          +15
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quick Presets Jam */}
+                    <div className="flex items-center gap-1 mt-2">
+                      {["18:00", "19:00", "20:00", "21:00"].map((t) => (
+                        <button
+                          type="button"
+                          key={t}
+                          onClick={() => setStartTime(t)}
+                          className={`flex-1 py-1 text-[10px] font-mono font-black rounded-md border transition-all cursor-pointer ${
+                            startTime === t
+                              ? "bg-black text-[#ccff00] border-black"
+                              : "bg-white text-black border-black/30 hover:border-black"
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Durasi Sewa (1 Jam, 2 Jam, 3 Jam, atau Custom) */}
-                  <div>
+                  {/* Durasi Sewa Lapangan (1 Jam, 2 Jam, 3 Jam, Custom) */}
+                  <div className="flex flex-col justify-between">
                     <label className="block text-[11px] font-black uppercase text-black/70 mb-1.5">
                       Durasi Sewa Lapangan
                     </label>
-                    <div className="grid grid-cols-4 gap-1">
+
+                    <div className="grid grid-cols-2 gap-1.5">
                       {[1, 2, 3].map((hrs) => (
                         <button
                           type="button"
@@ -253,7 +365,7 @@ export default function HomePage() {
                             setIsCustomDuration(false);
                             setDurationHours(hrs);
                           }}
-                          className={`py-2 rounded-lg text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                          className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer ${
                             !isCustomDuration && durationHours === hrs
                               ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
                               : "bg-white text-black hover:bg-slate-50"
@@ -263,43 +375,47 @@ export default function HomePage() {
                         </button>
                       ))}
 
-                      {/* Tombol Custom Durasi Sewa */}
+                      {/* Tombol Custom Durasi Sewa Rapi */}
                       <button
                         type="button"
                         onClick={() => setIsCustomDuration(true)}
-                        className={`py-2 rounded-lg text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                        className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer flex items-center justify-center gap-1 ${
                           isCustomDuration
                             ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
                             : "bg-white text-black hover:bg-slate-50"
                         }`}
                       >
-                        Custom
+                        <Edit3 className="h-3 w-3" />
+                        <span>Custom</span>
                       </button>
                     </div>
 
                     {isCustomDuration && (
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <input
-                          type="number"
-                          step="0.5"
-                          min="0.5"
-                          max="12"
-                          value={customDurationInput}
-                          onChange={(e) => setCustomDurationInput(e.target.value)}
-                          placeholder="Misal 2.5 atau 4"
-                          className="w-full rounded-lg bg-white border-2 border-black px-2.5 py-1 text-xs font-mono font-bold text-black shadow-[1px_1px_0px_#000]"
-                        />
-                        <span className="text-xs font-black font-mono">Jam</span>
+                      <div className="mt-2 p-2 rounded-xl bg-white border-2 border-black flex items-center justify-between shadow-[2px_2px_0px_#000]">
+                        <span className="text-[11px] font-black uppercase text-black/60 pl-1">Durasi:</span>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            step="0.5"
+                            min="0.5"
+                            max="12"
+                            value={customDurationInput}
+                            onChange={(e) => setCustomDurationInput(e.target.value)}
+                            className="w-16 text-center font-mono font-black text-sm border-2 border-black rounded-lg p-1 bg-[#faf8f2]"
+                          />
+                          <span className="text-xs font-mono font-black pr-1">Jam</span>
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Estimasi 1 Match (12m, 15m, 20m, atau Custom) */}
-                  <div>
+                  {/* Estimasi 1 Match (12m, 15m, 20m, Custom) */}
+                  <div className="flex flex-col justify-between">
                     <label className="block text-[11px] font-black uppercase text-black/70 mb-1.5">
                       Estimasi 1 Match/Ronde
                     </label>
-                    <div className="grid grid-cols-4 gap-1">
+
+                    <div className="grid grid-cols-2 gap-1.5">
                       {[12, 15, 20].map((mins) => (
                         <button
                           type="button"
@@ -308,43 +424,46 @@ export default function HomePage() {
                             setIsCustomMatchDuration(false);
                             setMatchDurationMinutes(mins);
                           }}
-                          className={`py-2 rounded-lg text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                          className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer ${
                             !isCustomMatchDuration && matchDurationMinutes === mins
                               ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
                               : "bg-white text-black hover:bg-slate-50"
                           }`}
                         >
-                          {mins}m
+                          {mins} Menit
                         </button>
                       ))}
 
-                      {/* Tombol Custom Estimasi Match */}
+                      {/* Tombol Custom Estimasi Match Rapi */}
                       <button
                         type="button"
                         onClick={() => setIsCustomMatchDuration(true)}
-                        className={`py-2 rounded-lg text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                        className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer flex items-center justify-center gap-1 ${
                           isCustomMatchDuration
                             ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
                             : "bg-white text-black hover:bg-slate-50"
                         }`}
                       >
-                        Custom
+                        <Edit3 className="h-3 w-3" />
+                        <span>Custom</span>
                       </button>
                     </div>
 
                     {isCustomMatchDuration && (
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <input
-                          type="number"
-                          step="1"
-                          min="5"
-                          max="90"
-                          value={customMatchDurationInput}
-                          onChange={(e) => setCustomMatchDurationInput(e.target.value)}
-                          placeholder="Misal 18 atau 25"
-                          className="w-full rounded-lg bg-white border-2 border-black px-2.5 py-1 text-xs font-mono font-bold text-black shadow-[1px_1px_0px_#000]"
-                        />
-                        <span className="text-xs font-black font-mono">Menit</span>
+                      <div className="mt-2 p-2 rounded-xl bg-white border-2 border-black flex items-center justify-between shadow-[2px_2px_0px_#000]">
+                        <span className="text-[11px] font-black uppercase text-black/60 pl-1">Tempo:</span>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            step="1"
+                            min="5"
+                            max="90"
+                            value={customMatchDurationInput}
+                            onChange={(e) => setCustomMatchDurationInput(e.target.value)}
+                            className="w-16 text-center font-mono font-black text-sm border-2 border-black rounded-lg p-1 bg-[#faf8f2]"
+                          />
+                          <span className="text-xs font-mono font-black pr-1">Menit</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -375,12 +494,42 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* 5. Pilihan Algoritma Mabar (Termasuk Custom Manual by Host) */}
+              {/* 5. Pilihan Algoritma Mabar (Dengan Banner Trigger Modal Penjelasan di Tengah) */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-2.5">
+                <label className="block text-xs font-black uppercase tracking-wider text-black mb-2">
                   5. Pilih Algoritma Rotasi Lapangan & Matchmaking (7 Algoritma)
                 </label>
 
+                {/* Banner Trigger Modal Penjelasan Algoritma Lengkap */}
+                <div
+                  onClick={() => setIsAlgoExplainerOpen(true)}
+                  className="mb-3.5 p-3 sm:p-3.5 rounded-2xl bg-white border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#ccff00]/20 hover:shadow-[5px_5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer flex items-center justify-between gap-3 group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center font-black shrink-0 group-hover:scale-105 transition-transform">
+                      <BookOpen className="h-5 w-5 stroke-[2.5]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-black uppercase tracking-tight text-black truncate">
+                          Pelajari Cara Kerja & Perbandingan Lengkap 7 Algoritma
+                        </span>
+                        <span className="text-[10px] font-mono font-black uppercase bg-black text-[#ccff00] px-2 py-0.2 rounded hidden sm:inline">
+                          BACA DETAIL
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-semibold text-black/70 truncate">
+                        Klik di sini untuk melihat formula antrean, penyeimbangan skill ganda, dan simulasi kasus di GOR
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-mono font-black text-black bg-[#faf8f2] border-2 border-black px-3 py-1.5 rounded-xl shadow-[2px_2px_0px_#000] shrink-0 group-hover:bg-[#ccff00] transition-colors">
+                    Buka Panduan →
+                  </span>
+                </div>
+
+                {/* Grid 7 Card Algoritma */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {Object.values(ALGORITHM_REGISTRY).map((algo) => {
                     const isSelected = selectedAlgorithm === algo.id;
@@ -416,26 +565,31 @@ export default function HomePage() {
                   })}
                 </div>
 
-                {/* Konfigurasi Tambahan Jika Memilih Algoritma Custom Manual */}
+                {/* Konfigurasi Tambahan Jika Memilih Algoritma Custom Manual: Bebas Tentukan Jumlah Match Awal */}
                 {selectedAlgorithm === "custom_manual" && (
-                  <div className="mt-3.5 p-4 rounded-2xl bg-[#fef08a]/40 border-2 border-black shadow-[3px_3px_0px_#000] flex flex-col gap-2">
+                  <div className="mt-3.5 p-4 rounded-2xl bg-[#fef08a]/40 border-2 border-black shadow-[3px_3px_0px_#000] flex flex-col gap-3">
                     <div className="flex items-center gap-2">
                       <Edit3 className="h-4 w-4 stroke-[3]" />
                       <span className="text-xs font-black uppercase tracking-wider text-black">
-                        Konfigurasi Awal Mode Susun Bebas:
+                        Konfigurasi Jumlah Match Awal (Mode Susun Bebas):
                       </span>
                     </div>
+
                     <p className="text-xs font-medium text-black/80">
-                      Anda dapat menentukan sendiri pasangan pertandingan di Dashboard Host kapan saja. Berapa banyak match yang ingin di-initialize sekarang?
+                      Tentukan berapa banyak match awal yang ingin di-initialize. Anda dapat mengisinya sekarang atau menambahkan match baru sesuka hati di Dashboard Host:
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
+
+                    <div className="flex flex-wrap items-center gap-2">
                       {[2, 4, 6, 8, 12].map((cnt) => (
                         <button
                           type="button"
                           key={cnt}
-                          onClick={() => setCustomInitialMatchesCount(cnt)}
+                          onClick={() => {
+                            setIsCustomMatchesCountInput(false);
+                            setCustomInitialMatchesCount(cnt);
+                          }}
                           className={`px-3 py-1.5 rounded-lg text-xs font-mono font-black border-2 border-black transition-all cursor-pointer ${
-                            customInitialMatchesCount === cnt
+                            !isCustomMatchesCountInput && customInitialMatchesCount === cnt
                               ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
                               : "bg-white text-black hover:bg-slate-50"
                           }`}
@@ -443,7 +597,35 @@ export default function HomePage() {
                           {cnt} Match
                         </button>
                       ))}
+
+                      {/* Tombol Input Bebas Custom Jumlah Match */}
+                      <button
+                        type="button"
+                        onClick={() => setIsCustomMatchesCountInput(true)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-mono font-black border-2 border-black transition-all cursor-pointer ${
+                          isCustomMatchesCountInput
+                            ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                            : "bg-white text-black hover:bg-slate-50"
+                        }`}
+                      >
+                        Isi Bebas
+                      </button>
                     </div>
+
+                    {isCustomMatchesCountInput && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs font-bold text-black/70">Jumlah Match:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={customInitialMatchesCount}
+                          onChange={(e) => setCustomInitialMatchesCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                          className="w-24 text-center font-mono font-black text-sm rounded-lg bg-white border-2 border-black px-2 py-1 shadow-[1px_1px_0px_#000]"
+                        />
+                        <span className="text-xs font-mono font-black">Pertandingan Siap Susun</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -493,6 +675,14 @@ export default function HomePage() {
           </div>
         </div>
       </main>
+
+      {/* Modal Popup Penjelasan Algoritma Lengkap */}
+      <AlgorithmExplainerModal
+        isOpen={isAlgoExplainerOpen}
+        onClose={() => setIsAlgoExplainerOpen(false)}
+        selectedAlgorithm={selectedAlgorithm}
+        onSelectAlgorithm={(algo) => setSelectedAlgorithm(algo)}
+      />
     </div>
   );
 }
