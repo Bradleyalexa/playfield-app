@@ -22,6 +22,7 @@ import {
   ExternalLink,
   Shuffle,
   Undo2,
+  Flag,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
@@ -33,6 +34,8 @@ import { WaPasteModal } from "../../../components/players/WaPasteModal";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { CreateCustomMatchModal } from "../../../components/schedule/CreateCustomMatchModal";
 import { ReshuffleConsentModal } from "../../../components/schedule/ReshuffleConsentModal";
+import { FinishSessionModal } from "../../../components/schedule/FinishSessionModal";
+import { CompletedSessionRecap } from "../../../components/schedule/CompletedSessionRecap";
 import { Match } from "../../../core/entities/match";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
 import {
@@ -69,6 +72,9 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   // Modal Ganti Suara Announcer / Wasit
   const [isAudioSettingsOpen, setIsAudioSettingsOpen] = useState(false);
+
+  // Modal Selesaikan Mabar
+  const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
 
   // Load session dari local storage atau fallback create demo jika tidak ditemukan
   useEffect(() => {
@@ -520,6 +526,34 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
   };
 
+  // 9. Selesaikan Sesi Mabar Resmi & Tampilkan Podium Rekap
+  const handleConfirmFinishSession = () => {
+    const updated: GameSession = {
+      ...session,
+      status: "completed",
+    };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    setIsFinishModalOpen(false);
+
+    try {
+      confetti({ particleCount: 120, spread: 90, origin: { y: 0.4 } });
+    } catch {}
+
+    AudioAnnouncer.announceGeneral("Sesi mabar hari ini resmi diselesaikan! Terima kasih semua pemain.");
+  };
+
+  // 10. Buka Kembali Sesi Mabar (Safety valve jika salah klik)
+  const handleReopenSession = () => {
+    const updated: GameSession = {
+      ...session,
+      status: "active",
+    };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    AudioAnnouncer.announceGeneral("Sesi mabar telah dibuka kembali.");
+  };
+
   const handleCopySpectatorLink = () => {
     const url = `${window.location.origin}/live/${session.publicSlug}`;
     navigator.clipboard.writeText(url);
@@ -557,6 +591,15 @@ function HostDashboardContent({ params }: HostPageProps) {
               Matikan
             </button>
           </div>
+        )}
+
+        {/* Rekap Selesai Mabar & Podium (Jika sesi berstatus completed) */}
+        {session.status === "completed" && (
+          <CompletedSessionRecap
+            session={session}
+            isHost={true}
+            onReopenSession={handleReopenSession}
+          />
         )}
 
         {/* Top Control Bar: Info Sesi & Tombol Aksi Cepat */}
@@ -708,6 +751,27 @@ function HostDashboardContent({ params }: HostPageProps) {
               <FastForward className="h-4 w-4 stroke-[3]" />
               <span>Ronde Berikutnya</span>
             </button>
+
+            {/* Selesaikan Mabar / Buka Kembali Sesi */}
+            {session.status === "completed" ? (
+              <button
+                onClick={handleReopenSession}
+                className="flex items-center gap-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-3.5 sm:px-4 py-2.5 text-xs font-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+                title="Buka kembali sesi mabar untuk menambah match"
+              >
+                <Undo2 className="h-4 w-4 stroke-[3]" />
+                <span>Buka Kembali Sesi</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsFinishModalOpen(true)}
+                className="flex items-center gap-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white px-3.5 sm:px-4 py-2.5 text-xs font-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+                title="Selesaikan sesi mabar hari ini, hitung rekap podium juara & pembagian biaya cock"
+              >
+                <Flag className="h-4 w-4 stroke-[3]" />
+                <span>Selesaikan Mabar 🏁</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -841,6 +905,14 @@ function HostDashboardContent({ params }: HostPageProps) {
       <AudioSettingsModal
         isOpen={isAudioSettingsOpen}
         onClose={() => setIsAudioSettingsOpen(false)}
+      />
+
+      {/* Modal Selesaikan Sesi Mabar */}
+      <FinishSessionModal
+        isOpen={isFinishModalOpen}
+        onClose={() => setIsFinishModalOpen(false)}
+        onConfirmFinish={handleConfirmFinishSession}
+        session={session}
       />
     </div>
   );
