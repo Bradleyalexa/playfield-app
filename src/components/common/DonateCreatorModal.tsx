@@ -11,8 +11,6 @@ interface DonateCreatorModalProps {
 
 export function DonateCreatorModal({ isOpen, onClose }: DonateCreatorModalProps) {
   const [copiedBank, setCopiedBank] = useState<string | null>(null);
-  const [selectedNominal, setSelectedNominal] = useState<number | null>(15000);
-
   if (!isOpen) return null;
 
   const handleCopy = (text: string, label: string) => {
@@ -20,13 +18,6 @@ export function DonateCreatorModal({ isOpen, onClose }: DonateCreatorModalProps)
     setCopiedBank(label);
     setTimeout(() => setCopiedBank(null), 2000);
   };
-
-  const nominalOptions = [
-    { amount: 5000, label: "☕ Kopi Sachet", desc: "Rp 5.000" },
-    { amount: 15000, label: "🧋 Es Kopi Susu", desc: "Rp 15.000" },
-    { amount: 25000, label: "🚀 Server 1 Hari", desc: "Rp 25.000" },
-    { amount: 50000, label: "👑 Sultan Server", desc: "Rp 50.000" },
-  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs font-sans selection:bg-[#ccff00] selection:text-black">
@@ -54,43 +45,16 @@ export function DonateCreatorModal({ isOpen, onClose }: DonateCreatorModalProps)
               </span>
             </div>
             <p className="text-xs font-bold text-slate-600">
-              Bantu seikhlasnya untuk sewa server &amp; pengembangan
+              Bantu seikhlasnya untuk server &amp; kopi
             </p>
           </div>
         </div>
 
-        {/* Banner Pesan Hangat */}
-        <div className="p-3.5 rounded-2xl bg-white border-2 border-black shadow-[3px_3px_0px_#000] text-xs font-bold text-slate-700 leading-relaxed">
+        {/* Banner Pesan Hangat Apresiasi */}
+        <div className="p-3.5 rounded-2xl bg-white border-2 border-black shadow-[3px_3px_0px_#000] text-xs font-bold text-slate-800 leading-relaxed">
           <p>
-            Playfield dibangun agar komunitas mabar di Indonesia bisa main rapi, adil, dan transparan{" "}
-            <strong>100% gratis tanpa iklan</strong>. Dukungan sukarela Anda sangat berarti untuk membayar tagihan server cloud, database, dan secangkir kopi bagi creator! ❤️
+            Seikhlasnya aja bantu creator bayar server &amp; kopi agar Playfield tetap gratis &amp; online 24/7. ❤️
           </p>
-        </div>
-
-        {/* Pilihan Nominal Cepat */}
-        <div>
-          <label className="block text-[11px] font-black uppercase text-black/70 mb-2">
-            Pilih Nominal Sukarela:
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {nominalOptions.map((opt) => (
-              <button
-                key={opt.amount}
-                type="button"
-                onClick={() => setSelectedNominal(opt.amount)}
-                className={`p-2.5 rounded-xl border-2 border-black text-left transition-all cursor-pointer ${
-                  selectedNominal === opt.amount
-                    ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000] -translate-y-0.5"
-                    : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
-                }`}
-              >
-                <span className="text-xs font-black block">{opt.label}</span>
-                <span className="text-[11px] font-mono font-bold text-slate-700 block mt-0.5">
-                  {opt.desc}
-                </span>
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Kartu QRIS Resmi Dummy / Placeholder */}

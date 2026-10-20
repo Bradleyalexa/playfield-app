@@ -33,12 +33,12 @@ export function FinishSessionModal({
   session,
 }: FinishSessionModalProps) {
   const currentBilling = session.billing || {
-    model: session.sportConfig.equipment.enabled ? "track_equipment" : "none",
+    model: session.sportConfig.equipment.enabled !== false ? "track_equipment" : "none",
   };
 
   const [courtRentalFee, setCourtRentalFee] = useState<number>(
     currentBilling.courtRentalFee ??
-      (session.sportConfig.equipment.enabled ? 160000 : 0),
+      (session.sportConfig.equipment.enabled !== false ? 160000 : 0),
   );
   const [fixedPrice, setFixedPrice] = useState<number>(
     currentBilling.fixedPricePerPerson ?? 40000,
@@ -191,7 +191,7 @@ export function FinishSessionModal({
           <div className="flex items-center justify-between pb-1.5 border-b border-black/10">
             <span className="text-xs font-black uppercase text-black flex items-center gap-1.5">
               <CreditCard className="h-4 w-4" />
-              <span>&amp; Split Bill Patungan</span>
+              <span>Rincian Biaya</span>
             </span>
             <span className="text-[10px] font-mono font-bold bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
               {playerCount} Peserta

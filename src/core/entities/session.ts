@@ -163,7 +163,7 @@ export interface SessionBillingSummary {
 export function calculateSessionBilling(session: GameSession): SessionBillingSummary {
   const playerCount = session.players.length;
   const billing: SessionBillingConfig = session.billing || {
-    model: session.sportConfig.equipment.enabled ? "track_equipment" : "none",
+    model: session.sportConfig.equipment.enabled !== false ? "track_equipment" : "none",
   };
 
   if (billing.model === "none") {

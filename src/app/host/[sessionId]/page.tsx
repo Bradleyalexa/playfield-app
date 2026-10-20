@@ -40,6 +40,7 @@ import { CreateCustomMatchModal } from "../../../components/schedule/CreateCusto
 import { ReshuffleConsentModal } from "../../../components/schedule/ReshuffleConsentModal";
 import { FinishSessionModal } from "../../../components/schedule/FinishSessionModal";
 import { CompletedSessionRecap } from "../../../components/schedule/CompletedSessionRecap";
+import { DonateCreatorModal } from "../../../components/common/DonateCreatorModal";
 import { Match } from "../../../core/entities/match";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
 import {
@@ -80,6 +81,7 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   // Modal Selesaikan Mabar
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
+  const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
 
   // Tips Praktis Host Mabar (Collapsible)
   const [isHostTipsOpen, setIsHostTipsOpen] = useState(false);
@@ -244,6 +246,58 @@ function HostDashboardContent({ params }: HostPageProps) {
         equipment: updatedEquipment,
       },
     };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+  };
+
+  // 1b. Tambah Pemakaian Shuttlecock / Bola khusus Lapangan Tertentu (Selalu +1 per klik)
+  const handleAddCockToCourt = (courtNumber: number) => {
+    if (!session) return;
+    const current = session.sportConfig.equipment;
+    const newTotal = Math.max(0, (current.totalUsed || 0) + 1);
+    const unitsPerSlop = current.unitsPerSlop || 12;
+    const updatedEquipment: EquipmentConfig = {
+      ...current,
+      totalUsed: newTotal,
+      slopUsed:
+        current.pricingModel === "per_slop"
+          ? Math.max(1, Math.ceil(newTotal / unitsPerSlop))
+          : current.slopUsed,
+    };
+
+    const updatedMatches = session.matches.map((m) => {
+      if (m.courtNumber === courtNumber && m.status === "in_progress") {
+        return {
+          ...m,
+          equipmentUsedCount: (m.equipmentUsedCount || 1) + 1,
+        };
+      }
+      return m;
+    });
+
+    const updatedCourts = session.courts.map((c) => {
+      if (c.courtNumber === courtNumber && c.currentMatch && c.currentMatch.status === "in_progress") {
+        return {
+          ...c,
+          currentMatch: {
+            ...c.currentMatch,
+            equipmentUsedCount: (c.currentMatch.equipmentUsedCount || 1) + 1,
+          },
+        };
+      }
+      return c;
+    });
+
+    const updated: GameSession = {
+      ...session,
+      sportConfig: {
+        ...session.sportConfig,
+        equipment: updatedEquipment,
+      },
+      matches: updatedMatches,
+      courts: updatedCourts,
+    };
+
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
   };
@@ -703,6 +757,11 @@ function HostDashboardContent({ params }: HostPageProps) {
     } catch {}
 
     AudioAnnouncer.announceGeneral("Sesi mabar hari ini resmi diselesaikan! Terima kasih semua pemain.");
+
+    // Langsung buka popup modal donasi creator setelah konfirmasi selesaikan mabar
+    setTimeout(() => {
+      setIsDonateModalOpen(true);
+    }, 600);
   };
 
   // 9b. Update Konfigurasi Biaya Billing dari Kartu Rekap
@@ -1088,7 +1147,7 @@ function HostDashboardContent({ params }: HostPageProps) {
                 sportConfig={session.sportConfig}
                 onUpdateScore={handleUpdateScore}
                 onFinishMatch={handleFinishMatch}
-                onAddCockToMatch={handleAddCock}
+                onAddCockToMatch={handleAddCockToCourt}
               />
             ))}
           </div>
@@ -1159,6 +1218,12 @@ function HostDashboardContent({ params }: HostPageProps) {
         onClose={() => setIsFinishModalOpen(false)}
         onConfirmFinish={handleConfirmFinishSession}
         session={session}
+      />
+
+      {/* Modal Donasi ke Creator Playfield (Muncul setelah selesaikan mabar) */}
+      <DonateCreatorModal
+        isOpen={isDonateModalOpen}
+        onClose={() => setIsDonateModalOpen(false)}
       />
     </div>
   );

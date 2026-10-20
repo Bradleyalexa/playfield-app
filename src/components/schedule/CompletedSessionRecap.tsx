@@ -47,7 +47,7 @@ export function CompletedSessionRecap({
 
   // State untuk form edit billing host
   const currentBilling = session.billing || {
-    model: session.sportConfig.equipment.enabled ? "track_equipment" : "none",
+    model: session.sportConfig.equipment.enabled !== false ? "track_equipment" : "none",
   };
   const [editCourtFee, setEditCourtFee] = useState<number>(currentBilling.courtRentalFee ?? 160000);
   const [editFixedPrice, setEditFixedPrice] = useState<number>(currentBilling.fixedPricePerPerson ?? 40000);
@@ -129,7 +129,7 @@ export function CompletedSessionRecap({
     // Rincian Patungan & Biaya
     if (billingSummary.model === "track_equipment") {
       const eq = session.sportConfig.equipment;
-      text += `\n💰 *RINCIAN PATUNGAN MABAR:*\n` +
+      text += `\n💰 *RINCIAN BIAYA:*\n` +
         `• Sewa Lapangan: ${formatRupiah(billingSummary.courtRentalFee)}\n` +
         `• Kok/Bola Terpakai: ${eq.pricingModel === "per_slop" ? `${eq.slopUsed || 1} Slop` : `${eq.totalUsed || 0} Butir`} (${formatRupiah(billingSummary.equipmentFee)})\n`;
 
@@ -140,7 +140,7 @@ export function CompletedSessionRecap({
       text += `• Total Biaya: *${formatRupiah(billingSummary.totalCost)}*\n` +
         `👉 *TAGIHAN PER ORANG: ${formatRupiah(billingSummary.costPerPerson)}*\n`;
     } else if (billingSummary.model === "fixed_per_person") {
-      text += `\n💰 *TAGIHAN MABAR (ALL-IN):*\n` +
+      text += `\n💰 *RINCIAN BIAYA (ALL-IN):*\n` +
         `👉 *TAGIHAN PER ORANG: ${formatRupiah(billingSummary.costPerPerson)}*\n`;
     }
 
@@ -311,7 +311,7 @@ export function CompletedSessionRecap({
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 stroke-[2.5]" />
               <span className="text-xs sm:text-sm font-black uppercase text-black tracking-wide">
-                Rincian Biaya &amp; Split Bill Patungan
+                Rincian Biaya
               </span>
             </div>
 
