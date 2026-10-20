@@ -82,7 +82,7 @@ export class LocalStorageAdapter {
 
     const demoPlayers = [
       { id: "p1", name: "Hendra Setiawan", gender: "M" as const, skillLevel: 3 as const, publicTier: "suhu" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1250, createdAt: new Date().toISOString() },
-      { id: "p2", name: "Kevin Sanjaya", gender: "M" as const, skillLevel: 3 as const, publicTier: "pelatnas" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1300, createdAt: new Date().toISOString() },
+      { id: "p2", name: "Kevin Sanjaya", gender: "M" as const, skillLevel: 3 as const, publicTier: "suhu" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1300, createdAt: new Date().toISOString() },
       { id: "p3", name: "Budi Santoso", gender: "M" as const, skillLevel: 2 as const, publicTier: "hore" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1050, createdAt: new Date().toISOString() },
       { id: "p4", name: "Rian Ardianto", gender: "M" as const, skillLevel: 2 as const, publicTier: "hore" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1100, createdAt: new Date().toISOString() },
       { id: "p5", name: "Siti Rahmawati", gender: "F" as const, skillLevel: 1 as const, publicTier: "kentang" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 950, createdAt: new Date().toISOString() },

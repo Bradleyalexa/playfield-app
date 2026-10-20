@@ -1,8 +1,8 @@
 export type Gender = "M" | "F";
 
-export type SkillLevel = 1 | 2 | 3; // 1: Beginner, 2: Intermediate, 3: Pro
+export type SkillLevel = 1 | 2 | 3; // 1: Beginner (Kentang), 2: Intermediate (Hore), 3: Pro/Mahir (Suhu)
 
-export type PublicTier = "kentang" | "hore" | "suhu" | "pelatnas";
+export type PublicTier = "kentang" | "hore" | "suhu";
 
 export type PlayerStatus = "active" | "paused" | "departed";
 
@@ -32,7 +32,7 @@ export function getTierFromSkill(skill: SkillLevel): PublicTier {
   }
 }
 
-export function getTierLabel(tier: PublicTier): { label: string; badgeColor: string; description: string } {
+export function getTierLabel(tier: PublicTier | string): { label: string; badgeColor: string; description: string } {
   switch (tier) {
     case "kentang":
       return {
@@ -47,16 +47,12 @@ export function getTierLabel(tier: PublicTier): { label: string; badgeColor: str
         description: "Reli jalan, penempatan bola lumayan, mabar rutin",
       };
     case "suhu":
+    case "pelatnas": // Fallback kompatibilitas jika ada data lama
+    default:
       return {
         label: "Tier Suhu",
         badgeColor: "bg-[#7dd3fc] text-black border-2 border-black shadow-[2px_2px_0px_#000] font-black uppercase",
-        description: "Pukulan tajam, footwork rapi, spesialis turnamen",
-      };
-    case "pelatnas":
-      return {
-        label: "Tier Pelatnas",
-        badgeColor: "bg-[#f472b6] text-black border-2 border-black shadow-[2px_2px_0px_#000] font-black uppercase",
-        description: "Mantan atlet GOR, smash petir tak terbendung",
+        description: "Pemain mahir/pro, pukulan tajam, footwork rapi & spesialis turnamen",
       };
   }
 }

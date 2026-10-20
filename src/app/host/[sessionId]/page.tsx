@@ -23,6 +23,8 @@ import { CourtCard } from "../../../components/court/CourtCard";
 import { PlayerRoster } from "../../../components/players/PlayerRoster";
 import { WaPasteModal } from "../../../components/players/WaPasteModal";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
+import { CreateCustomMatchModal } from "../../../components/schedule/CreateCustomMatchModal";
+import { Match } from "../../../core/entities/match";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
 import { ALGORITHM_REGISTRY, GameSession } from "../../../core/entities/session";
 import { generateBalancedMatches } from "../../../core/matchmaking/balanced-queue";
@@ -41,6 +43,7 @@ function HostDashboardContent({ params }: HostPageProps) {
   const [session, setSession] = useState<GameSession | null>(null);
   const [isWaModalOpen, setIsWaModalOpen] = useState(false);
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
+  const [isCreateMatchModalOpen, setIsCreateMatchModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Load session dari local storage atau fallback create demo jika tidak ditemukan
@@ -259,6 +262,28 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
   };
 
+  // 9. Simpan Custom Match yang disusun manual oleh host
+  const handleSaveCustomMatch = (newMatch: Match, assignToCourtImmediately: boolean) => {
+    let updatedCourts = [...session.courts];
+    if (assignToCourtImmediately) {
+      updatedCourts = updatedCourts.map((c) => {
+        if (c.courtNumber === newMatch.courtNumber) {
+          return { ...c, currentMatch: newMatch };
+        }
+        return c;
+      });
+    }
+
+    const updated: GameSession = {
+      ...session,
+      matches: [...session.matches, newMatch],
+      courts: updatedCourts,
+    };
+
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+  };
+
   const handleCopySpectatorLink = () => {
     const url = `${window.location.origin}/live/${session.publicSlug}`;
     navigator.clipboard.writeText(url);
@@ -359,6 +384,15 @@ function HostDashboardContent({ params }: HostPageProps) {
               <span>Sultan Mode</span>
             </button>
 
+            {/* Tombol Susun Match Sendiri */}
+            <button
+              onClick={() => setIsCreateMatchModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-[#fef08a] border-2 border-black px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#fde047] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+            >
+              <Plus className="h-4 w-4 stroke-[3]" />
+              <span>+ Susun Match</span>
+            </button>
+
             {/* Mulai Ronde Berikutnya */}
             <button
               onClick={handleNextRound}
@@ -393,7 +427,7 @@ function HostDashboardContent({ params }: HostPageProps) {
 
           <button
             onClick={handleCopySpectatorLink}
-            className="flex items-center gap-1.5 font-black uppercase text-black hover:text-slate-600 font-mono-sport bg-[#ccff00] px-3 py-1.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000]"
+            className="flex items-center gap-1.5 font-black uppercase text-black hover:text-slate-600 font-mono bg-[#ccff00] px-3 py-1.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer"
           >
             {copiedLink ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <Copy className="h-3.5 w-3.5 stroke-[2.5]" />}
             <span>{copiedLink ? "Link Tersalin!" : "Salin Link Penonton"}</span>
@@ -403,12 +437,20 @@ function HostDashboardContent({ params }: HostPageProps) {
         {/* Grid Lapangan (Court Cards) */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
+            <h2 className="text-base font-black text-black uppercase tracking-wider flex items-center gap-2">
               <span>Lapangan Pertandingan Aktif</span>
-              <span className="text-xs text-slate-400 font-normal">
-                (Tap + / - untuk update skor real-time)
+              <span className="text-xs text-black/60 font-mono font-bold">
+                (Tap + / - untuk update skor)
               </span>
             </h2>
+
+            <button
+              onClick={() => setIsCreateMatchModalOpen(true)}
+              className="flex items-center gap-1 rounded-lg bg-black text-white px-3 py-1 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-neutral-800 transition-all cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5 stroke-[3]" />
+              <span>Tambah Match Manual</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -447,6 +489,14 @@ function HostDashboardContent({ params }: HostPageProps) {
         isOpen={isAllMatchesModalOpen}
         onClose={() => setIsAllMatchesModalOpen(false)}
         session={session}
+      />
+
+      {/* Modal Susun Match Manual (Custom Match by Host) */}
+      <CreateCustomMatchModal
+        isOpen={isCreateMatchModalOpen}
+        onClose={() => setIsCreateMatchModalOpen(false)}
+        session={session}
+        onSaveCustomMatch={handleSaveCustomMatch}
       />
     </div>
   );

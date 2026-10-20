@@ -11,7 +11,8 @@ export type MatchmakingAlgorithm =
   | "skill_tiered"    // Seimbang Level (Kombinasi tier seimbang antar tim)
   | "king_of_court"   // Raja Lapangan (Pemenang bertahan di court 1)
   | "americano"       // Turnamen Americano (Rotasi partner individu bergiliran)
-  | "random_fun";     // Acak Santai (Fun Mabar Tanpa Beban)
+  | "random_fun"      // Acak Santai (Fun Mabar Tanpa Beban)
+  | "custom_manual";  // Susun Manual / Custom by Host (Host tentukan sendiri matchup & jumlah match)
 
 export interface AlgorithmDetails {
   id: MatchmakingAlgorithm;
@@ -52,7 +53,7 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
     badge: "ANTI JOMPLANG",
     badgeColor: "bg-[#00e5ff] text-black",
     icon: "⚡",
-    description: "Memadukan pemain tier atas (Suhu/Pelatnas) dengan pemula (Kentang) melawan pasangan tier menengah (Hore) agar tensi reli tetap seru.",
+    description: "Memadukan pemain tier atas (Suhu) dengan pemula (Kentang) melawan pasangan tier menengah (Hore) agar tensi reli tetap seru.",
     bestFor: "Komunitas dengan disparitas skill yang tinggi agar pemain pemula tidak kena bantai.",
   },
   king_of_court: {
@@ -84,6 +85,16 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
     icon: "🎲",
     description: "Rotasi acak sepenuhnya tanpa memedulikan tier atau statistik, murni untuk kesenangan dan memperluas kenalan baru.",
     bestFor: "Mabar santai, gathering kantor, atau sesi pemanasan sebelum tanding serius.",
+  },
+  custom_manual: {
+    id: "custom_manual",
+    name: "Susun Bebas (Custom Manual by Host)",
+    shortName: "Susun Bebas",
+    badge: "KENDALI PENUH",
+    badgeColor: "bg-[#fef08a] text-black",
+    icon: "✍️",
+    description: "Host memiliki kendali 100% menentukan sendiri siapa berpasangan dengan siapa dan siapa lawan siapa. Host bebas menambah match kapan saja.",
+    bestFor: "Host yang telah menyusun bagan tanding sendiri, sparing spesial, atau pertandingan permintaan khusus antar member.",
   },
 };
 
@@ -118,8 +129,8 @@ export interface GameSession {
 
   // Waktu sewa & Prediksi Algoritma Mabar
   startTime: string; // contoh "19:00"
-  durationHours: number; // contoh 2 atau 3 jam
-  matchDurationMinutes: number; // estimasi 1 match (contoh 15 atau 20 menit)
+  durationHours: number; // contoh 1, 2, 3, atau angka desimal custom
+  matchDurationMinutes: number; // estimasi 1 match (contoh 12, 15, 20, atau custom menit)
   algorithm: MatchmakingAlgorithm;
   estimatedMatchesCount: number; // (durationHours * 60 / matchDurationMinutes * courtCount) + 10 extra matches
 
