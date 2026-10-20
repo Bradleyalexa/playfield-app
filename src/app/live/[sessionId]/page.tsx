@@ -14,11 +14,13 @@ import {
   Clock,
   Share2,
   Flame,
+  QrCode,
 } from "lucide-react";
 import { Navbar } from "../../../components/common/Navbar";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { CompletedSessionRecap } from "../../../components/schedule/CompletedSessionRecap";
 import { PlayerShareModal } from "../../../components/players/PlayerShareModal";
+import { SpectatorQrModal } from "../../../components/common/SpectatorQrModal";
 import { getTierLabel, Player } from "../../../core/entities/player";
 import { ALGORITHM_REGISTRY, GameSession } from "../../../core/entities/session";
 import { LocalStorageAdapter } from "../../../services/storage/local-storage.adapter";
@@ -33,6 +35,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
 
   const [session, setSession] = useState<GameSession | null>(null);
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
+  const [isSpectatorQrOpen, setIsSpectatorQrOpen] = useState(false);
   const [sharingPlayer, setSharingPlayer] = useState<Player | null>(null);
 
   // Waktu & Countdown Sewa Lapangan
@@ -259,6 +262,15 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                 </div>
 
                 <div className="flex items-center gap-2 mt-0.5">
+                  <button
+                    onClick={() => setIsSpectatorQrOpen(true)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#ffde00] text-black border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#ffe640] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    title="Buka QR Code Penonton"
+                  >
+                    <QrCode className="h-4 w-4 stroke-[2.5]" />
+                    <span>Bagikan QR</span>
+                  </button>
+
                   <button
                     onClick={() => setIsAllMatchesModalOpen(true)}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white text-black border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#ccff00] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
@@ -492,6 +504,15 @@ function LiveSpectatorContent({ params }: LivePageProps) {
         isOpen={isAllMatchesModalOpen}
         onClose={() => setIsAllMatchesModalOpen(false)}
         session={session}
+      />
+
+      {/* Modal QR Code Penonton */}
+      <SpectatorQrModal
+        isOpen={isSpectatorQrOpen}
+        onClose={() => setIsSpectatorQrOpen(false)}
+        publicSlug={session.publicSlug}
+        sessionTitle={session.title}
+        courtLocation={session.courtLocation}
       />
 
       {/* Modal Share Rekap Pemain (Bisa Digunakan Penonton / Pemain) */}

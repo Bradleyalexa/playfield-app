@@ -27,6 +27,7 @@ import {
   ChevronUp,
   Lightbulb,
   Lock,
+  QrCode,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
@@ -41,6 +42,7 @@ import { ReshuffleConsentModal } from "../../../components/schedule/ReshuffleCon
 import { FinishSessionModal } from "../../../components/schedule/FinishSessionModal";
 import { CompletedSessionRecap } from "../../../components/schedule/CompletedSessionRecap";
 import { DonateCreatorModal } from "../../../components/common/DonateCreatorModal";
+import { SpectatorQrModal } from "../../../components/common/SpectatorQrModal";
 import { Match } from "../../../core/entities/match";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
 import {
@@ -82,6 +84,7 @@ function HostDashboardContent({ params }: HostPageProps) {
   // Modal Selesaikan Mabar
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+  const [isSpectatorQrOpen, setIsSpectatorQrOpen] = useState(false);
 
   // Tips Praktis Host Mabar (Collapsible)
   const [isHostTipsOpen, setIsHostTipsOpen] = useState(false);
@@ -1037,13 +1040,28 @@ function HostDashboardContent({ params }: HostPageProps) {
             </button>
           </div>
 
-          <button
-            onClick={handleCopySpectatorLink}
-            className="flex items-center gap-1.5 font-black uppercase text-black hover:text-slate-600 font-mono bg-[#ccff00] px-3 py-1.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer"
-          >
-            {copiedLink ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <Copy className="h-3.5 w-3.5 stroke-[2.5]" />}
-            <span>{copiedLink ? "Link Tersalin!" : "Salin Link Penonton"}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Tombol Tampilkan QR Code Penonton */}
+            <button
+              type="button"
+              onClick={() => setIsSpectatorQrOpen(true)}
+              className="flex items-center gap-1.5 font-black uppercase text-black bg-[#ffde00] hover:bg-[#ebd000] px-3 py-1.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              title="Tampilkan QR Code untuk di-scan oleh pemain atau penonton di GOR"
+            >
+              <QrCode className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>QR Penonton</span>
+            </button>
+
+            {/* Tombol Salin Link Penonton */}
+            <button
+              type="button"
+              onClick={handleCopySpectatorLink}
+              className="flex items-center gap-1.5 font-black uppercase text-black hover:text-slate-600 font-mono bg-[#ccff00] px-3 py-1.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            >
+              {copiedLink ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <Copy className="h-3.5 w-3.5 stroke-[2.5]" />}
+              <span>{copiedLink ? "Link Tersalin!" : "Salin Link"}</span>
+            </button>
+          </div>
         </div>
 
         {/* Accordion / Card Tips Praktis untuk Host */}
@@ -1224,6 +1242,15 @@ function HostDashboardContent({ params }: HostPageProps) {
       <DonateCreatorModal
         isOpen={isDonateModalOpen}
         onClose={() => setIsDonateModalOpen(false)}
+      />
+
+      {/* Modal QR Code Papan Penonton */}
+      <SpectatorQrModal
+        isOpen={isSpectatorQrOpen}
+        onClose={() => setIsSpectatorQrOpen(false)}
+        publicSlug={session.publicSlug}
+        sessionTitle={session.title}
+        courtLocation={session.courtLocation}
       />
     </div>
   );
