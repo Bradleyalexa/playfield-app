@@ -17,6 +17,7 @@ interface PlayerShareModalProps {
 export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerShareModalProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [customGelar, setCustomGelar] = useState<string>("");
 
   if (!isOpen || !player) return null;
 
@@ -63,12 +64,14 @@ export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerSha
   const winRate = Math.round((matchesWon / effectivePlayed) * 100);
   const tier = getTierLabel(player.publicTier);
 
-  const badgeTitle =
+  const defaultBadgeTitle =
     matchesWon >= 3
       ? "Suhu Lapangan GOR"
       : winRate >= 60
       ? "Reli Panas Tak Terkalahkan"
       : "Spesialis Penguras Stamina";
+
+  const effectiveGelar = customGelar.trim() || defaultBadgeTitle;
 
   // Unduh gambar Story Card
   const handleDownloadCard = async () => {
@@ -79,7 +82,7 @@ export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerSha
         matchesPlayed: effectivePlayed,
         matchesWon,
         totalPoints,
-        badgeTitle,
+        badgeTitle: effectiveGelar,
         bestPartnerName: bestPartner !== "Belum ada partner" ? bestPartner : undefined,
       });
       StoryCardGenerator.downloadCard(dataUrl, player.name);
@@ -95,7 +98,7 @@ export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerSha
   const shareText = `🏸 *PLAYFIELD MABAR RECAP*\n` +
     `👤 *Pemain:* ${player.name} (${player.gender === "M" ? "Men" : "Women"})\n` +
     `🏢 *Sesi:* ${session.title}\n` +
-    `🏆 *Tier:* ${tier.label.replace("Tier ", "")} • ${badgeTitle}\n` +
+    `🏆 *Tier:* ${tier.label.replace("Tier ", "")} • ${effectiveGelar}\n` +
     `🎮 *Main:* ${effectivePlayed} Match\n` +
     `🥇 *Win Rate:* ${winRate}% (${matchesWon} Menang)\n` +
     `⭐ *Total Poin:* ${totalPoints} Poin\n` +
@@ -197,7 +200,57 @@ export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerSha
 
           <div className="flex items-center gap-1.5 text-xs font-black text-rose-700 bg-rose-50 border border-rose-300 rounded-lg p-2">
             <Flame className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Gelar: {badgeTitle}</span>
+            <span className="truncate">Gelar: {effectiveGelar}</span>
+          </div>
+        </div>
+
+        {/* Form Edit Gelar / Badge Pemain (Host Bisa Rewrite) */}
+        <div className="rounded-2xl border-2 border-black bg-white p-3.5 shadow-[3px_3px_0px_#000] flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-black uppercase tracking-wider text-black flex items-center gap-1.5">
+              <span>✏️ Edit Gelar / Julukan Pemain:</span>
+            </label>
+            {customGelar && (
+              <button
+                type="button"
+                onClick={() => setCustomGelar("")}
+                className="text-[10px] font-bold text-slate-500 hover:text-black underline cursor-pointer"
+              >
+                Reset Default
+              </button>
+            )}
+          </div>
+          <input
+            type="text"
+            value={customGelar}
+            onChange={(e) => setCustomGelar(e.target.value)}
+            placeholder={defaultBadgeTitle}
+            className="w-full rounded-xl bg-[#faf8f2] border-2 border-black px-3 py-1.5 text-xs font-black text-black placeholder:text-slate-400 focus:outline-none focus:bg-white"
+          />
+
+          {/* Quick Preset Gelar Pills */}
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {[
+              "👑 Raja Smash Geledek",
+              "🥔 Juara Bertahan Kentang",
+              "🏸 Spesialis Reli Panjang",
+              "⚡ Paling Gacor Malam Ini",
+              "🎯 Raja Netting Tipis",
+              "🛡️ Tembok Pertahanan Kokoh",
+            ].map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setCustomGelar(preset)}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                  customGelar === preset
+                    ? "bg-[#ccff00] text-black border-2 border-black font-black shadow-[1px_1px_0px_#000]"
+                    : "bg-white text-slate-700 border border-slate-300 hover:border-black"
+                }`}
+              >
+                {preset}
+              </button>
+            ))}
           </div>
         </div>
 

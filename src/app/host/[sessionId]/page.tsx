@@ -27,10 +27,12 @@ import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
 import { CourtCard } from "../../../components/court/CourtCard";
 import { EquipmentSettingsModal } from "../../../components/common/EquipmentSettingsModal";
+import { AudioSettingsModal } from "../../../components/common/AudioSettingsModal";
 import { PlayerRoster } from "../../../components/players/PlayerRoster";
 import { WaPasteModal } from "../../../components/players/WaPasteModal";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { CreateCustomMatchModal } from "../../../components/schedule/CreateCustomMatchModal";
+import { ReshuffleConsentModal } from "../../../components/schedule/ReshuffleConsentModal";
 import { Match } from "../../../core/entities/match";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
 import {
@@ -59,6 +61,14 @@ function HostDashboardContent({ params }: HostPageProps) {
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [lastReshuffleSnapshot, setLastReshuffleSnapshot] = useState<GameSession | null>(null);
+
+  // Modal Konfirmasi Alur Kocok Ulang (Consent Host)
+  const [isReshuffleModalOpen, setIsReshuffleModalOpen] = useState(false);
+  const [reshuffleTriggerReason, setReshuffleTriggerReason] = useState<"manual_button" | "player_added" | "player_removed">("manual_button");
+  const [reshuffleExtraNotice, setReshuffleExtraNotice] = useState<string | undefined>(undefined);
+
+  // Modal Ganti Suara Announcer / Wasit
+  const [isAudioSettingsOpen, setIsAudioSettingsOpen] = useState(false);
 
   // Load session dari local storage atau fallback create demo jika tidak ditemukan
   useEffect(() => {
@@ -292,31 +302,68 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   // 6b. Hapus Pemain dari Roster
   const handleRemovePlayer = (playerId: string) => {
+    const targetPlayer = session.players.find((p) => p.id === playerId);
     const updatedPlayers = session.players.filter((p) => p.id !== playerId);
-    const updated: GameSession = { ...session, players: updatedPlayers };
+
+    // Cari apakah pemain yang dihapus sedang terjadwal di lapangan yang belum bertanding (skor 0-0)
+    const assignedCourt = session.courts.find(
+      (c) =>
+        c.currentMatch &&
+        (c.currentMatch.teamA.some((p) => p.id === playerId) ||
+          c.currentMatch.teamB.some((p) => p.id === playerId))
+    );
+
+    let updatedCourts = [...session.courts];
+    let updatedMatches = [...session.matches];
+
+    if (assignedCourt && assignedCourt.currentMatch) {
+      if (
+        assignedCourt.currentMatch.scoreA === 0 &&
+        assignedCourt.currentMatch.scoreB === 0
+      ) {
+        // Hapus match yang anggotanya sudah tidak lengkap
+        updatedMatches = updatedMatches.filter((m) => m.id !== assignedCourt.currentMatch!.id);
+        updatedCourts = updatedCourts.map((c) =>
+          c.id === assignedCourt.id ? { ...c, currentMatch: undefined } : c
+        );
+      }
+    }
+
+    const updated: GameSession = {
+      ...session,
+      players: updatedPlayers,
+      courts: updatedCourts,
+      matches: updatedMatches,
+    };
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
+
+    // Minta consent dari host untuk mengisi slot yang kosong
+    if (assignedCourt) {
+      setReshuffleTriggerReason("player_removed");
+      setReshuffleExtraNotice(
+        `Pemain "${targetPlayer?.name || "Pemain"}" sebelumnya terjadwal di ${assignedCourt.courtName}. Slot pemain kini kosong. Mau kocok ulang untuk mencari pengganti?`
+      );
+      setIsReshuffleModalOpen(true);
+    }
   };
 
-  // 6c. Kocok Ulang / Reshuffle Rotasi Pertandingan
-  const handleReshuffle = () => {
+  // 6c. Buka Modal Konfirmasi Alur Kocok Ulang
+  const handleOpenReshuffleModal = () => {
+    setReshuffleTriggerReason("manual_button");
+    setReshuffleExtraNotice(undefined);
+    setIsReshuffleModalOpen(true);
+  };
+
+  // Eksekusi Kocok Ulang / Reshuffle Rotasi Pertandingan (Setelah Host Setuju di Modal)
+  const executeReshuffle = () => {
     const activePlayers = session.players.filter((p) => p.status === "active");
     if (activePlayers.length < 4) {
       alert("Pemain aktif saat ini kurang dari 4 orang untuk membentuk pertandingan ganda!");
       return;
     }
 
-    const hasScoredMatches = session.courts.some(
-      (c) => c.currentMatch && (c.currentMatch.scoreA > 0 || c.currentMatch.scoreB > 0)
-    );
-
-    const message = hasScoredMatches
-      ? "Kocok ulang giliran di lapangan yang masih kosong atau belum dimulai? Pertandingan yang sedang berlangsung dengan skor tidak akan diubah."
-      : "Kocok ulang seluruh pasangan dan lawan di semua lapangan untuk ronde ini?";
-
-    if (!window.confirm(message)) return;
-
-    // Filter pemain yang sedang bermain di lapangan yang tidak di-reset
+    // Filter pemain yang sedang bermain di lapangan yang tidak di-reset (skor > 0)
     const lockedPlayerIds = new Set<string>();
     session.courts.forEach((c) => {
       if (c.currentMatch && (c.currentMatch.scoreA > 0 || c.currentMatch.scoreB > 0)) {
@@ -406,93 +453,49 @@ function HostDashboardContent({ params }: HostPageProps) {
     };
 
     const updatedPlayers = [...session.players, newPlayer];
-    let updatedCourts = [...session.courts];
-    let updatedMatches = [...session.matches];
-
-    // Jika ada lapangan yang kosong dan pemain aktif cukup (>= 4), langsung isi lapangan kosong
-    const emptyCourts = session.courts.filter((c) => !c.currentMatch);
-    const activePool = updatedPlayers.filter((p) => p.status === "active");
-    const playingIds = new Set(
-      session.courts
-        .filter((c) => c.currentMatch)
-        .flatMap((c) => [...c.currentMatch!.teamA, ...c.currentMatch!.teamB].map((p) => p.id))
-    );
-    const availablePool = activePool.filter((p) => !playingIds.has(p.id));
-
-    if (emptyCourts.length > 0 && availablePool.length >= 4) {
-      const fresh = generateBalancedMatches(
-        availablePool,
-        emptyCourts.length,
-        session.currentRound,
-        session.algorithm || "fair_playtime",
-        session.matches.filter((m) => m.status === "completed")
-      );
-      fresh.matches.forEach((fm, idx) => {
-        const target = emptyCourts[idx];
-        if (target) {
-          const adj = { ...fm, courtNumber: target.courtNumber };
-          updatedMatches.push(adj);
-          updatedCourts = updatedCourts.map((c) =>
-            c.courtNumber === target.courtNumber ? { ...c, currentMatch: adj } : c
-          );
-        }
-      });
-    }
-
     const updated: GameSession = {
       ...session,
       players: updatedPlayers,
-      courts: updatedCourts,
-      matches: updatedMatches,
     };
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
+
+    // Cek apakah ada lapangan yang kosong atau belum bermain, lalu minta consent host
+    const emptyOrResetCourts = session.courts.filter(
+      (c) => !c.currentMatch || (c.currentMatch.scoreA === 0 && c.currentMatch.scoreB === 0)
+    );
+    const activePool = updatedPlayers.filter((p) => p.status === "active");
+    if (emptyOrResetCourts.length > 0 && activePool.length >= 4) {
+      setReshuffleTriggerReason("player_added");
+      setReshuffleExtraNotice(
+        `Pemain "${name}" baru saja bergabung! Ada ${emptyOrResetCourts.length} lapangan yang belum bertanding/kosong. Mau langsung diacak agar ${name} bisa masuk lapangan sekarang?`
+      );
+      setIsReshuffleModalOpen(true);
+    }
   };
 
   // 8. Import Pemain dari WhatsApp
   const handleImportWaPlayers = (newPlayers: Player[]) => {
     const updatedPlayers = [...session.players, ...newPlayers];
-    let updatedCourts = [...session.courts];
-    let updatedMatches = [...session.matches];
-
-    // Jika ada lapangan yang kosong dan pemain aktif cukup (>= 4), langsung isi lapangan kosong
-    const emptyCourts = session.courts.filter((c) => !c.currentMatch);
-    const activePool = updatedPlayers.filter((p) => p.status === "active");
-    const playingIds = new Set(
-      session.courts
-        .filter((c) => c.currentMatch)
-        .flatMap((c) => [...c.currentMatch!.teamA, ...c.currentMatch!.teamB].map((p) => p.id))
-    );
-    const availablePool = activePool.filter((p) => !playingIds.has(p.id));
-
-    if (emptyCourts.length > 0 && availablePool.length >= 4) {
-      const fresh = generateBalancedMatches(
-        availablePool,
-        emptyCourts.length,
-        session.currentRound,
-        session.algorithm || "fair_playtime",
-        session.matches.filter((m) => m.status === "completed")
-      );
-      fresh.matches.forEach((fm, idx) => {
-        const target = emptyCourts[idx];
-        if (target) {
-          const adj = { ...fm, courtNumber: target.courtNumber };
-          updatedMatches.push(adj);
-          updatedCourts = updatedCourts.map((c) =>
-            c.courtNumber === target.courtNumber ? { ...c, currentMatch: adj } : c
-          );
-        }
-      });
-    }
-
     const updated: GameSession = {
       ...session,
       players: updatedPlayers,
-      courts: updatedCourts,
-      matches: updatedMatches,
     };
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
+
+    // Cek apakah ada lapangan yang kosong atau belum bermain, lalu minta consent host
+    const emptyOrResetCourts = session.courts.filter(
+      (c) => !c.currentMatch || (c.currentMatch.scoreA === 0 && c.currentMatch.scoreB === 0)
+    );
+    const activePool = updatedPlayers.filter((p) => p.status === "active");
+    if (emptyOrResetCourts.length > 0 && activePool.length >= 4) {
+      setReshuffleTriggerReason("player_added");
+      setReshuffleExtraNotice(
+        `${newPlayers.length} pemain baru dari WhatsApp berhasil diimpor. Mau kocok ulang lapangan yang belum bertanding agar pemain baru langsung masuk sekarang?`
+      );
+      setIsReshuffleModalOpen(true);
+    }
   };
 
   // 9. Simpan Custom Match yang disusun manual oleh host
@@ -675,9 +678,9 @@ function HostDashboardContent({ params }: HostPageProps) {
               <span>+ Susun Match</span>
             </button>
 
-            {/* Tombol Kocok Ulang / Reshuffle Rotasi */}
+            {/* Tombol Kocok Ulang / Reshuffle Rotasi (Membuka Modal Alur & Konfirmasi) */}
             <button
-              onClick={handleReshuffle}
+              onClick={handleOpenReshuffleModal}
               className="flex items-center gap-1.5 rounded-xl bg-[#00e5ff] border-2 border-black px-3.5 sm:px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#00cce6] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
               title="Kocok ulang giliran pemain untuk lapangan yang belum bertanding atau kosong"
             >
@@ -727,6 +730,15 @@ function HostDashboardContent({ params }: HostPageProps) {
               <Users className="h-4 w-4 stroke-[2.5]" />
               <span>Buka Papan Penonton</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => setIsAudioSettingsOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border-2 border-black bg-white px-3.5 py-1.5 font-black uppercase text-black hover:bg-[#ccff00] shadow-[2px_2px_0px_#000] transition-all cursor-pointer"
+              title="Ganti karakter suara wasit / announcer speaker GOR (Cewek, Cowok, Wasit Robot)"
+            >
+              <Volume2 className="h-4 w-4 stroke-[2.5]" />
+              <span>Ganti Suara Wasit</span>
+            </button>
           </div>
 
           <button
@@ -814,6 +826,22 @@ function HostDashboardContent({ params }: HostPageProps) {
           onSave={handleSaveEquipment}
         />
       )}
+
+      {/* Modal Konfirmasi & Alur Kocok Ulang (Reshuffle Consent) */}
+      <ReshuffleConsentModal
+        isOpen={isReshuffleModalOpen}
+        onClose={() => setIsReshuffleModalOpen(false)}
+        onConfirm={executeReshuffle}
+        session={session}
+        triggerReason={reshuffleTriggerReason}
+        extraNotice={reshuffleExtraNotice}
+      />
+
+      {/* Modal Pengaturan Karakter Suara Announcer / Wasit */}
+      <AudioSettingsModal
+        isOpen={isAudioSettingsOpen}
+        onClose={() => setIsAudioSettingsOpen(false)}
+      />
     </div>
   );
 }
