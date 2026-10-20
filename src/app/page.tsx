@@ -24,9 +24,17 @@ import {
   Package,
   MapPin,
   ExternalLink,
+  ClipboardPaste,
+  Trash2,
+  X,
+  UserPlus,
+  Shuffle,
 } from "lucide-react";
 import { Navbar } from "../components/common/Navbar";
 import { AlgorithmExplainerModal } from "../components/schedule/AlgorithmExplainerModal";
+import { WaPasteModal } from "../components/players/WaPasteModal";
+import { Player, getTierFromSkill, getTierLabel } from "../core/entities/player";
+import { generateBalancedMatches, addMinutesToTimeString } from "../core/matchmaking/balanced-queue";
 import {
   ALGORITHM_REGISTRY,
   EquipmentPricingModel,
@@ -73,6 +81,78 @@ export default function HomePage() {
 
   // Modal Penjelasan Algoritma
   const [isAlgoExplainerOpen, setIsAlgoExplainerOpen] = useState(false);
+
+  // Daftar Pemain Awal (Bisa Diisi Sebelum Sesi Dimulai / Paste WA)
+  const [initialPlayers, setInitialPlayers] = useState<Player[]>([
+    {
+      id: "p1",
+      name: "Hendra Setiawan",
+      gender: "M",
+      skillLevel: 3,
+      publicTier: "suhu",
+      gamesPlayed: 0,
+      lastPlayedRound: 0,
+      status: "active",
+      eloRating: 1250,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    {
+      id: "p2",
+      name: "Kevin Sanjaya",
+      gender: "M",
+      skillLevel: 3,
+      publicTier: "suhu",
+      gamesPlayed: 0,
+      lastPlayedRound: 0,
+      status: "active",
+      eloRating: 1300,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+  ]);
+  const [isWaModalOpen, setIsWaModalOpen] = useState(false);
+  const [quickPlayerName, setQuickPlayerName] = useState("");
+  const [quickGender, setQuickGender] = useState<"M" | "F">("M");
+  const [quickSkill, setQuickSkill] = useState<1 | 2 | 3>(2);
+
+  const handleAddQuickPlayer = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!quickPlayerName.trim()) return;
+    const newP: Player = {
+      id: `p-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name: quickPlayerName.trim(),
+      gender: quickGender,
+      skillLevel: quickSkill,
+      publicTier: getTierFromSkill(quickSkill),
+      gamesPlayed: 0,
+      lastPlayedRound: 0,
+      status: "active",
+      eloRating: 1000 + (quickSkill - 2) * 100,
+      createdAt: new Date().toISOString(),
+    };
+    setInitialPlayers((prev) => [...prev, newP]);
+    setQuickPlayerName("");
+  };
+
+  const handleImportWaPlayers = (newPlayers: Player[]) => {
+    setInitialPlayers((prev) => [...prev, ...newPlayers]);
+  };
+
+  const handleRemoveInitialPlayer = (id: string) => {
+    setInitialPlayers((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleLoadDemo8Players = () => {
+    setInitialPlayers([
+      { id: `p-${Date.now()}-1`, name: "Hendra Setiawan", gender: "M", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1300, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-2`, name: "Kevin Sanjaya", gender: "M", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1320, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-3`, name: "Greysia Polii", gender: "F", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1290, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-4`, name: "Apriyani Rahayu", gender: "F", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1280, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-5`, name: "Fajar Alfian", gender: "M", skillLevel: 2, publicTier: "hore", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1100, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-6`, name: "Rian Ardianto", gender: "M", skillLevel: 2, publicTier: "hore", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1100, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-7`, name: "Siti Fadia", gender: "F", skillLevel: 2, publicTier: "hore", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1050, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-8`, name: "Budi Pemula", gender: "M", skillLevel: 1, publicTier: "kentang", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 900, createdAt: new Date().toISOString() },
+    ]);
+  };
 
   const [recentSessions, setRecentSessions] = useState<
     { id: string; publicSlug: string; title: string; sport: SportType; updatedAt: string; playerCount: number }[]
@@ -148,6 +228,7 @@ export default function HomePage() {
     demo.estimatedMatchesCount = totalProjectedMatches;
     demo.courtLocation = courtLocation.trim() || undefined;
     demo.googleMapsUrl = googleMapsUrl.trim() || undefined;
+    demo.players = initialPlayers;
 
     // Konfigurasi Equipment (Cock / Bola & Slop)
     demo.sportConfig.equipment = {
@@ -170,15 +251,15 @@ export default function HomePage() {
       slopUsed: equipmentPricingModel === "per_slop" ? 1 : 0,
     };
 
-    // Jika user memilih custom manual, buat N custom matches awal siap pakai (jika pemain >= 4)
+    // Shuffle & Matchmaking Ronde 1 berdasarkan algoritma yang dipilih
     if (selectedAlgorithm === "custom_manual") {
       const customMatches: Match[] = [];
       const totalToInit = customInitialMatchesCount || 4;
-      if (demo.players.length >= 4) {
+      if (initialPlayers.length >= 4) {
         for (let i = 0; i < totalToInit; i++) {
           const cNum = (i % courtCount) + 1;
           const rNum = Math.floor(i / courtCount) + 1;
-          const four = demo.players.slice(0, 4);
+          const four = initialPlayers.slice(0, 4);
           customMatches.push({
             id: `custom-init-${i + 1}-${Date.now()}`,
             courtNumber: cNum,
@@ -204,6 +285,19 @@ export default function HomePage() {
           currentMatch: undefined,
         }));
       }
+    } else if (initialPlayers.length >= 4) {
+      const initialMatches = generateBalancedMatches(initialPlayers, courtCount, 1, selectedAlgorithm);
+      demo.matches = initialMatches.matches;
+      demo.courts = demo.courts.map((c) => ({
+        ...c,
+        currentMatch: initialMatches.matches.find((m) => m.courtNumber === c.courtNumber) || undefined,
+      }));
+    } else {
+      demo.matches = [];
+      demo.courts = demo.courts.map((c) => ({
+        ...c,
+        currentMatch: undefined,
+      }));
     }
 
     LocalStorageAdapter.saveSession(demo);
@@ -612,10 +706,168 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* 5. Pilihan Algoritma Mabar (Dengan Banner Trigger Modal Penjelasan di Tengah) */}
+              {/* 5. Daftar Pemain Mabar (Bisa Diisi Sekarang / Nanti di Dashboard) */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-[#faf8f2] border-3 border-black shadow-[4px_4px_0px_#000] flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b-2 border-black">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 stroke-[3]" />
+                    <span className="text-xs font-black uppercase tracking-wider text-black">
+                      5. Masukkan Daftar Pemain Mabar (Opsional Diisi Sekarang)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-[#ccff00] text-black border border-black shadow-[1px_1px_0px_#000]">
+                      {initialPlayers.length} Pemain (
+                      {initialPlayers.filter((p) => p.gender === "M").length} M •{" "}
+                      {initialPlayers.filter((p) => p.gender === "F").length} W)
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs font-bold text-slate-700">
+                  Host dapat mengisi daftar nama pemain sekarang agar <strong>Ronde 1 langsung dikocok & diatur otomatis</strong> oleh algoritma begitu mabar dimulai, atau bisa juga diisi/ditambahkan nanti saat di Dashboard.
+                </p>
+
+                {/* Action Bar Pemain: Paste WA & Preset */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsWaModalOpen(true)}
+                    className="flex items-center gap-1.5 rounded-xl bg-[#ccff00] border-2 border-black px-3.5 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                  >
+                    <ClipboardPaste className="h-4 w-4 stroke-[2.5]" />
+                    <span>Paste List WhatsApp</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLoadDemo8Players}
+                    className="flex items-center gap-1 rounded-xl bg-white border-2 border-black px-3 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                  >
+                    <span>⚡ Isi 8 Pemain Contoh</span>
+                  </button>
+
+                  {initialPlayers.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setInitialPlayers([])}
+                      className="flex items-center gap-1 rounded-xl bg-white border-2 border-black px-3 py-2 text-xs font-black text-rose-600 hover:bg-rose-50 shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Kosongkan</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick Add Form Mini */}
+                <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={quickPlayerName}
+                    onChange={(e) => setQuickPlayerName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddQuickPlayer();
+                      }
+                    }}
+                    placeholder="Ketik nama pemain (contoh: Joko, Maya, Dedi)..."
+                    className="flex-1 rounded-lg bg-[#faf8f2] border-2 border-black px-3 py-1.5 text-xs font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white"
+                  />
+
+                  {/* Gender Selector: M vs W */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setQuickGender("M")}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                        quickGender === "M"
+                          ? "bg-blue-200 text-blue-950 shadow-[2px_2px_0px_#000]"
+                          : "bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      👦 M
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setQuickGender("F")}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                        quickGender === "F"
+                          ? "bg-pink-200 text-pink-950 shadow-[2px_2px_0px_#000]"
+                          : "bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      👧 W
+                    </button>
+                  </div>
+
+                  {/* Skill Tier Selector */}
+                  <select
+                    value={quickSkill}
+                    onChange={(e) => setQuickSkill(parseInt(e.target.value, 10) as 1 | 2 | 3)}
+                    className="rounded-lg bg-[#faf8f2] border-2 border-black px-2.5 py-1.5 text-xs font-black text-black cursor-pointer"
+                  >
+                    <option value={1}>Kentang (Beginner)</option>
+                    <option value={2}>Hore (Intermediate)</option>
+                    <option value={3}>Suhu (Advanced)</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={handleAddQuickPlayer}
+                    className="flex items-center justify-center gap-1 px-3.5 py-1.5 rounded-lg bg-black text-[#ccff00] text-xs font-black uppercase tracking-wider hover:bg-neutral-800 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer shadow-[2px_2px_0px_#000]"
+                  >
+                    <Plus className="h-3.5 w-3.5 stroke-[3]" />
+                    <span>Tambah</span>
+                  </button>
+                </div>
+
+                {/* List Chips Pemain */}
+                {initialPlayers.length === 0 ? (
+                  <div className="py-4 text-center rounded-xl bg-white border-2 border-dashed border-black/40 text-xs font-bold text-slate-600">
+                    Belum ada pemain. Kamu bisa paste dari WhatsApp sekarang atau nanti saat mabar dimulai.
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1">
+                    {initialPlayers.map((player) => {
+                      const tier = getTierLabel(player.publicTier);
+                      return (
+                        <div
+                          key={player.id}
+                          className="flex items-center gap-1.5 rounded-xl bg-white border-2 border-black px-2.5 py-1 text-xs shadow-[2px_2px_0px_#000]"
+                        >
+                          <span className="font-extrabold text-black">{player.name}</span>
+                          <span
+                            className={`text-[9px] font-mono font-black px-1.5 py-0.2 rounded border ${
+                              player.gender === "M"
+                                ? "bg-blue-100 text-blue-900 border-blue-400"
+                                : "bg-pink-100 text-pink-900 border-pink-400"
+                            }`}
+                          >
+                            {player.gender === "M" ? "M" : "W"}
+                          </span>
+                          <span className={`text-[9px] px-1 py-0.2 rounded ${tier.badgeColor}`}>
+                            {tier.label.replace("Tier ", "")}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveInitialPlayer(player.id)}
+                            className="text-slate-400 hover:text-rose-600 transition-colors ml-0.5 cursor-pointer"
+                            title="Hapus"
+                          >
+                            <X className="h-3.5 w-3.5 stroke-[2.5]" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* 6. Pilihan Algoritma Mabar (Dengan Banner Trigger Modal Penjelasan di Tengah) */}
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-black mb-2">
-                  5. Pilih Algoritma Rotasi Lapangan & Matchmaking (7 Algoritma)
+                  6. Pilih Algoritma Rotasi Lapangan & Matchmaking (7 Algoritma)
                 </label>
 
                 {/* Banner Trigger Modal Penjelasan Algoritma Lengkap */}
@@ -1108,6 +1360,13 @@ export default function HomePage() {
         onClose={() => setIsAlgoExplainerOpen(false)}
         selectedAlgorithm={selectedAlgorithm}
         onSelectAlgorithm={(algo) => setSelectedAlgorithm(algo)}
+      />
+
+      {/* Modal WhatsApp Paste untuk Input Awal Pemain */}
+      <WaPasteModal
+        isOpen={isWaModalOpen}
+        onClose={() => setIsWaModalOpen(false)}
+        onImportPlayers={handleImportWaPlayers}
       />
     </div>
   );

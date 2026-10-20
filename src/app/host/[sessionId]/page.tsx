@@ -20,6 +20,7 @@ import {
   Settings2,
   MapPin,
   ExternalLink,
+  Shuffle,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
@@ -295,10 +296,90 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
   };
 
+  // 6c. Kocok Ulang / Reshuffle Rotasi Pertandingan
+  const handleReshuffle = () => {
+    const activePlayers = session.players.filter((p) => p.status === "active");
+    if (activePlayers.length < 4) {
+      alert("Pemain aktif saat ini kurang dari 4 orang untuk membentuk pertandingan ganda!");
+      return;
+    }
+
+    const hasScoredMatches = session.courts.some(
+      (c) => c.currentMatch && (c.currentMatch.scoreA > 0 || c.currentMatch.scoreB > 0)
+    );
+
+    const message = hasScoredMatches
+      ? "Kocok ulang giliran di lapangan yang masih kosong atau belum dimulai? Pertandingan yang sedang berlangsung dengan skor tidak akan diubah."
+      : "Kocok ulang seluruh pasangan dan lawan di semua lapangan untuk ronde ini?";
+
+    if (!window.confirm(message)) return;
+
+    // Filter pemain yang sedang bermain di lapangan yang tidak di-reset
+    const lockedPlayerIds = new Set<string>();
+    session.courts.forEach((c) => {
+      if (c.currentMatch && (c.currentMatch.scoreA > 0 || c.currentMatch.scoreB > 0)) {
+        c.currentMatch.teamA.forEach((p) => lockedPlayerIds.add(p.id));
+        c.currentMatch.teamB.forEach((p) => lockedPlayerIds.add(p.id));
+      }
+    });
+
+    const eligiblePool = activePlayers.filter((p) => !lockedPlayerIds.has(p.id));
+    const emptyOrResetCourts = session.courts.filter(
+      (c) => !c.currentMatch || (c.currentMatch.scoreA === 0 && c.currentMatch.scoreB === 0)
+    );
+
+    if (eligiblePool.length < 4 && emptyOrResetCourts.length > 0) {
+      alert("Pemain yang siap dirotasi kurang dari 4 orang!");
+      return;
+    }
+
+    const fresh = generateBalancedMatches(
+      eligiblePool,
+      emptyOrResetCourts.length,
+      session.currentRound,
+      session.algorithm || "fair_playtime",
+      session.matches.filter((m) => m.status === "completed")
+    );
+
+    let updatedCourts = [...session.courts];
+    let updatedMatches = [
+      ...session.matches.filter((m) => m.status === "completed" || lockedPlayerIds.has(m.teamA[0]?.id)),
+    ];
+
+    emptyOrResetCourts.forEach((court, idx) => {
+      const matchForCourt = fresh.matches[idx];
+      if (matchForCourt) {
+        const adjustedMatch: Match = { ...matchForCourt, courtNumber: court.courtNumber };
+        updatedMatches.push(adjustedMatch);
+        updatedCourts = updatedCourts.map((c) =>
+          c.courtNumber === court.courtNumber ? { ...c, currentMatch: adjustedMatch } : c
+        );
+      } else {
+        updatedCourts = updatedCourts.map((c) =>
+          c.courtNumber === court.courtNumber ? { ...c, currentMatch: undefined } : c
+        );
+      }
+    });
+
+    const updated: GameSession = {
+      ...session,
+      matches: updatedMatches,
+      courts: updatedCourts,
+    };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+
+    try {
+      confetti({ particleCount: 70, spread: 70, origin: { y: 0.5 } });
+    } catch {}
+
+    AudioAnnouncer.announceGeneral("Jadwal rotasi pemain telah dikocok ulang.");
+  };
+
   // 7. Tambah Pemain Manual Tunggal
   const handleAddSinglePlayer = (name: string, gender: "M" | "F", skillLevel: 1 | 2 | 3) => {
     const newPlayer: Player = {
-      id: `p-${Date.now()}`,
+      id: `p-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
       name,
       gender,
       skillLevel,
@@ -310,14 +391,92 @@ function HostDashboardContent({ params }: HostPageProps) {
       createdAt: new Date().toISOString(),
     };
 
-    const updated: GameSession = { ...session, players: [...session.players, newPlayer] };
+    const updatedPlayers = [...session.players, newPlayer];
+    let updatedCourts = [...session.courts];
+    let updatedMatches = [...session.matches];
+
+    // Jika ada lapangan yang kosong dan pemain aktif cukup (>= 4), langsung isi lapangan kosong
+    const emptyCourts = session.courts.filter((c) => !c.currentMatch);
+    const activePool = updatedPlayers.filter((p) => p.status === "active");
+    const playingIds = new Set(
+      session.courts
+        .filter((c) => c.currentMatch)
+        .flatMap((c) => [...c.currentMatch!.teamA, ...c.currentMatch!.teamB].map((p) => p.id))
+    );
+    const availablePool = activePool.filter((p) => !playingIds.has(p.id));
+
+    if (emptyCourts.length > 0 && availablePool.length >= 4) {
+      const fresh = generateBalancedMatches(
+        availablePool,
+        emptyCourts.length,
+        session.currentRound,
+        session.algorithm || "fair_playtime",
+        session.matches.filter((m) => m.status === "completed")
+      );
+      fresh.matches.forEach((fm, idx) => {
+        const target = emptyCourts[idx];
+        if (target) {
+          const adj = { ...fm, courtNumber: target.courtNumber };
+          updatedMatches.push(adj);
+          updatedCourts = updatedCourts.map((c) =>
+            c.courtNumber === target.courtNumber ? { ...c, currentMatch: adj } : c
+          );
+        }
+      });
+    }
+
+    const updated: GameSession = {
+      ...session,
+      players: updatedPlayers,
+      courts: updatedCourts,
+      matches: updatedMatches,
+    };
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
   };
 
   // 8. Import Pemain dari WhatsApp
   const handleImportWaPlayers = (newPlayers: Player[]) => {
-    const updated: GameSession = { ...session, players: [...session.players, ...newPlayers] };
+    const updatedPlayers = [...session.players, ...newPlayers];
+    let updatedCourts = [...session.courts];
+    let updatedMatches = [...session.matches];
+
+    // Jika ada lapangan yang kosong dan pemain aktif cukup (>= 4), langsung isi lapangan kosong
+    const emptyCourts = session.courts.filter((c) => !c.currentMatch);
+    const activePool = updatedPlayers.filter((p) => p.status === "active");
+    const playingIds = new Set(
+      session.courts
+        .filter((c) => c.currentMatch)
+        .flatMap((c) => [...c.currentMatch!.teamA, ...c.currentMatch!.teamB].map((p) => p.id))
+    );
+    const availablePool = activePool.filter((p) => !playingIds.has(p.id));
+
+    if (emptyCourts.length > 0 && availablePool.length >= 4) {
+      const fresh = generateBalancedMatches(
+        availablePool,
+        emptyCourts.length,
+        session.currentRound,
+        session.algorithm || "fair_playtime",
+        session.matches.filter((m) => m.status === "completed")
+      );
+      fresh.matches.forEach((fm, idx) => {
+        const target = emptyCourts[idx];
+        if (target) {
+          const adj = { ...fm, courtNumber: target.courtNumber };
+          updatedMatches.push(adj);
+          updatedCourts = updatedCourts.map((c) =>
+            c.courtNumber === target.courtNumber ? { ...c, currentMatch: adj } : c
+          );
+        }
+      });
+    }
+
+    const updated: GameSession = {
+      ...session,
+      players: updatedPlayers,
+      courts: updatedCourts,
+      matches: updatedMatches,
+    };
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
   };
@@ -502,10 +661,20 @@ function HostDashboardContent({ params }: HostPageProps) {
               <span>+ Susun Match</span>
             </button>
 
+            {/* Tombol Kocok Ulang / Reshuffle Rotasi */}
+            <button
+              onClick={handleReshuffle}
+              className="flex items-center gap-1.5 rounded-xl bg-[#00e5ff] border-2 border-black px-3.5 sm:px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#00cce6] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+              title="Kocok ulang giliran pemain untuk lapangan yang belum bertanding atau kosong"
+            >
+              <Shuffle className="h-4 w-4 stroke-[2.5]" />
+              <span>Kocok Ulang</span>
+            </button>
+
             {/* Mulai Ronde Berikutnya */}
             <button
               onClick={handleNextRound}
-              className="flex items-center gap-2 rounded-xl bg-[#ccff00] px-5 py-2.5 text-xs font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+              className="flex items-center gap-2 rounded-xl bg-[#ccff00] px-4 sm:px-5 py-2.5 text-xs font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
             >
               <FastForward className="h-4 w-4 stroke-[3]" />
               <span>Ronde Berikutnya</span>
