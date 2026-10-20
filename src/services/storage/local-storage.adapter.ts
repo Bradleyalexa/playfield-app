@@ -16,11 +16,31 @@ export class LocalStorageAdapter {
 
     session.updatedAt = new Date().toISOString();
 
-    // 1. Simpan payload sesi
+    // 1. Simpan payload sesi di LocalStorage
+    this.saveSessionLocalOnly(session);
+
+    // 2. Kirim sinkronisasi ke serverless API / Cloud (R2 & D1) secara asynchronous
+    if (typeof window !== "undefined") {
+      fetch(`/api/sessions/${session.publicSlug}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(session),
+      }).catch((err) => {
+        // Silently fail if offline or network unreachable
+        console.debug("[LocalStorageAdapter] Cloud sync skipped:", err);
+      });
+    }
+
+    // 3. Dispatch window event agar tab/komponen lain auto-refresh
+    window.dispatchEvent(new CustomEvent("clubcourt:session_updated", { detail: session }));
+  }
+
+  public static saveSessionLocalOnly(session: GameSession): void {
+    if (!this.isAvailable()) return;
+
     localStorage.setItem(`${STORAGE_PREFIX}${session.id}`, JSON.stringify(session));
     localStorage.setItem(`${STORAGE_PREFIX}${session.publicSlug}`, JSON.stringify(session));
 
-    // 2. Simpan di daftar recent sessions
     const recent = this.listRecentSessions();
     const filtered = recent.filter((r) => r.id !== session.id);
     filtered.unshift({
@@ -32,9 +52,6 @@ export class LocalStorageAdapter {
       playerCount: session.players.length,
     });
     localStorage.setItem(RECENT_SESSIONS_KEY, JSON.stringify(filtered.slice(0, 10)));
-
-    // 3. Dispatch window event agar tab/komponen lain auto-refresh
-    window.dispatchEvent(new CustomEvent("clubcourt:session_updated", { detail: session }));
   }
 
   public static getSession(idOrSlug: string): GameSession | null {
@@ -48,6 +65,25 @@ export class LocalStorageAdapter {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Tarik data sesi dari Server / Cloud (R2 Snapshot / D1) jika tidak ada di LocalStorage
+   * Berguna untuk smartphone penonton / TV Kiosk yang membuka di browser terpisah dari host
+   */
+  public static async fetchRemoteSession(idOrSlug: string): Promise<GameSession | null> {
+    try {
+      const res = await fetch(`/api/sessions/${idOrSlug}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (json && json.session) {
+        this.saveSessionLocalOnly(json.session);
+        return json.session as GameSession;
+      }
+    } catch {
+      // Offline / network failure
+    }
+    return null;
   }
 
   public static listRecentSessions(): {

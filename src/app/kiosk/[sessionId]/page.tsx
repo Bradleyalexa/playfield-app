@@ -52,13 +52,28 @@ function KioskContent({ params }: KioskPageProps) {
 
     setSession(current);
 
+    // Ambil data terbaru dari cloud (R2/D1/API)
+    LocalStorageAdapter.fetchRemoteSession(sessionId).then((remote) => {
+      if (remote) setSession(remote);
+    });
+
+    // Polling berkala tiap 7 detik agar TV Kiosk GOR terupdate otomatis saat host ganti giliran
+    const pollTimer = setInterval(() => {
+      LocalStorageAdapter.fetchRemoteSession(sessionId).then((remote) => {
+        if (remote) setSession(remote);
+      });
+    }, 7000);
+
     const handleSync = (e: any) => {
       if (e.detail && (e.detail.id === sessionId || e.detail.publicSlug === sessionId)) {
         setSession(e.detail);
       }
     };
     window.addEventListener("clubcourt:session_updated", handleSync);
-    return () => window.removeEventListener("clubcourt:session_updated", handleSync);
+    return () => {
+      clearInterval(pollTimer);
+      window.removeEventListener("clubcourt:session_updated", handleSync);
+    };
   }, [sessionId]);
 
   if (!session) {
