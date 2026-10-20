@@ -26,6 +26,30 @@ function KioskContent({ params }: KioskPageProps) {
     if (!current) {
       current = LocalStorageAdapter.createDemoSession("badminton");
     }
+
+    // Auto-heal courts jika jumlah array court kurang dari courtCount
+    if (current && current.courts.length < current.courtCount) {
+      const existingNumbers = new Set(current.courts.map((c) => c.courtNumber));
+      const courtColors = ["Hijau", "Biru", "Merah", "Ungu", "Abu-abu", "Kuning", "Tosca", "Oranye"];
+      const healedCourts = [...current.courts];
+      for (let i = 1; i <= current.courtCount; i++) {
+        if (!existingNumbers.has(i)) {
+          const colorName = courtColors[(i - 1) % courtColors.length];
+          const activeMatch = current.matches.find(
+            (m) => m.courtNumber === i && m.status === "in_progress"
+          );
+          healedCourts.push({
+            id: `c${i}-${Date.now()}`,
+            courtNumber: i,
+            courtName: `Lapangan ${i} (Karpet ${colorName})`,
+            currentMatch: activeMatch,
+          });
+        }
+      }
+      healedCourts.sort((a, b) => a.courtNumber - b.courtNumber);
+      current = { ...current, courts: healedCourts };
+    }
+
     setSession(current);
 
     const handleSync = (e: any) => {
@@ -72,6 +96,8 @@ function KioskContent({ params }: KioskPageProps) {
               ? "grid grid-cols-1 max-w-3xl mx-auto"
               : session.courts.length === 2
               ? "grid grid-cols-1 md:grid-cols-2"
+              : session.courts.length === 4
+              ? "grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 overflow-y-auto"
               : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 overflow-y-auto"
           }`}
         >

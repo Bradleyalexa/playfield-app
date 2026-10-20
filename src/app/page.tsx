@@ -43,7 +43,7 @@ import {
 } from "../core/entities/session";
 import { SportRegistry } from "../core/sports/sport-registry";
 import { LocalStorageAdapter } from "../services/storage/local-storage.adapter";
-import { Match } from "../core/entities/match";
+import { Court, Match } from "../core/entities/match";
 
 export default function HomePage() {
   const router = useRouter();
@@ -271,10 +271,24 @@ export default function HomePage() {
       slopUsed: equipmentPricingModel === "per_slop" ? 1 : 0,
     };
 
+    // Inisialisasi seluruh lapangan (demo.courts) sesuai jumlah courtCount yang dipilih host
+    const courtColors = ["Hijau", "Biru", "Merah", "Ungu", "Abu-abu", "Kuning", "Tosca", "Oranye"];
+    const generatedCourts: Court[] = [];
+    for (let i = 1; i <= courtCount; i++) {
+      const colorName = courtColors[(i - 1) % courtColors.length];
+      generatedCourts.push({
+        id: `c${i}-${Date.now()}`,
+        courtNumber: i,
+        courtName: `Lapangan ${i} (Karpet ${colorName})`,
+        currentMatch: undefined,
+      });
+    }
+    demo.courts = generatedCourts;
+
     // Shuffle & Matchmaking Ronde 1 berdasarkan algoritma yang dipilih
     if (selectedAlgorithm === "custom_manual") {
       const customMatches: Match[] = [];
-      const totalToInit = customInitialMatchesCount || 4;
+      const totalToInit = customInitialMatchesCount || (courtCount * 2);
       if (initialPlayers.length >= 4) {
         for (let i = 0; i < totalToInit; i++) {
           const cNum = (i % courtCount) + 1;
@@ -294,30 +308,24 @@ export default function HomePage() {
           });
         }
         demo.matches = customMatches;
-        demo.courts = demo.courts.map((c) => ({
+        demo.courts = generatedCourts.map((c) => ({
           ...c,
           currentMatch: customMatches.find((m) => m.courtNumber === c.courtNumber && m.roundNumber === 1),
         }));
       } else {
         demo.matches = [];
-        demo.courts = demo.courts.map((c) => ({
-          ...c,
-          currentMatch: undefined,
-        }));
+        demo.courts = generatedCourts;
       }
     } else if (initialPlayers.length >= 4) {
       const initialMatches = generateBalancedMatches(initialPlayers, courtCount, 1, selectedAlgorithm);
       demo.matches = initialMatches.matches;
-      demo.courts = demo.courts.map((c) => ({
+      demo.courts = generatedCourts.map((c) => ({
         ...c,
         currentMatch: initialMatches.matches.find((m) => m.courtNumber === c.courtNumber) || undefined,
       }));
     } else {
       demo.matches = [];
-      demo.courts = demo.courts.map((c) => ({
-        ...c,
-        currentMatch: undefined,
-      }));
+      demo.courts = generatedCourts;
     }
 
     LocalStorageAdapter.saveSession(demo);

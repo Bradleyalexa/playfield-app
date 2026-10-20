@@ -82,6 +82,31 @@ function HostDashboardContent({ params }: HostPageProps) {
     if (!current) {
       current = LocalStorageAdapter.createDemoSession("badminton");
     }
+
+    // Auto-heal courts jika jumlah array court kurang dari courtCount (misal session lama terbuat hanya 2 lapangan)
+    if (current && current.courts.length < current.courtCount) {
+      const existingNumbers = new Set(current.courts.map((c) => c.courtNumber));
+      const courtColors = ["Hijau", "Biru", "Merah", "Ungu", "Abu-abu", "Kuning", "Tosca", "Oranye"];
+      const healedCourts = [...current.courts];
+      for (let i = 1; i <= current.courtCount; i++) {
+        if (!existingNumbers.has(i)) {
+          const colorName = courtColors[(i - 1) % courtColors.length];
+          const activeMatch = current.matches.find(
+            (m) => m.courtNumber === i && m.status === "in_progress"
+          );
+          healedCourts.push({
+            id: `c${i}-${Date.now()}`,
+            courtNumber: i,
+            courtName: `Lapangan ${i} (Karpet ${colorName})`,
+            currentMatch: activeMatch,
+          });
+        }
+      }
+      healedCourts.sort((a, b) => a.courtNumber - b.courtNumber);
+      current = { ...current, courts: healedCourts };
+      LocalStorageAdapter.saveSession(current);
+    }
+
     setSession(current);
 
     const handleSync = (e: any) => {
@@ -237,6 +262,25 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   // 4. Mulai Ronde Berikutnya (Algoritma Penyeimbang Otomatis)
   const handleNextRound = () => {
+    // Pastikan seluruh lapangan terdaftar (auto-heal jika kurang dari session.courtCount)
+    let currentCourts = [...session.courts];
+    if (currentCourts.length < session.courtCount) {
+      const existingNumbers = new Set(currentCourts.map((c) => c.courtNumber));
+      const courtColors = ["Hijau", "Biru", "Merah", "Ungu", "Abu-abu", "Kuning", "Tosca", "Oranye"];
+      for (let i = 1; i <= session.courtCount; i++) {
+        if (!existingNumbers.has(i)) {
+          const colorName = courtColors[(i - 1) % courtColors.length];
+          currentCourts.push({
+            id: `c${i}-${Date.now()}`,
+            courtNumber: i,
+            courtName: `Lapangan ${i} (Karpet ${colorName})`,
+            currentMatch: undefined,
+          });
+        }
+      }
+      currentCourts.sort((a, b) => a.courtNumber - b.courtNumber);
+    }
+
     const nextRoundNumber = session.currentRound + 1;
     const result = generateBalancedMatches(
       session.players,
@@ -251,7 +295,15 @@ function HostDashboardContent({ params }: HostPageProps) {
       return;
     }
 
-    const updatedCourts = session.courts.map((c) => {
+    // Arsipkan match in_progress sebelumnya menjadi completed jika ada
+    const updatedMatches = session.matches.map((m) => {
+      if (m.status === "in_progress") {
+        return { ...m, status: "completed" as const, endedAt: new Date().toISOString() };
+      }
+      return m;
+    });
+
+    const updatedCourts = currentCourts.map((c) => {
       const matchForCourt = result.matches.find((m) => m.courtNumber === c.courtNumber);
       return { ...c, currentMatch: matchForCourt };
     });
@@ -259,7 +311,7 @@ function HostDashboardContent({ params }: HostPageProps) {
     const updated: GameSession = {
       ...session,
       currentRound: nextRoundNumber,
-      matches: [...session.matches, ...result.matches],
+      matches: [...updatedMatches, ...result.matches],
       courts: updatedCourts,
     };
 
@@ -300,7 +352,6 @@ function HostDashboardContent({ params }: HostPageProps) {
       }
       return p;
     });
-
     const updated: GameSession = { ...session, players: updatedPlayers };
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
@@ -309,9 +360,27 @@ function HostDashboardContent({ params }: HostPageProps) {
   // 6b. Hapus Pemain dari Roster
   const handleRemovePlayer = (playerId: string) => {
     const targetPlayer = session.players.find((p) => p.id === playerId);
+    if (!targetPlayer) return;
+
+    // Cek apakah pemain sedang bertanding di lapangan dengan skor yang sudah berjalan
+    const assignedCourtWithActiveScore = session.courts.find(
+      (c) =>
+        c.currentMatch &&
+        (c.currentMatch.teamA.some((p) => p.id === playerId) ||
+          c.currentMatch.teamB.some((p) => p.id === playerId)) &&
+        (c.currentMatch.scoreA > 0 || c.currentMatch.scoreB > 0)
+    );
+
+    if (assignedCourtWithActiveScore && assignedCourtWithActiveScore.currentMatch) {
+      const confirmRemove = confirm(
+        `Perhatian: "${targetPlayer.name}" sedang bermain di ${assignedCourtWithActiveScore.courtName} dengan skor (${assignedCourtWithActiveScore.currentMatch.scoreA} - ${assignedCourtWithActiveScore.currentMatch.scoreB}).\n\nJika dihapus, match di lapangan ini akan dibatalkan/dikosongkan.\nSemua riwayat pertandingan yang sudah selesai sebelumnya tetap aman tersimpan.\n\nYakin ingin menghapus pemain?`
+      );
+      if (!confirmRemove) return;
+    }
+
     const updatedPlayers = session.players.filter((p) => p.id !== playerId);
 
-    // Cari apakah pemain yang dihapus sedang terjadwal di lapangan yang belum bertanding (skor 0-0)
+    // Cari apakah pemain yang dihapus sedang terjadwal di lapangan yang belum bertanding (skor 0-0) atau yang dibatalkan
     const assignedCourt = session.courts.find(
       (c) =>
         c.currentMatch &&
@@ -323,16 +392,11 @@ function HostDashboardContent({ params }: HostPageProps) {
     let updatedMatches = [...session.matches];
 
     if (assignedCourt && assignedCourt.currentMatch) {
-      if (
-        assignedCourt.currentMatch.scoreA === 0 &&
-        assignedCourt.currentMatch.scoreB === 0
-      ) {
-        // Hapus match yang anggotanya sudah tidak lengkap
-        updatedMatches = updatedMatches.filter((m) => m.id !== assignedCourt.currentMatch!.id);
-        updatedCourts = updatedCourts.map((c) =>
-          c.id === assignedCourt.id ? { ...c, currentMatch: undefined } : c
-        );
-      }
+      // Hapus match yang anggotanya sudah tidak lengkap (hanya match aktif di lapangan saat ini, BUKAN match lama yang sudah selesai!)
+      updatedMatches = updatedMatches.filter((m) => m.id !== assignedCourt.currentMatch!.id);
+      updatedCourts = updatedCourts.map((c) =>
+        c.id === assignedCourt.id ? { ...c, currentMatch: undefined } : c
+      );
     }
 
     const updated: GameSession = {
