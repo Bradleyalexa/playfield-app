@@ -21,6 +21,8 @@ import {
   FolderOpen,
   ArrowRight,
   Package,
+  MapPin,
+  ExternalLink,
 } from "lucide-react";
 import { Navbar } from "../components/common/Navbar";
 import { AlgorithmExplainerModal } from "../components/schedule/AlgorithmExplainerModal";
@@ -38,6 +40,8 @@ export default function HomePage() {
   const router = useRouter();
   const [selectedSport, setSelectedSport] = useState<SportType>("badminton");
   const [sessionTitle, setSessionTitle] = useState("");
+  const [courtLocation, setCourtLocation] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [courtCount, setCourtCount] = useState(2);
 
   // Waktu sewa & Custom Input
@@ -140,6 +144,8 @@ export default function HomePage() {
     demo.matchDurationMinutes = effectiveMatchDurationMinutes;
     demo.algorithm = selectedAlgorithm;
     demo.estimatedMatchesCount = totalProjectedMatches;
+    demo.courtLocation = courtLocation.trim() || undefined;
+    demo.googleMapsUrl = googleMapsUrl.trim() || undefined;
 
     // Konfigurasi Equipment (Cock / Bola & Slop)
     demo.sportConfig.equipment = {
@@ -161,32 +167,40 @@ export default function HomePage() {
       slopUsed: equipmentPricingModel === "per_slop" ? 1 : 0,
     };
 
-    // Jika user memilih custom manual, buat N custom matches awal siap pakai
+    // Jika user memilih custom manual, buat N custom matches awal siap pakai (jika pemain >= 4)
     if (selectedAlgorithm === "custom_manual") {
       const customMatches: Match[] = [];
       const totalToInit = customInitialMatchesCount || 4;
-      for (let i = 0; i < totalToInit; i++) {
-        const cNum = (i % courtCount) + 1;
-        const rNum = Math.floor(i / courtCount) + 1;
-        const four = demo.players.slice(0, 4);
-        customMatches.push({
-          id: `custom-init-${i + 1}-${Date.now()}`,
-          courtNumber: cNum,
-          roundNumber: rNum,
-          teamA: [four[0], four[1]],
-          teamB: [four[2], four[3]],
-          scoreA: 0,
-          scoreB: 0,
-          status: "in_progress",
-          startedAt: new Date().toISOString(),
-          equipmentUsedCount: 1,
-        });
+      if (demo.players.length >= 4) {
+        for (let i = 0; i < totalToInit; i++) {
+          const cNum = (i % courtCount) + 1;
+          const rNum = Math.floor(i / courtCount) + 1;
+          const four = demo.players.slice(0, 4);
+          customMatches.push({
+            id: `custom-init-${i + 1}-${Date.now()}`,
+            courtNumber: cNum,
+            roundNumber: rNum,
+            teamA: [four[0], four[1]],
+            teamB: [four[2], four[3]],
+            scoreA: 0,
+            scoreB: 0,
+            status: "in_progress",
+            startedAt: new Date().toISOString(),
+            equipmentUsedCount: 1,
+          });
+        }
+        demo.matches = customMatches;
+        demo.courts = demo.courts.map((c) => ({
+          ...c,
+          currentMatch: customMatches.find((m) => m.courtNumber === c.courtNumber && m.roundNumber === 1),
+        }));
+      } else {
+        demo.matches = [];
+        demo.courts = demo.courts.map((c) => ({
+          ...c,
+          currentMatch: undefined,
+        }));
       }
-      demo.matches = customMatches;
-      demo.courts = demo.courts.map((c) => ({
-        ...c,
-        currentMatch: customMatches.find((m) => m.courtNumber === c.courtNumber && m.roundNumber === 1),
-      }));
     }
 
     LocalStorageAdapter.saveSession(demo);
@@ -326,6 +340,37 @@ export default function HomePage() {
                   placeholder="Contoh: Mabar Badminton PB Rajawali - GOR Tomang..."
                   className="w-full rounded-xl bg-[#faf8f2] border-3 border-black px-4 py-3.5 text-sm font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white shadow-[3px_3px_0px_#000]"
                 />
+              </div>
+
+              {/* 2b. Alamat Lapangan & Link Google Maps (Opsional untuk Penonton & Kiosk) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 rounded-2xl bg-[#faf8f2] border-2 border-black shadow-[3px_3px_0px_#000]">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5 flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-rose-600" />
+                    <span>Nama / Alamat GOR Lapangan (Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={courtLocation}
+                    onChange={(e) => setCourtLocation(e.target.value)}
+                    placeholder="Contoh: GOR Tomang Barat, Lapangan 1-2..."
+                    className="w-full rounded-xl bg-white border-2 border-black px-3.5 py-2.5 text-xs font-bold text-black placeholder-slate-400 focus:outline-none shadow-[2px_2px_0px_#000]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5 flex items-center gap-1.5">
+                    <ExternalLink className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Link Google Maps Lapangan (Opsional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={googleMapsUrl}
+                    onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                    placeholder="Contoh: https://maps.app.goo.gl/..."
+                    className="w-full rounded-xl bg-white border-2 border-black px-3.5 py-2.5 text-xs font-bold text-black placeholder-slate-400 focus:outline-none shadow-[2px_2px_0px_#000]"
+                  />
+                </div>
               </div>
 
               {/* 3. Jumlah Lapangan */}

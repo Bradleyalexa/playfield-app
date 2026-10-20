@@ -162,6 +162,10 @@ export interface GameSession {
   algorithm: MatchmakingAlgorithm;
   estimatedMatchesCount: number; // (durationHours * 60 / matchDurationMinutes * courtCount) + 10 extra matches
 
+  // Lokasi & Link Google Maps Lapangan
+  courtLocation?: string; // contoh "GOR Tomang Barat, Lapangan 1-2"
+  googleMapsUrl?: string; // contoh "https://maps.app.goo.gl/..."
+
   sultanSponsor?: string;
   createdAt: string;
   updatedAt: string;

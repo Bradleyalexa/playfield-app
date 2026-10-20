@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pause, Play, Share2, ClipboardPaste, Plus, UserCheck, Shield } from "lucide-react";
+import { Pause, Play, Share2, ClipboardPaste, Plus, UserCheck, Shield, Trash2 } from "lucide-react";
 import { getTierLabel, Player } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
 import { StoryCardGenerator } from "../../services/share/story-card";
@@ -11,6 +11,7 @@ interface PlayerRosterProps {
   onTogglePlayerPause: (playerId: string) => void;
   onOpenWaModal: () => void;
   onAddSinglePlayer: (name: string, gender: "M" | "F", skillLevel: 1 | 2 | 3) => void;
+  onRemovePlayer?: (playerId: string) => void;
 }
 
 export function PlayerRoster({
@@ -18,6 +19,7 @@ export function PlayerRoster({
   onTogglePlayerPause,
   onOpenWaModal,
   onAddSinglePlayer,
+  onRemovePlayer,
 }: PlayerRosterProps) {
   const [quickName, setQuickName] = useState("");
   const [selectedGender, setSelectedGender] = useState<"M" | "F">("M");
@@ -211,11 +213,16 @@ export function PlayerRoster({
                 </div>
               </div>
 
-              {/* Action Buttons: Pause & Story Card */}
+              {/* Action Buttons: Pause, Share Story Card & Remove */}
               <div className="flex items-center gap-1">
+                {/* Tombol Play/Pause (Tahan / Lanjutkan Pemain) */}
                 <button
                   onClick={() => onTogglePlayerPause(player.id)}
-                  title={isPaused ? "Lanjutkan main (Resume)" : "Tahan pemain (Pause)"}
+                  title={
+                    isPaused
+                      ? "Play (Resume): Pemain siap masuk lapangan ronde berikutnya"
+                      : "Pause: Tahan pemain (istirahat/toilet/cedera agar dilewati rotasi ronde depan)"
+                  }
                   className={`h-7 w-7 rounded border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ${
                     isPaused ? "bg-[#ffde00] text-black" : "bg-white text-black hover:bg-slate-100"
                   }`}
@@ -223,14 +230,30 @@ export function PlayerRoster({
                   {isPaused ? <Play className="h-3 w-3 stroke-[3]" /> : <Pause className="h-3 w-3 stroke-[3]" />}
                 </button>
 
+                {/* Tombol Share (Download/Share IG Story Card Statistik) */}
                 <button
                   onClick={() => handleGenerateStory(player)}
                   disabled={isGeneratingStory === player.id}
-                  title="Generate Spotify-Wrapped IG Story Card"
+                  title="Share: Buat & Download Story Card profil statistik pemain (Spotify-Wrapped style) untuk WA/IG"
                   className="h-7 w-7 rounded border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[#ccff00] shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
                 >
                   <Share2 className="h-3 w-3 stroke-[2.5]" />
                 </button>
+
+                {/* Tombol Remove Player (Hapus Pemain dari Roster) */}
+                {onRemovePlayer && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Hapus ${player.name} dari daftar pemain mabar?`)) {
+                        onRemovePlayer(player.id);
+                      }
+                    }}
+                    title={`Hapus ${player.name} dari daftar pemain`}
+                    className="h-7 w-7 rounded border-2 border-black bg-white flex items-center justify-center text-rose-600 hover:bg-rose-500 hover:text-white shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                  >
+                    <Trash2 className="h-3 w-3 stroke-[2.5]" />
+                  </button>
+                )}
               </div>
             </div>
           );

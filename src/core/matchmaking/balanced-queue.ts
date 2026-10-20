@@ -126,7 +126,7 @@ export function generateBalancedMatches(
         const females = courtFour.filter((p) => p.gender === "F");
 
         if (males.length >= 2 && females.length >= 2) {
-          // Format ideal: 1 PA + 1 PI vs 1 PA + 1 PI
+          // Format ideal: 1 Men (M) + 1 Women (W) vs 1 Men (M) + 1 Women (W)
           teamA = [males[0], females[0]];
           teamB = [males[1], females[1]];
         } else if (females.length === 1 && males.length === 3) {

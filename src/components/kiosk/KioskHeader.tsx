@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, Clock, Volume2, VolumeX, Trophy } from "lucide-react";
+import { Sparkles, Clock, Volume2, VolumeX, Trophy, MapPin, ExternalLink } from "lucide-react";
 import { GameSession } from "../../core/entities/session";
 
 interface KioskHeaderProps {
@@ -61,6 +61,23 @@ export function KioskHeader({ session, isAudioEnabled, onToggleAudio }: KioskHea
                 RONDE #{session.currentRound}
               </span>
             </div>
+            {session.courtLocation && (
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 mt-1">
+                <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                <span>{session.courtLocation}</span>
+                {session.googleMapsUrl && (
+                  <a
+                    href={session.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-200 border border-emerald-500 text-emerald-950 font-black text-[10px] uppercase"
+                  >
+                    <span>Maps</span>
+                    <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

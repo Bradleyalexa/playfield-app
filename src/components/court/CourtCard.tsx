@@ -94,8 +94,19 @@ export function CourtCard({
               const tier = getTierLabel(p.publicTier);
               return (
                 <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
-                  <span className="font-extrabold text-black truncate">{p.name}</span>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="font-extrabold text-black truncate">{p.name}</span>
+                    <span
+                      className={`text-[8px] font-mono font-black px-1.5 py-0.2 rounded border ${
+                        p.gender === "M"
+                          ? "bg-blue-100 text-blue-900 border-blue-400"
+                          : "bg-pink-100 text-pink-900 border-pink-400"
+                      }`}
+                    >
+                      {p.gender === "M" ? "M" : "W"}
+                    </span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded shrink-0 ${tier.badgeColor}`}>
                     {tier.label.replace("Tier ", "")}
                   </span>
                 </div>
@@ -103,20 +114,33 @@ export function CourtCard({
             })}
           </div>
 
-          {/* Skor Tim A */}
-          <div className="flex items-center justify-between pt-2 border-t-2 border-black">
+          {/* Skor Tim A (Bisa Ditik Langsung & Tombol +/-) */}
+          <div className="flex items-center justify-between pt-2 border-t-2 border-black gap-1">
             <button
+              type="button"
               onClick={() => onUpdateScore(court.courtNumber, Math.max(0, match.scoreA - 1), match.scoreB)}
-              className="h-9 w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+              className="h-9 w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+              title="Kurang 1 Poin"
             >
               -
             </button>
-            <span className="text-4xl font-black text-black font-mono-sport tracking-tight">
-              {match.scoreA}
-            </span>
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={match.scoreA}
+              onChange={(e) => {
+                const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                onUpdateScore(court.courtNumber, val, match.scoreB);
+              }}
+              className="w-16 sm:w-20 text-center text-3xl sm:text-4xl font-black text-black font-mono-sport tracking-tight bg-white border-2 border-black rounded-lg py-0.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-[2px_2px_0px_#000]"
+              title="Ketik angka skor langsung atau gunakan tombol +/-"
+            />
             <button
+              type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA + 1, match.scoreB)}
-              className="h-9 w-9 rounded-lg bg-[#ccff00] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+              className="h-9 w-9 rounded-lg bg-[#ccff00] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+              title="Tambah 1 Poin"
             >
               +
             </button>
@@ -137,8 +161,19 @@ export function CourtCard({
               const tier = getTierLabel(p.publicTier);
               return (
                 <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
-                  <span className="font-extrabold text-black truncate">{p.name}</span>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="font-extrabold text-black truncate">{p.name}</span>
+                    <span
+                      className={`text-[8px] font-mono font-black px-1.5 py-0.2 rounded border ${
+                        p.gender === "M"
+                          ? "bg-blue-100 text-blue-900 border-blue-400"
+                          : "bg-pink-100 text-pink-900 border-pink-400"
+                      }`}
+                    >
+                      {p.gender === "M" ? "M" : "W"}
+                    </span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded shrink-0 ${tier.badgeColor}`}>
                     {tier.label.replace("Tier ", "")}
                   </span>
                 </div>
@@ -146,20 +181,33 @@ export function CourtCard({
             })}
           </div>
 
-          {/* Skor Tim B */}
-          <div className="flex items-center justify-between pt-2 border-t-2 border-black">
+          {/* Skor Tim B (Bisa Ditik Langsung & Tombol +/-) */}
+          <div className="flex items-center justify-between pt-2 border-t-2 border-black gap-1">
             <button
+              type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA, Math.max(0, match.scoreB - 1))}
-              className="h-9 w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+              className="h-9 w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+              title="Kurang 1 Poin"
             >
               -
             </button>
-            <span className="text-4xl font-black text-black font-mono-sport tracking-tight">
-              {match.scoreB}
-            </span>
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={match.scoreB}
+              onChange={(e) => {
+                const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                onUpdateScore(court.courtNumber, match.scoreA, val);
+              }}
+              className="w-16 sm:w-20 text-center text-3xl sm:text-4xl font-black text-black font-mono-sport tracking-tight bg-white border-2 border-black rounded-lg py-0.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-[2px_2px_0px_#000]"
+              title="Ketik angka skor langsung atau gunakan tombol +/-"
+            />
             <button
+              type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA, match.scoreB + 1)}
-              className="h-9 w-9 rounded-lg bg-[#7dd3fc] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#38bdf8] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+              className="h-9 w-9 rounded-lg bg-[#7dd3fc] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#38bdf8] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+              title="Tambah 1 Poin"
             >
               +
             </button>

@@ -42,11 +42,11 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
 
   const sampleText = `Absen Mabar Badminton Rabu GOR Tomang:
 1. Hendra Setiawan (Pro)
-2. Kevin Sanjaya [Pro - L]
-3. Siti Rahmawati (Beg - Putri)
+2. Kevin Sanjaya [Pro - M]
+3. Siti Rahmawati (Beg - W)
 4. Budi Santoso (Inter)
 5. Rian Ardianto (M)
-6. Dewi Lestari (Beg - PI)
+6. Dewi Lestari (Beg - W)
 7. Fajar Alfian (Inter)
 8. Agus Pratama (Hore)`;
 

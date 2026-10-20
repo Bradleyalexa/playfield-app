@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
-import { Trophy, Users, ShieldCheck, Flame, Sparkles, RefreshCw, Radio, Calendar } from "lucide-react";
+import { Trophy, Users, ShieldCheck, Flame, Sparkles, RefreshCw, Radio, Calendar, MapPin, ExternalLink } from "lucide-react";
 import { Navbar } from "../../../components/common/Navbar";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { getTierLabel } from "../../../core/entities/player";
@@ -79,6 +79,23 @@ function LiveSpectatorContent({ params }: LivePageProps) {
             <p className="text-xs font-bold text-black/70 mt-1 font-mono">
               Ronde #{session.currentRound} • {session.courtCount} Lapangan • {session.players.length} Pemain • {session.startTime || "19:00"} ({session.durationHours || 2} Jam)
             </p>
+            {session.courtLocation && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-slate-700">
+                <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                <span className="truncate max-w-[280px] sm:max-w-md">{session.courtLocation}</span>
+                {session.googleMapsUrl && (
+                  <a
+                    href={session.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 text-emerald-950 font-black text-[10px] uppercase transition-colors"
+                  >
+                    <span>Buka Maps</span>
+                    <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

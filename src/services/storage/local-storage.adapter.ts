@@ -83,20 +83,14 @@ export class LocalStorageAdapter {
     const demoPlayers = [
       { id: "p1", name: "Hendra Setiawan", gender: "M" as const, skillLevel: 3 as const, publicTier: "suhu" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1250, createdAt: new Date().toISOString() },
       { id: "p2", name: "Kevin Sanjaya", gender: "M" as const, skillLevel: 3 as const, publicTier: "suhu" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1300, createdAt: new Date().toISOString() },
-      { id: "p3", name: "Budi Santoso", gender: "M" as const, skillLevel: 2 as const, publicTier: "hore" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1050, createdAt: new Date().toISOString() },
-      { id: "p4", name: "Rian Ardianto", gender: "M" as const, skillLevel: 2 as const, publicTier: "hore" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1100, createdAt: new Date().toISOString() },
-      { id: "p5", name: "Siti Rahmawati", gender: "F" as const, skillLevel: 1 as const, publicTier: "kentang" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 950, createdAt: new Date().toISOString() },
-      { id: "p6", name: "Fajar Alfian", gender: "M" as const, skillLevel: 2 as const, publicTier: "hore" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1120, createdAt: new Date().toISOString() },
-      { id: "p7", name: "Dewi Lestari", gender: "F" as const, skillLevel: 1 as const, publicTier: "kentang" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 920, createdAt: new Date().toISOString() },
-      { id: "p8", name: "Agus Pratama", gender: "M" as const, skillLevel: 2 as const, publicTier: "hore" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1020, createdAt: new Date().toISOString() },
     ];
 
     const courtCount = 2;
     const initialMatches = generateBalancedMatches(demoPlayers, courtCount, 1);
 
     const courts = [
-      { id: "c1", courtNumber: 1, courtName: "Lapangan 1 (Karpet Hijau)", currentMatch: initialMatches.matches[0] },
-      { id: "c2", courtNumber: 2, courtName: "Lapangan 2 (Karpet Biru)", currentMatch: initialMatches.matches[1] },
+      { id: "c1", courtNumber: 1, courtName: "Lapangan 1 (Karpet Hijau)", currentMatch: initialMatches.matches[0] || undefined },
+      { id: "c2", courtNumber: 2, courtName: "Lapangan 2 (Karpet Biru)", currentMatch: initialMatches.matches[1] || undefined },
     ];
 
     const session: GameSession = {
@@ -123,6 +117,8 @@ export class LocalStorageAdapter {
       matchDurationMinutes: 15,
       algorithm: "fair_playtime",
       estimatedMatchesCount: Math.ceil((2 * 60 / 15) * courtCount) + 10,
+      courtLocation: "GOR Tomang Barat, Lapangan 1-2",
+      googleMapsUrl: "https://maps.google.com/?q=GOR+Tomang+Barat",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

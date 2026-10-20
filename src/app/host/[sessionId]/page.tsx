@@ -18,6 +18,8 @@ import {
   Calendar,
   Package,
   Settings2,
+  MapPin,
+  ExternalLink,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
@@ -285,6 +287,14 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
   };
 
+  // 6b. Hapus Pemain dari Roster
+  const handleRemovePlayer = (playerId: string) => {
+    const updatedPlayers = session.players.filter((p) => p.id !== playerId);
+    const updated: GameSession = { ...session, players: updatedPlayers };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+  };
+
   // 7. Tambah Pemain Manual Tunggal
   const handleAddSinglePlayer = (name: string, gender: "M" | "F", skillLevel: 1 | 2 | 3) => {
     const newPlayer: Player = {
@@ -398,6 +408,23 @@ function HostDashboardContent({ params }: HostPageProps) {
             <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-wider font-mono">
               RONDE #{session.currentRound} • {session.courtCount} LAPANGAN • {session.players.length} PEMAIN TERDAFTAR
             </p>
+            {session.courtLocation && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-slate-700">
+                <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                <span className="truncate max-w-[280px] sm:max-w-md">{session.courtLocation}</span>
+                {session.googleMapsUrl && (
+                  <a
+                    href={session.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 text-emerald-950 font-black text-[10px] uppercase transition-colors"
+                  >
+                    <span>Maps</span>
+                    <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Quick Action Badges */}
@@ -554,6 +581,7 @@ function HostDashboardContent({ params }: HostPageProps) {
           onTogglePlayerPause={handleTogglePlayerPause}
           onOpenWaModal={() => setIsWaModalOpen(true)}
           onAddSinglePlayer={handleAddSinglePlayer}
+          onRemovePlayer={handleRemovePlayer}
         />
       </main>
 
