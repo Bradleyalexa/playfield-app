@@ -118,10 +118,11 @@ function KioskContent({ params }: KioskPageProps) {
             </button>
 
             <Link
-              href={`/host/${session.publicSlug}`}
+              href={`/live/${session.publicSlug}`}
               className="text-[10px] sm:text-xs font-black uppercase text-black hover:text-slate-600 underline font-mono transition-colors whitespace-nowrap"
+              title="Buka tampilan penonton di smartphone pemain"
             >
-              Host
+              📱 Buka di HP
             </Link>
           </div>
         </div>

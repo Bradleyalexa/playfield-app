@@ -13,33 +13,41 @@ interface NavbarProps {
 export function Navbar({ publicSlug }: NavbarProps) {
   const pathname = usePathname();
   const currentSlug = publicSlug || "demo";
+  const isSpectatorMode = pathname.startsWith("/live");
 
-  const navLinks = [
+  const allNavLinks = [
     {
       name: "Dashboard Host",
       shortName: "Host",
       href: `/host/${currentSlug}`,
       icon: Trophy,
+      hostOnly: true,
     },
     {
       name: "TV GOR Kiosk",
       shortName: "Kiosk",
       href: `/kiosk/${currentSlug}`,
       icon: Tv,
+      hostOnly: false,
     },
     {
       name: "Papan Penonton",
       shortName: "Live",
       href: `/live/${currentSlug}`,
       icon: Users,
+      hostOnly: false,
     },
     {
       name: "Pojok Edukasi",
       shortName: "Edukasi",
       href: "/education",
       icon: BookOpen,
+      hostOnly: false,
     },
   ];
+
+  // Pada halaman penonton/pemain (/live), sembunyikan tombol Dashboard Host
+  const navLinks = isSpectatorMode ? allNavLinks.filter((l) => !l.hostOnly) : allNavLinks;
 
   return (
     <>

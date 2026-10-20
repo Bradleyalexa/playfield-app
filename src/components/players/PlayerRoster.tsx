@@ -45,10 +45,38 @@ export function PlayerRoster({
     setQuickName("");
   };
 
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const handleTogglePauseWithFeedback = (playerId: string) => {
+    const target = session.players.find((p) => p.id === playerId);
+    if (!target) return;
+    const isNowPaused = target.status !== "paused";
+    onTogglePlayerPause(playerId);
+    setToastMsg(
+      isNowPaused
+        ? `⏸️ ${target.name} diistirahatkan (dilewati rotasi ronde depan)`
+        : `▶️ ${target.name} siap main kembali di ronde depan!`
+    );
+    setTimeout(() => setToastMsg(null), 3500);
+  };
+
   return (
     <div className="flex flex-col rounded-2xl border-3 border-black bg-white p-5 shadow-[5px_5px_0px_#000]">
+      {/* Toast Feedback Aksi Pemain untuk Mobile */}
+      {toastMsg && (
+        <div className="mb-3 rounded-xl bg-black text-[#ccff00] px-3.5 py-2 text-xs font-black border-2 border-black shadow-[3px_3px_0px_#ccff00] flex items-center justify-between animate-in fade-in slide-in-from-top-1">
+          <span>{toastMsg}</span>
+          <button
+            onClick={() => setToastMsg(null)}
+            className="text-white hover:text-rose-400 font-bold ml-2 text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Header Roster */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-3 border-black mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-3 border-black mb-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-black text-black uppercase tracking-wide">
@@ -73,6 +101,25 @@ export function PlayerRoster({
           <ClipboardPaste className="h-4 w-4 stroke-[2.5]" />
           <span>Paste Chat WA</span>
         </button>
+      </div>
+
+      {/* Panduan Ikon Aksi Pemain (Sangat Membantu di Smartphone karena Tidak Bisa Hover) */}
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 p-2 rounded-xl bg-[#faf8f2] border-2 border-black text-[10px] sm:text-xs font-bold text-slate-800 shadow-[2px_2px_0px_#000]">
+        <span className="font-black text-black uppercase bg-black text-[#ccff00] px-1.5 py-0.5 rounded text-[9px] font-mono tracking-wider">
+          PANDUAN IKON
+        </span>
+        <span className="inline-flex items-center gap-1 bg-white border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">⏸️ Pause:</span> Rehatkan (Dilewati rotasi)
+        </span>
+        <span className="inline-flex items-center gap-1 bg-white border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">▶️ Play:</span> Siap main lagi
+        </span>
+        <span className="inline-flex items-center gap-1 bg-[#00e5ff]/40 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">🔄 Share:</span> Rekap WA / Story IG
+        </span>
+        <span className="inline-flex items-center gap-1 bg-rose-50 border border-rose-400 text-rose-800 px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">🗑️ Hapus:</span> Keluar grup
+        </span>
       </div>
 
       {/* Form Tambah Pemain dengan Pilihan Gender (Men/Women) & Skill Tier */}
@@ -149,12 +196,12 @@ export function PlayerRoster({
                 isPlaying
                   ? "bg-[#ccff00]/25 shadow-[3px_3px_0px_#000] translate-x-[-1px] translate-y-[-1px]"
                   : isPaused
-                  ? "bg-slate-200/60 opacity-60 shadow-none"
+                  ? "bg-slate-200/80 border-dashed opacity-80 shadow-none"
                   : "bg-[#faf8f2] hover:bg-white shadow-[2px_2px_0px_#000]"
               }`}
             >
               <div className="flex flex-col min-w-0 pr-2">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-black text-xs truncate text-black">{player.name}</span>
                   <span
                     className={`text-[9px] font-mono font-black px-1.5 py-0.2 rounded border ${
@@ -165,6 +212,16 @@ export function PlayerRoster({
                   >
                     {player.gender === "M" ? "M" : "W"}
                   </span>
+                  {/* Status Badge Langsung Terlihat di HP */}
+                  {isPaused ? (
+                    <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-[#ffde00] border border-black text-black">
+                      ⏸️ Rehat
+                    </span>
+                  ) : isPlaying ? (
+                    <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-[#ccff00] border border-black text-black">
+                      🔥 Di Lapangan
+                    </span>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
@@ -180,11 +237,11 @@ export function PlayerRoster({
               <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
                 {/* Tombol Play/Pause (Tahan / Lanjutkan Pemain) */}
                 <button
-                  onClick={() => onTogglePlayerPause(player.id)}
+                  onClick={() => handleTogglePauseWithFeedback(player.id)}
                   title={
                     isPaused
-                      ? "Play (Resume): Pemain siap masuk lapangan ronde berikutnya"
-                      : "Pause: Tahan pemain (istirahat/toilet/cedera agar dilewati rotasi ronde depan)"
+                      ? "Play: Aktifkan pemain kembali siap masuk lapangan"
+                      : "Pause: Rehatkan pemain (toilet/cedera/lelah) agar dilewati rotasi ronde depan"
                   }
                   className={`h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ${
                     isPaused ? "bg-[#ffde00] text-black" : "bg-white text-black hover:bg-slate-100"

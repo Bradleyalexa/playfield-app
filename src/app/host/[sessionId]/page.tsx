@@ -21,6 +21,7 @@ import {
   MapPin,
   ExternalLink,
   Shuffle,
+  Undo2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Navbar } from "../../../components/common/Navbar";
@@ -57,6 +58,7 @@ function HostDashboardContent({ params }: HostPageProps) {
   const [isCreateMatchModalOpen, setIsCreateMatchModalOpen] = useState(false);
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [lastReshuffleSnapshot, setLastReshuffleSnapshot] = useState<GameSession | null>(null);
 
   // Load session dari local storage atau fallback create demo jika tidak ditemukan
   useEffect(() => {
@@ -366,6 +368,9 @@ function HostDashboardContent({ params }: HostPageProps) {
       matches: updatedMatches,
       courts: updatedCourts,
     };
+
+    // Simpan snapshot sebelum perubahan untuk fitur Urungkan / Undo
+    setLastReshuffleSnapshot(JSON.parse(JSON.stringify(session)));
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
 
@@ -374,6 +379,15 @@ function HostDashboardContent({ params }: HostPageProps) {
     } catch {}
 
     AudioAnnouncer.announceGeneral("Jadwal rotasi pemain telah dikocok ulang.");
+  };
+
+  // 6d. Urungkan Kocok Ulang / Undo Reshuffle
+  const handleUndoReshuffle = () => {
+    if (!lastReshuffleSnapshot) return;
+    setSession(lastReshuffleSnapshot);
+    LocalStorageAdapter.saveSession(lastReshuffleSnapshot);
+    setLastReshuffleSnapshot(null);
+    AudioAnnouncer.announceGeneral("Kocok ulang berhasil diurungkan.");
   };
 
   // 7. Tambah Pemain Manual Tunggal
@@ -670,6 +684,18 @@ function HostDashboardContent({ params }: HostPageProps) {
               <Shuffle className="h-4 w-4 stroke-[2.5]" />
               <span>Kocok Ulang</span>
             </button>
+
+            {/* Tombol Urungkan Kocok Ulang (Jika baru saja kocok ulang) */}
+            {lastReshuffleSnapshot && (
+              <button
+                onClick={handleUndoReshuffle}
+                className="flex items-center gap-1.5 rounded-xl bg-[#ffde00] border-2 border-black px-3 sm:px-3.5 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#facc15] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer animate-in fade-in"
+                title="Urungkan kocok ulang dan kembalikan susunan match sebelumnya"
+              >
+                <Undo2 className="h-4 w-4 stroke-[2.5]" />
+                <span>Urungkan</span>
+              </button>
+            )}
 
             {/* Mulai Ronde Berikutnya */}
             <button
