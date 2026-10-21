@@ -29,10 +29,12 @@ import {
   X,
   UserPlus,
   Shuffle,
+  Coffee,
 } from "lucide-react";
 import { Navbar } from "../components/common/Navbar";
 import { AlgorithmExplainerModal } from "../components/schedule/AlgorithmExplainerModal";
 import { WaPasteModal } from "../components/players/WaPasteModal";
+import { DonateCreatorModal } from "../components/common/DonateCreatorModal";
 import { Player, getTierFromSkill, getTierLabel } from "../core/entities/player";
 import { generateBalancedMatches, addMinutesToTimeString } from "../core/matchmaking/balanced-queue";
 import {
@@ -98,6 +100,7 @@ export default function HomePage() {
 
   // Modal Penjelasan Algoritma
   const [isAlgoExplainerOpen, setIsAlgoExplainerOpen] = useState(false);
+  const [isDonateCreatorOpen, setIsDonateCreatorOpen] = useState(false);
 
   // Daftar Pemain Awal (Bisa Diisi Sebelum Sesi Dimulai / Paste WA)
   const [initialPlayers, setInitialPlayers] = useState<Player[]>([
@@ -1803,6 +1806,34 @@ export default function HomePage() {
         </div>
       </main>
 
+      {/* Footer Area & Dukung Creator */}
+      <footer className="mt-8 pt-6 pb-20 sm:pb-8 border-t-3 sm:border-t-4 border-black bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-[#ccff00] border-2 sm:border-3 border-black flex items-center justify-center shadow-[2px_2px_0px_#000] overflow-hidden shrink-0">
+              <Image src="/Playfield_icon.png" alt="Playfield Logo" width={36} height={36} className="object-contain" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-black uppercase text-black font-heading tracking-wide">
+                PLAYFIELD • MABAR APP
+              </p>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-500">
+                Rotasi matchmaking cerdas, scoring live, & patungan transparan gratis 24/7.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsDonateCreatorOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ffde00] hover:bg-[#ebd000] border-2 sm:border-3 border-black text-xs font-black uppercase tracking-wider text-black shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+          >
+            <Coffee className="h-4 w-4 stroke-[2.5]" />
+            <span>☕ Dukung Creator (QRIS)</span>
+          </button>
+        </div>
+      </footer>
+
       {/* Modal Popup Penjelasan Algoritma Lengkap */}
       <AlgorithmExplainerModal
         isOpen={isAlgoExplainerOpen}
@@ -1816,6 +1847,12 @@ export default function HomePage() {
         isOpen={isWaModalOpen}
         onClose={() => setIsWaModalOpen(false)}
         onImportPlayers={handleImportWaPlayers}
+      />
+
+      {/* Modal Donasi QRIS Creator */}
+      <DonateCreatorModal
+        isOpen={isDonateCreatorOpen}
+        onClose={() => setIsDonateCreatorOpen(false)}
       />
     </div>
   );

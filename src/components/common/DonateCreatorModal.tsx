@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Heart, Coffee, Copy, Check, Sparkles, QrCode } from "lucide-react";
+import { X, Heart, Coffee, Copy, Check, Sparkles, QrCode, Download } from "lucide-react";
 import Image from "next/image";
 
 interface DonateCreatorModalProps {
@@ -57,126 +57,66 @@ export function DonateCreatorModal({ isOpen, onClose }: DonateCreatorModalProps)
           </p>
         </div>
 
-        {/* Kartu QRIS Resmi Dummy / Placeholder */}
-        <div className="flex flex-col items-center rounded-2xl border-3 border-black bg-white p-4 shadow-[4px_4px_0px_#000] text-center">
-          {/* Header Bar QRIS */}
-          <div className="w-full flex items-center justify-between pb-2 border-b-2 border-black mb-3">
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-sm tracking-tighter text-rose-600 font-mono">
-                QRIS
-              </span>
-              <span className="text-[9px] font-bold text-slate-600 uppercase">
-                Standar Pembayaran Nasional
-              </span>
-            </div>
-            <span className="text-[9px] font-mono font-bold bg-[#faf8f2] px-1.5 py-0.5 rounded border border-black">
-              GPN
+        {/* Kartu QRIS Resmi Creator Playfield */}
+        <div className="flex flex-col items-center rounded-2xl border-3 border-black bg-white p-3.5 sm:p-4 shadow-[4px_4px_0px_#000] text-center">
+          {/* Gambar QRIS Resmi */}
+          <div className="relative w-full max-w-[270px] sm:max-w-[290px] rounded-xl overflow-hidden border-2 border-black shadow-[3px_3px_0px_#000] bg-white group">
+            <Image
+              src="/qris creator.png"
+              alt="QRIS Donasi Creator Playfield - PLAY FIELD MABAR APP, SOF"
+              width={903}
+              height={1036}
+              priority
+              className="w-full h-auto object-contain block"
+            />
+          </div>
+
+          {/* Info Merchant Resmi */}
+          <div className="mt-3 w-full flex flex-col items-center gap-0.5">
+            <span className="text-xs sm:text-sm font-black uppercase text-black tracking-wide">
+              PLAY FIELD MABAR APP, SOF
+            </span>
+            <span className="text-[10px] font-mono font-bold text-slate-600 bg-[#faf8f2] px-2 py-0.5 rounded border border-black/30">
+              NMID: ID1025455702262
             </span>
           </div>
 
-          {/* Dummy QR Code Vector Mock */}
-          <div className="relative p-3 bg-white rounded-xl border-2 border-black shadow-[2px_2px_0px_#000] mb-2.5">
-            <svg
-              className="w-44 h-44 sm:w-48 sm:h-48 text-black"
-              viewBox="0 0 100 100"
-              fill="currentColor"
+          {/* Tombol Simpan Gambar QRIS (UX Ramah Smartphone) */}
+          <div className="mt-2.5 w-full flex items-center justify-center gap-2">
+            <a
+              href="/qris creator.png"
+              download="QRIS-Playfield-Creator.png"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#ccff00] text-black border-2 border-black text-[11px] font-black uppercase shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              title="Simpan gambar QRIS ke galeri HP untuk di-scan lewat M-Banking"
             >
-              {/* Corner 1 */}
-              <rect x="5" y="5" width="28" height="28" rx="4" fill="black" />
-              <rect x="9" y="9" width="20" height="20" rx="2" fill="white" />
-              <rect x="13" y="13" width="12" height="12" rx="1" fill="black" />
-
-              {/* Corner 2 */}
-              <rect x="67" y="5" width="28" height="28" rx="4" fill="black" />
-              <rect x="71" y="9" width="20" height="20" rx="2" fill="white" />
-              <rect x="75" y="13" width="12" height="12" rx="1" fill="black" />
-
-              {/* Corner 3 */}
-              <rect x="5" y="67" width="28" height="28" rx="4" fill="black" />
-              <rect x="9" y="71" width="20" height="20" rx="2" fill="white" />
-              <rect x="13" y="75" width="12" height="12" rx="1" fill="black" />
-
-              {/* Random QR Pattern Dots */}
-              <rect x="38" y="8" width="5" height="5" />
-              <rect x="48" y="8" width="5" height="5" />
-              <rect x="58" y="8" width="5" height="5" />
-              <rect x="38" y="18" width="5" height="5" />
-              <rect x="48" y="18" width="10" height="5" />
-              <rect x="38" y="28" width="8" height="5" />
-              <rect x="50" y="28" width="12" height="5" />
-
-              <rect x="8" y="38" width="5" height="5" />
-              <rect x="18" y="38" width="12" height="5" />
-              <rect x="8" y="48" width="8" height="5" />
-              <rect x="20" y="48" width="6" height="5" />
-              <rect x="8" y="58" width="10" height="5" />
-
-              <rect x="68" y="38" width="8" height="5" />
-              <rect x="80" y="38" width="12" height="5" />
-              <rect x="72" y="48" width="10" height="5" />
-              <rect x="86" y="48" width="6" height="5" />
-              <rect x="68" y="58" width="6" height="5" />
-              <rect x="78" y="58" width="14" height="5" />
-
-              <rect x="38" y="68" width="6" height="5" />
-              <rect x="48" y="68" width="10" height="5" />
-              <rect x="38" y="78" width="12" height="5" />
-              <rect x="54" y="78" width="8" height="5" />
-              <rect x="38" y="88" width="8" height="5" />
-              <rect x="50" y="88" width="12" height="5" />
-              <rect x="68" y="68" width="10" height="5" />
-              <rect x="82" y="68" width="10" height="5" />
-              <rect x="70" y="78" width="8" height="5" />
-              <rect x="82" y="78" width="10" height="5" />
-              <rect x="68" y="88" width="12" height="5" />
-              <rect x="84" y="88" width="8" height="5" />
-
-              {/* Center Logo Area */}
-              <circle cx="50" cy="50" r="14" fill="white" stroke="black" strokeWidth="2" />
-              <text
-                x="50"
-                y="54"
-                textAnchor="middle"
-                fontSize="9"
-                fontWeight="9"
-                fill="black"
-                fontFamily="sans-serif"
-              >
-                PLAY
-              </text>
-            </svg>
-
-            <span className="text-[10px] font-black uppercase text-slate-800 tracking-wider block mt-1">
-              PLAYFIELD COMMUNITY CREATOR
-            </span>
-            <span className="text-[9px] font-mono text-slate-500">
-              NMID: ID1020261021PLAYFIELD
-            </span>
+              <Download className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>Simpan Gambar QRIS</span>
+            </a>
           </div>
 
-          <p className="text-[10px] font-bold text-slate-600">
-            Scan via BCA, Mandiri, BRI, BNI, GoPay, OVO, ShopeePay, DANA, atau mobile banking apapun.
+          <p className="text-[10px] font-bold text-slate-500 mt-2 leading-tight">
+            Scan via BCA, Mandiri, BRI, BNI, GoPay, OVO, ShopeePay, DANA, LinkAja, atau mobile banking apapun.
           </p>
         </div>
 
         {/* Alternatif Transfer Rekening / E-Wallet */}
         <div className="rounded-xl border-2 border-black bg-white p-3 shadow-[2px_2px_0px_#000] flex flex-col gap-2">
           <span className="text-[10px] font-black uppercase text-slate-600 block">
-            Atau Transfer Manual:
+            Atau Transfer Manual BCA:
           </span>
           <div className="flex items-center justify-between gap-2 text-xs">
             <div>
               <span className="font-black text-black">BCA: </span>
-              <span className="font-mono font-bold text-black">604-201-3010</span>
+              <span className="font-mono font-black text-black text-sm">604-201-3010</span>
               <span className="text-[10px] text-slate-600 block">a.n Alexander (Creator Playfield)</span>
             </div>
             <button
               type="button"
               onClick={() => handleCopy("6042013010", "BCA")}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#ccff00] border border-black font-black text-[10px] uppercase shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#ccff00] border-2 border-black font-black text-[10px] uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer"
             >
               {copiedBank === "BCA" ? <Check className="h-3 w-3 stroke-[3]" /> : <Copy className="h-3 w-3" />}
-              <span>{copiedBank === "BCA" ? "Disalin!" : "Salin"}</span>
+              <span>{copiedBank === "BCA" ? "Disalin!" : "Salin No. Rek"}</span>
             </button>
           </div>
         </div>
