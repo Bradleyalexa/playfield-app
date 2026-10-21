@@ -86,3 +86,15 @@
   font-family: var(--font-mono), monospace;
   font-variant-numeric: tabular-nums;
 }
+
+/* Remove spin buttons from input number to ensure perfect symmetry and centering */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+

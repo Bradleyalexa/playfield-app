@@ -81,7 +81,7 @@ export function CourtCard({
       {/* Grid Tim: Duel Lapangan */}
       <div className="grid grid-cols-2 gap-3.5 my-4">
         {/* Tim A */}
-        <div className="flex flex-col rounded-xl bg-[#e6fffa] border-2 border-black p-3.5 shadow-[3px_3px_0px_#000]">
+        <div className="flex flex-col rounded-xl bg-[#e6fffa] border-2 border-black p-2.5 sm:p-3.5 shadow-[3px_3px_0px_#000]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-black uppercase tracking-wider text-black bg-[#ccff00] px-1.5 py-0.5 rounded border border-black">
               TIM A
@@ -115,11 +115,11 @@ export function CourtCard({
           </div>
 
           {/* Skor Tim A (Bisa Ditik Langsung & Tombol +/-) */}
-          <div className="flex items-center justify-between pt-2 border-t-2 border-black gap-1">
+          <div className="flex items-center justify-center sm:justify-between pt-2 border-t-2 border-black gap-1 sm:gap-1.5 -translate-x-1 sm:translate-x-0">
             <button
               type="button"
               onClick={() => onUpdateScore(court.courtNumber, Math.max(0, match.scoreA - 1), match.scoreB)}
-              className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-white text-black font-black text-xl sm:text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
+              className="h-8.5 w-8.5 sm:h-9 sm:w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
               title="Kurang 1 Poin"
             >
               -
@@ -133,13 +133,13 @@ export function CourtCard({
                 const val = Math.max(0, parseInt(e.target.value, 10) || 0);
                 onUpdateScore(court.courtNumber, val, match.scoreB);
               }}
-              className="w-16 sm:w-20 text-center text-3xl sm:text-4xl font-black text-black font-mono-sport tracking-tight bg-white border-2 border-black rounded-lg py-0.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-[2px_2px_0px_#000]"
+              className="w-13 sm:w-20 text-center text-2xl sm:text-4xl font-black text-black font-mono-sport tracking-tight bg-white border-2 border-black rounded-lg py-0.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-[2px_2px_0px_#000]"
               title="Ketik angka skor langsung atau gunakan tombol +/-"
             />
             <button
               type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA + 1, match.scoreB)}
-              className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-[#ccff00] text-black font-black text-xl sm:text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
+              className="h-8.5 w-8.5 sm:h-9 sm:w-9 rounded-lg bg-[#ccff00] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
               title="Tambah 1 Poin"
             >
               +
@@ -148,7 +148,7 @@ export function CourtCard({
         </div>
 
         {/* Tim B */}
-        <div className="flex flex-col rounded-xl bg-[#eff6ff] border-2 border-black p-3.5 shadow-[3px_3px_0px_#000]">
+        <div className="flex flex-col rounded-xl bg-[#eff6ff] border-2 border-black p-2.5 sm:p-3.5 shadow-[3px_3px_0px_#000]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-black uppercase tracking-wider text-black bg-[#7dd3fc] px-1.5 py-0.5 rounded border border-black">
               TIM B
@@ -182,11 +182,11 @@ export function CourtCard({
           </div>
 
           {/* Skor Tim B (Bisa Ditik Langsung & Tombol +/-) */}
-          <div className="flex items-center justify-between pt-2 border-t-2 border-black gap-1">
+          <div className="flex items-center justify-center sm:justify-between pt-2 border-t-2 border-black gap-1 sm:gap-1.5 -translate-x-1 sm:translate-x-0">
             <button
               type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA, Math.max(0, match.scoreB - 1))}
-              className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-white text-black font-black text-xl sm:text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
+              className="h-8.5 w-8.5 sm:h-9 sm:w-9 rounded-lg bg-white text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
               title="Kurang 1 Poin"
             >
               -
@@ -200,13 +200,13 @@ export function CourtCard({
                 const val = Math.max(0, parseInt(e.target.value, 10) || 0);
                 onUpdateScore(court.courtNumber, match.scoreA, val);
               }}
-              className="w-16 sm:w-20 text-center text-3xl sm:text-4xl font-black text-black font-mono-sport tracking-tight bg-white border-2 border-black rounded-lg py-0.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-[2px_2px_0px_#000]"
+              className="w-13 sm:w-20 text-center text-2xl sm:text-4xl font-black text-black font-mono-sport tracking-tight bg-white border-2 border-black rounded-lg py-0.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-[2px_2px_0px_#000]"
               title="Ketik angka skor langsung atau gunakan tombol +/-"
             />
             <button
               type="button"
               onClick={() => onUpdateScore(court.courtNumber, match.scoreA, match.scoreB + 1)}
-              className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-[#7dd3fc] text-black font-black text-xl sm:text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#38bdf8] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
+              className="h-8.5 w-8.5 sm:h-9 sm:w-9 rounded-lg bg-[#7dd3fc] text-black font-black text-lg border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#38bdf8] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0 flex items-center justify-center"
               title="Tambah 1 Poin"
             >
               +
