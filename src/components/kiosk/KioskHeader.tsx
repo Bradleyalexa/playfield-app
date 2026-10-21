@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, Clock, Volume2, VolumeX, Trophy, MapPin, ExternalLink, Timer, Calendar } from "lucide-react";
+import { Sparkles, Clock, Volume2, VolumeX, Trophy, MapPin, ExternalLink, Timer, Calendar, Maximize, Minimize, Moon, Sun } from "lucide-react";
 import { GameSession } from "../../core/entities/session";
 import { calculateRentalTimeInfo, RentalTimeInfo } from "../../lib/time-tracker";
 
@@ -9,9 +9,21 @@ interface KioskHeaderProps {
   session: GameSession;
   isAudioEnabled: boolean;
   onToggleAudio: () => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
+  isDarkMode?: boolean;
+  onToggleDarkMode?: () => void;
 }
 
-export function KioskHeader({ session, isAudioEnabled, onToggleAudio }: KioskHeaderProps) {
+export function KioskHeader({
+  session,
+  isAudioEnabled,
+  onToggleAudio,
+  isFullscreen,
+  onToggleFullscreen,
+  isDarkMode,
+  onToggleDarkMode,
+}: KioskHeaderProps) {
   const [currentTime, setCurrentTime] = useState("");
   const [rentalInfo, setRentalInfo] = useState<RentalTimeInfo>(() =>
     calculateRentalTimeInfo(session)
@@ -37,7 +49,7 @@ export function KioskHeader({ session, isAudioEnabled, onToggleAudio }: KioskHea
   }, [session]);
 
   return (
-    <div className="flex flex-col gap-2 sm:gap-3 pb-2.5 sm:pb-3 border-b-2 sm:border-b-3 border-black shrink-0">
+    <div className={`flex flex-col gap-2 sm:gap-3 pb-2.5 sm:pb-3 border-b-2 sm:border-b-3 ${isDarkMode ? "border-white/30" : "border-black"} shrink-0`}>
       {/* Sultan Mode Banner jika aktif */}
       {session.sultanSponsor && (
         <div className="flex items-center justify-center gap-2 rounded-xl bg-[#ffde00] border-2 border-black py-1 px-3 text-center shadow-[2px_2px_0px_#000]">
@@ -49,17 +61,17 @@ export function KioskHeader({ session, isAudioEnabled, onToggleAudio }: KioskHea
         </div>
       )}
 
-      {/* Bar Utama Kiosk: Baris 1 (Identitas & Audio) */}
+      {/* Bar Utama Kiosk: Baris 1 (Identitas & Controls) */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-xl bg-[#ccff00] border-2 border-black flex items-center justify-center text-black font-black shadow-[2px_2px_0px_#000] shrink-0">
             <Trophy className="h-5 w-5 sm:h-6 sm:w-6 stroke-[2.5]" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm sm:text-2xl font-black text-black tracking-tight uppercase truncate">
+            <h1 className={`text-sm sm:text-2xl font-black ${isDarkMode ? "text-white" : "text-black"} tracking-tight uppercase truncate`}>
               {session.title}
             </h1>
-            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-black text-slate-700 font-mono-sport uppercase">
+            <div className={`flex items-center gap-1.5 text-[10px] sm:text-xs font-black ${isDarkMode ? "text-slate-300" : "text-slate-700"} font-mono-sport uppercase`}>
               <span className="bg-black text-[#ccff00] px-1.5 py-0.2 rounded font-mono">{session.sport}</span>
               <span>•</span>
               <span>{session.courtCount} LAPANGAN</span>
@@ -71,17 +83,48 @@ export function KioskHeader({ session, isAudioEnabled, onToggleAudio }: KioskHea
           </div>
         </div>
 
-        {/* Audio Toggle */}
-        <button
-          onClick={onToggleAudio}
-          className={`flex items-center gap-1 rounded-xl px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-black uppercase tracking-wider border-2 border-black transition-all shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none shrink-0 cursor-pointer ${
-            isAudioEnabled ? "bg-[#ccff00] text-black" : "bg-white text-slate-500"
-          }`}
-          title={isAudioEnabled ? "Matikan Suara Pengumuman" : "Nyalakan Suara Pengumuman"}
-        >
-          {isAudioEnabled ? <Volume2 className="h-3.5 w-3.5 stroke-[2.5]" /> : <VolumeX className="h-3.5 w-3.5 stroke-[2.5]" />}
-          <span className="hidden sm:inline">{isAudioEnabled ? "Audio On" : "Mute"}</span>
-        </button>
+        {/* Action Controls: Dark Mode, Fullscreen, Audio */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Dark Mode Toggle */}
+          {onToggleDarkMode && (
+            <button
+              onClick={onToggleDarkMode}
+              className={`flex items-center gap-1 rounded-xl px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black uppercase tracking-wider border-2 border-black transition-all shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
+                isDarkMode ? "bg-[#ccff00] text-black" : "bg-white text-black hover:bg-slate-50"
+              }`}
+              title={isDarkMode ? "Kembali ke Mode Terang" : "Ganti ke Mode Gelap GOR (Kontras Tinggi)"}
+            >
+              {isDarkMode ? <Sun className="h-3.5 w-3.5 stroke-[2.5]" /> : <Moon className="h-3.5 w-3.5 stroke-[2.5]" />}
+              <span className="hidden md:inline">{isDarkMode ? "Light" : "Dark"}</span>
+            </button>
+          )}
+
+          {/* Fullscreen Toggle */}
+          {onToggleFullscreen && (
+            <button
+              onClick={onToggleFullscreen}
+              className={`flex items-center gap-1 rounded-xl px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-black uppercase tracking-wider border-2 border-black transition-all shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
+                isFullscreen ? "bg-[#ccff00] text-black" : "bg-white text-black hover:bg-slate-50"
+              }`}
+              title={isFullscreen ? "Keluar Layar Penuh" : "Tampilan Layar Penuh TV (F11)"}
+            >
+              {isFullscreen ? <Minimize className="h-3.5 w-3.5 stroke-[2.5]" /> : <Maximize className="h-3.5 w-3.5 stroke-[2.5]" />}
+              <span className="hidden md:inline">{isFullscreen ? "Normal" : "Layar Penuh"}</span>
+            </button>
+          )}
+
+          {/* Audio Toggle */}
+          <button
+            onClick={onToggleAudio}
+            className={`flex items-center gap-1 rounded-xl px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-black uppercase tracking-wider border-2 border-black transition-all shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none shrink-0 cursor-pointer ${
+              isAudioEnabled ? "bg-[#ccff00] text-black" : "bg-white text-slate-500"
+            }`}
+            title={isAudioEnabled ? "Matikan Suara Pengumuman" : "Nyalakan Suara Pengumuman"}
+          >
+            {isAudioEnabled ? <Volume2 className="h-3.5 w-3.5 stroke-[2.5]" /> : <VolumeX className="h-3.5 w-3.5 stroke-[2.5]" />}
+            <span className="hidden sm:inline">{isAudioEnabled ? "Audio On" : "Mute"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Baris 2: Digital Clock & Waktu Sewa Lapangan (Responsif Tanpa Overflow) */}

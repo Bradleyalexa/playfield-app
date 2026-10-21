@@ -38,6 +38,18 @@ export function PlayerRoster({
   const maleCount = session.players.filter((p) => p.gender === "M").length;
   const femaleCount = session.players.filter((p) => p.gender === "F").length;
 
+  // Filter Tab Roster
+  const [filterTab, setFilterTab] = useState<"all" | "playing" | "resting" | "paused">("all");
+  const restingCount = session.players.filter((p) => !activePlayingIds.has(p.id) && p.status !== "paused").length;
+  const pausedCount = session.players.filter((p) => p.status === "paused").length;
+
+  const filteredPlayers = session.players.filter((p) => {
+    if (filterTab === "playing") return activePlayingIds.has(p.id);
+    if (filterTab === "resting") return !activePlayingIds.has(p.id) && p.status !== "paused";
+    if (filterTab === "paused") return p.status === "paused";
+    return true;
+  });
+
   const handleQuickAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickName.trim()) return;
@@ -182,9 +194,64 @@ export function PlayerRoster({
         </div>
       </form>
 
+      {/* Tab Filter Roster */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 mb-2 border-b border-black/10">
+        <button
+          type="button"
+          onClick={() => setFilterTab("all")}
+          className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer whitespace-nowrap ${
+            filterTab === "all"
+              ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+              : "bg-white text-black hover:bg-slate-50"
+          }`}
+        >
+          Semua ({session.players.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilterTab("playing")}
+          className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer whitespace-nowrap ${
+            filterTab === "playing"
+              ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+              : "bg-white text-black hover:bg-slate-50"
+          }`}
+        >
+          🔥 Sedang Main ({activePlayingIds.size})
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilterTab("resting")}
+          className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer whitespace-nowrap ${
+            filterTab === "resting"
+              ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+              : "bg-white text-black hover:bg-slate-50"
+          }`}
+        >
+          ☕ Istirahat ({restingCount})
+        </button>
+        {pausedCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setFilterTab("paused")}
+            className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer whitespace-nowrap ${
+              filterTab === "paused"
+                ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                : "bg-white text-black hover:bg-slate-50"
+            }`}
+          >
+            ⏸️ Rehat ({pausedCount})
+          </button>
+        )}
+      </div>
+
       {/* Grid Pemain */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[380px] overflow-y-auto pr-1">
-        {session.players.map((player) => {
+        {filteredPlayers.length === 0 ? (
+          <div className="col-span-full py-8 text-center text-xs font-bold text-slate-500 italic bg-[#faf8f2] rounded-xl border-2 border-dashed border-black/30">
+            Tidak ada pemain dalam kategori ini.
+          </div>
+        ) : (
+          filteredPlayers.map((player) => {
           const isPlaying = activePlayingIds.has(player.id);
           const isPaused = player.status === "paused";
           const tier = getTierLabel(player.publicTier);
@@ -276,7 +343,7 @@ export function PlayerRoster({
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
 
       {/* Modal Share Pemain (Neo-Brutalism & WhatsApp Share) */}

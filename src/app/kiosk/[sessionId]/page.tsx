@@ -20,6 +20,26 @@ function KioskContent({ params }: KioskPageProps) {
   const [session, setSession] = useState<GameSession | null>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     let current = LocalStorageAdapter.getSession(sessionId);
@@ -95,12 +115,20 @@ function KioskContent({ params }: KioskPageProps) {
   const onDeckPlayers = session.players.filter((p) => p.status === "active" && !activePlayingIds.has(p.id));
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-[#faf8f2] text-black p-2 sm:p-4 md:p-6 flex flex-col justify-between selection:bg-[#ccff00] selection:text-black font-sans">
+    <div
+      className={`h-[100dvh] max-h-[100dvh] overflow-hidden ${
+        isDarkMode ? "bg-[#0a0a0a] text-white" : "bg-[#faf8f2] text-black"
+      } p-2 sm:p-4 md:p-6 flex flex-col justify-between selection:bg-[#ccff00] selection:text-black font-sans transition-colors duration-200`}
+    >
       {/* Header Kiosk */}
       <KioskHeader
         session={session}
         isAudioEnabled={isAudioEnabled}
         onToggleAudio={() => setIsAudioEnabled(!isAudioEnabled)}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={handleToggleFullscreen}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
       />
 
       {/* Grid Lapangan (Layar TV Besar / Full Viewport Fit) */}
@@ -117,24 +145,39 @@ function KioskContent({ params }: KioskPageProps) {
           }`}
         >
           {session.courts.map((court) => (
-            <KioskCourtCard key={court.id} court={court} match={court.currentMatch} />
+            <KioskCourtCard
+              key={court.id}
+              court={court}
+              match={court.currentMatch}
+              isDarkMode={isDarkMode}
+            />
           ))}
         </div>
       </div>
 
       {/* Sisi Bawah: Bar Antrean Bersiap (On-Deck Ticker Compact) */}
-      <div className="shrink-0 rounded-xl sm:rounded-2xl border-2 sm:border-3 border-black bg-white p-2 sm:p-3 shadow-[3px_3px_0px_#000]">
+      <div
+        className={`shrink-0 rounded-xl sm:rounded-2xl border-2 sm:border-3 ${
+          isDarkMode
+            ? "border-white/30 bg-[#121820] shadow-[3px_3px_0px_#ccff00]"
+            : "border-black bg-white shadow-[3px_3px_0px_#000]"
+        } p-2 sm:p-3 transition-colors duration-200`}
+      >
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-3">
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="flex h-2.5 w-2.5 rounded-full bg-[#ff5500] animate-ping" />
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-black whitespace-nowrap">
+            <span
+              className={`text-[10px] sm:text-xs font-black uppercase tracking-wider ${
+                isDarkMode ? "text-white" : "text-black"
+              } whitespace-nowrap`}
+            >
               Bersiap ({onDeckPlayers.length}):
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto flex-nowrap py-0.5 no-scrollbar max-w-full">
             {onDeckPlayers.length === 0 ? (
-              <span className="text-[11px] font-bold text-slate-500 italic whitespace-nowrap">
+              <span className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-500"} italic whitespace-nowrap`}>
                 Semua pemain sedang bertanding di lapangan.
               </span>
             ) : (
@@ -149,7 +192,11 @@ function KioskContent({ params }: KioskPageProps) {
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+          <div
+            className={`flex items-center justify-end gap-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 ${
+              isDarkMode ? "border-white/20" : "border-slate-200"
+            }`}
+          >
             <button
               onClick={() => setIsAllMatchesModalOpen(true)}
               className="flex items-center gap-1 rounded-lg bg-black text-white px-2.5 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wider border border-black shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer whitespace-nowrap"
@@ -160,7 +207,9 @@ function KioskContent({ params }: KioskPageProps) {
 
             <Link
               href={`/live/${session.publicSlug}`}
-              className="text-[10px] sm:text-xs font-black uppercase text-black hover:text-slate-600 underline font-mono transition-colors whitespace-nowrap"
+              className={`text-[10px] sm:text-xs font-black uppercase ${
+                isDarkMode ? "text-slate-300 hover:text-white" : "text-black hover:text-slate-600"
+              } underline font-mono transition-colors whitespace-nowrap`}
               title="Buka tampilan penonton di smartphone pemain"
             >
               📱 Buka di HP

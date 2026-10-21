@@ -103,6 +103,26 @@ function HostDashboardContent({ params }: HostPageProps) {
   const [hostKeyInput, setHostKeyInput] = useState("");
   const [authError, setAuthError] = useState("");
 
+  // Undo Action saat Selesaikan Match (Safety Net 6 Detik)
+  const [undoFinishData, setUndoFinishData] = useState<{
+    prevSession: GameSession;
+    courtNumber: number;
+    matchTitle: string;
+    countdown: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!undoFinishData) return;
+    if (undoFinishData.countdown <= 0) {
+      setUndoFinishData(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setUndoFinishData((prev) => (prev ? { ...prev, countdown: prev.countdown - 1 } : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [undoFinishData]);
+
   // Load session dari local storage atau fallback create demo jika tidak ditemukan
   useEffect(() => {
     let current = LocalStorageAdapter.getSession(sessionId);
@@ -393,6 +413,7 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   // 3. Selesaikan Pertandingan Lapangan Ini
   const handleFinishMatch = (courtNumber: number) => {
+    const prevSnapshot: GameSession = JSON.parse(JSON.stringify(session));
     const currentMatch = session.matches.find((m) => m.courtNumber === courtNumber && m.status === "in_progress");
     if (!currentMatch) return;
 
@@ -441,6 +462,24 @@ function HostDashboardContent({ params }: HostPageProps) {
     };
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
+
+    // Aktifkan Undo Toast 6 Detik
+    const matchTitle = `${currentMatch.teamA.map((p) => p.name).join("/")} vs ${currentMatch.teamB.map((p) => p.name).join("/")}`;
+    setUndoFinishData({
+      prevSession: prevSnapshot,
+      courtNumber,
+      matchTitle,
+      countdown: 6,
+    });
+  };
+
+  // Batalkan Selesaikan Match (Undo Action)
+  const handleUndoFinishMatch = () => {
+    if (!undoFinishData) return;
+    setSession(undoFinishData.prevSession);
+    LocalStorageAdapter.saveSession(undoFinishData.prevSession);
+    AudioAnnouncer.announceGeneral(`Penyelesaian match di Lapangan ${undoFinishData.courtNumber} telah dibatalkan.`);
+    setUndoFinishData(null);
   };
 
   // 4. Mulai Ronde Berikutnya (Algoritma Penyeimbang Otomatis)
@@ -1242,6 +1281,38 @@ function HostDashboardContent({ params }: HostPageProps) {
           onAddSinglePlayer={handleAddSinglePlayer}
           onRemovePlayer={handleRemovePlayer}
         />
+
+        {/* Floating Undo Toast saat Selesaikan Match (Safety Net 6 Detik) */}
+        {undoFinishData && (
+          <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-black text-white border-3 border-[#ccff00] shadow-[6px_6px_0px_#000] animate-in fade-in slide-in-from-bottom-4 duration-200 max-w-sm sm:max-w-md">
+            <div className="h-9 w-9 rounded-xl bg-[#ccff00] text-black font-black flex items-center justify-center shrink-0 text-sm shadow-[1px_1px_0px_#000]">
+              {undoFinishData.countdown}s
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="font-black text-xs sm:text-sm text-[#ccff00] block truncate">
+                Match Lapangan {undoFinishData.courtNumber} Selesai!
+              </span>
+              <span className="text-[10px] text-slate-300 block truncate">
+                {undoFinishData.matchTitle}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleUndoFinishMatch}
+              className="px-3 py-1.5 rounded-xl bg-[#ccff00] text-black text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#fff] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer shrink-0 hover:bg-[#b8e600] transition-colors"
+            >
+              Batalkan ↩
+            </button>
+            <button
+              type="button"
+              onClick={() => setUndoFinishData(null)}
+              className="text-slate-400 hover:text-white p-1 cursor-pointer text-xs"
+              title="Tutup"
+            >
+              ✕
+            </button>
+          </div>
+        )}
       </main>
 
       {/* Modal WhatsApp Paste */}

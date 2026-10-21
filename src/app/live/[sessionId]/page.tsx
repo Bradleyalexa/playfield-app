@@ -330,9 +330,15 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                     <span>Jadwal Lengkap</span>
                   </button>
 
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black text-[#ccff00] border-2 border-black shadow-[2px_2px_0px_#000]">
-                    <Radio className="h-3.5 w-3.5 animate-pulse" />
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black text-[#ccff00] border-2 border-black shadow-[2px_2px_0px_#000]"
+                    title="Realtime sync aktif tiap 7 detik"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-ping shrink-0" />
                     <span className="text-xs font-black font-mono tracking-wider">LIVE</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-300 hidden md:inline">
+                      • Terhubung
+                    </span>
                   </div>
                 </div>
               </div>

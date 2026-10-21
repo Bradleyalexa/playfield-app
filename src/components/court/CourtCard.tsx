@@ -27,11 +27,14 @@ export function CourtCard({
   if (!match) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border-3 border-dashed border-black bg-white/70 p-8 text-center shadow-[4px_4px_0px_#000]">
-        <div className="h-14 w-14 rounded-xl bg-black flex items-center justify-center text-[#ccff00] font-black text-xl mb-3 border-2 border-black">
+        <div className="h-14 w-14 rounded-xl bg-black flex items-center justify-center text-[#ccff00] font-black text-xl mb-3 border-2 border-black shadow-[2px_2px_0px_#000]">
           #{court.courtNumber}
         </div>
         <h3 className="font-black text-black text-lg uppercase tracking-wide">{court.courtName}</h3>
-        <p className="text-xs font-bold text-slate-600 mt-1">Lapangan sedang kosong. Klik &apos;Ronde Berikutnya&apos; untuk rotasi.</p>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 border border-amber-500 text-amber-900 text-[10px] font-mono font-black uppercase mt-2 shadow-[1px_1px_0px_#000]">
+          <span>⏸️ MENUNGGU RONDE BERIKUTNYA</span>
+        </span>
+        <p className="text-xs font-bold text-slate-600 mt-2">Lapangan sedang kosong. Klik &apos;Ronde Berikutnya&apos; untuk rotasi.</p>
       </div>
     );
   }
@@ -67,10 +70,15 @@ export function CourtCard({
         </div>
 
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 border border-emerald-500 text-emerald-950 text-[10px] font-mono font-black uppercase shadow-[1px_1px_0px_#000]">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span>LIVE</span>
+          </div>
+
           <button
             onClick={handleAnnounce}
             title="Panggil via Bluetooth Speaker GOR"
-            className="flex items-center gap-1.5 rounded-lg bg-black text-[#ccff00] px-3 py-1.5 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+            className="flex items-center gap-1.5 rounded-lg bg-black text-[#ccff00] px-3 py-1.5 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
             <Volume2 className="h-3.5 w-3.5 stroke-[2.5]" />
             <span className="hidden sm:inline">Panggil</span>
