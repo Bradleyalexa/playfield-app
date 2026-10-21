@@ -15,6 +15,8 @@ import {
   Share2,
   Flame,
   QrCode,
+  Search,
+  X,
 } from "lucide-react";
 import { Navbar } from "../../../components/common/Navbar";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
@@ -38,6 +40,78 @@ function LiveSpectatorContent({ params }: LivePageProps) {
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
   const [isSpectatorQrOpen, setIsSpectatorQrOpen] = useState(false);
   const [sharingPlayer, setSharingPlayer] = useState<Player | null>(null);
+
+  // Fitur Cari Giliran Saya (Match Finder)
+  const [searchPlayerName, setSearchPlayerName] = useState("");
+  const [selectedPlayerForFinder, setSelectedPlayerForFinder] = useState<Player | null>(null);
+
+  const getPlayerLiveStatus = (player: Player) => {
+    if (!session) return null;
+
+    // 1. Cek apakah sedang bertanding di lapangan aktif saat ini
+    for (const court of session.courts) {
+      const match = court.currentMatch;
+      if (match && match.status === "in_progress") {
+        const inTeamA = match.teamA.some((p) => p.id === player.id);
+        const inTeamB = match.teamB.some((p) => p.id === player.id);
+        if (inTeamA || inTeamB) {
+          const myTeam = inTeamA ? match.teamA : match.teamB;
+          const opponentTeam = inTeamA ? match.teamB : match.teamA;
+          const partner = myTeam.find((p) => p.id !== player.id);
+          const myScore = inTeamA ? match.scoreA : match.scoreB;
+          const oppScore = inTeamA ? match.scoreB : match.scoreA;
+
+          return {
+            type: "playing" as const,
+            courtNumber: court.courtNumber,
+            courtName: court.courtName,
+            roundNumber: match.roundNumber,
+            partner,
+            opponents: opponentTeam,
+            myScore,
+            oppScore,
+            match,
+          };
+        }
+      }
+    }
+
+    // 2. Cek apakah ada jadwal pertandingan berikutnya yang sudah antre
+    const upcomingMatch = session.matches.find(
+      (m) =>
+        (m.status === "queued" || m.status === "in_progress") &&
+        (m.teamA.some((p) => p.id === player.id) || m.teamB.some((p) => p.id === player.id))
+    );
+
+    if (upcomingMatch) {
+      const inTeamA = upcomingMatch.teamA.some((p) => p.id === player.id);
+      const myTeam = inTeamA ? upcomingMatch.teamA : upcomingMatch.teamB;
+      const opponentTeam = inTeamA ? upcomingMatch.teamB : upcomingMatch.teamA;
+      const partner = myTeam.find((p) => p.id !== player.id);
+
+      return {
+        type: "upcoming" as const,
+        courtNumber: upcomingMatch.courtNumber,
+        courtName: `Lapangan ${upcomingMatch.courtNumber}`,
+        roundNumber: upcomingMatch.roundNumber,
+        partner,
+        opponents: opponentTeam,
+        match: upcomingMatch,
+      };
+    }
+
+    // 3. Jika tidak ada di active maupun upcoming, berarti sedang istirahat
+    const completedMatches = session.matches.filter(
+      (m) =>
+        m.status === "completed" &&
+        (m.teamA.some((p) => p.id === player.id) || m.teamB.some((p) => p.id === player.id))
+    );
+
+    return {
+      type: "resting" as const,
+      completedCount: completedMatches.length,
+    };
+  };
 
   // Waktu & Countdown Sewa Lapangan
   const [currentTime, setCurrentTime] = useState("");
@@ -262,6 +336,212 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* FITUR: CARI GILIRAN MAIN SAYA (PERSONAL MATCH FINDER) */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white border-3 border-black shadow-[4px_4px_0px_#000] flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b-2 border-black">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-[#ccff00] border-2 border-black flex items-center justify-center font-black text-sm shadow-[1px_1px_0px_#000]">
+                    🎯
+                  </div>
+                  <div>
+                    <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-black">
+                      Cari Giliran Main Saya (Live Match Finder)
+                    </h2>
+                    <p className="text-[10px] sm:text-[11px] font-bold text-slate-600">
+                      Cek jadwal lapangan, partner ganda, dan lawan mainmu seketika
+                    </p>
+                  </div>
+                </div>
+
+                {selectedPlayerForFinder && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPlayerForFinder(null);
+                      setSearchPlayerName("");
+                    }}
+                    className="self-start sm:self-auto flex items-center gap-1 text-[10px] font-mono font-black text-rose-600 bg-rose-50 border border-rose-300 px-2 py-1 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                  >
+                    <X className="h-3 w-3" />
+                    <span>Ganti Pemain</span>
+                  </button>
+                )}
+              </div>
+
+              {!selectedPlayerForFinder ? (
+                <div className="flex flex-col gap-2.5">
+                  <div className="relative">
+                    <div className="flex items-center gap-2 p-2 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000]">
+                      <Search className="h-4 w-4 text-black/60 shrink-0 ml-1" />
+                      <input
+                        type="text"
+                        value={searchPlayerName}
+                        onChange={(e) => setSearchPlayerName(e.target.value)}
+                        placeholder="Ketik namamu di sini (contoh: Hendra, Kevin, Maya)..."
+                        className="w-full bg-transparent border-none text-xs sm:text-sm font-bold text-black placeholder-slate-400 focus:outline-none"
+                      />
+                      {searchPlayerName && (
+                        <button
+                          type="button"
+                          onClick={() => setSearchPlayerName("")}
+                          className="text-slate-400 hover:text-black p-1"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Quick Chip Selection */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] font-mono font-bold text-slate-500 mr-1">
+                      Pilih Namamu:
+                    </span>
+                    {session.players
+                      .filter((p) =>
+                        searchPlayerName
+                          ? p.name.toLowerCase().includes(searchPlayerName.toLowerCase())
+                          : true
+                      )
+                      .slice(0, 14)
+                      .map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedPlayerForFinder(p);
+                            setSearchPlayerName("");
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-[#faf8f2] hover:bg-[#ccff00] border-2 border-black text-xs font-black text-black shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer truncate max-w-[150px]"
+                        >
+                          {p.name}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              ) : (
+                /* Kartu Sorotan Jadwal Pemain Terpilih */
+                (() => {
+                  const status = getPlayerLiveStatus(selectedPlayerForFinder);
+                  if (!status) return null;
+
+                  return (
+                    <div className="rounded-xl border-3 border-black p-4 shadow-[4px_4px_0px_#000] animate-in fade-in zoom-in-95 duration-150 bg-[#faf8f2]">
+                      {/* Header Pemain */}
+                      <div className="flex items-center justify-between pb-3 border-b-2 border-black mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">🏸</span>
+                          <div>
+                            <span className="text-sm sm:text-base font-black text-black">
+                              Halo, {selectedPlayerForFinder.name}!
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span
+                                className={`text-[8px] font-mono font-black px-1.5 py-0.2 rounded border ${
+                                  selectedPlayerForFinder.gender === "M"
+                                    ? "bg-blue-100 text-blue-900 border-blue-400"
+                                    : "bg-pink-100 text-pink-900 border-pink-400"
+                                }`}
+                              >
+                                {selectedPlayerForFinder.gender === "M" ? "Laki-laki (M)" : "Perempuan (W)"}
+                              </span>
+                              <span className={`text-[9px] px-1.5 py-0.2 rounded ${getTierLabel(selectedPlayerForFinder.publicTier).badgeColor}`}>
+                                {getTierLabel(selectedPlayerForFinder.publicTier).label}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        {status.type === "playing" && (
+                          <span className="flex items-center gap-1 font-mono font-black text-[10px] uppercase bg-[#ccff00] text-black px-2.5 py-1 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] animate-pulse">
+                            🔥 Sedang Main
+                          </span>
+                        )}
+                        {status.type === "upcoming" && (
+                          <span className="flex items-center gap-1 font-mono font-black text-[10px] uppercase bg-[#ffde00] text-black px-2.5 py-1 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000]">
+                            ⏳ Antre Berikutnya
+                          </span>
+                        )}
+                        {status.type === "resting" && (
+                          <span className="flex items-center gap-1 font-mono font-black text-[10px] uppercase bg-white text-slate-800 px-2.5 py-1 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000]">
+                            ☕ Sedang Rehat
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Konten Status Khusus */}
+                      {status.type === "playing" && (
+                        <div className="flex flex-col gap-2.5">
+                          <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000]">
+                            <div className="flex items-center justify-between text-xs font-black uppercase text-slate-600 mb-1.5">
+                              <span>{status.courtName} • Ronde {status.roundNumber}</span>
+                              <span className="text-emerald-700 font-mono">Live Score</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 text-xs sm:text-sm">
+                              <div className="flex-1">
+                                <span className="text-[10px] uppercase font-bold text-slate-500 block">Tim Kamu:</span>
+                                <span className="font-extrabold text-black block truncate">
+                                  {selectedPlayerForFinder.name} {status.partner ? `& ${status.partner.name}` : ""}
+                                </span>
+                              </div>
+                              <div className="px-3 py-1 rounded-lg bg-black text-[#ccff00] font-mono-sport text-lg font-black shrink-0 border border-black shadow-[1px_1px_0px_#000]">
+                                {status.myScore} - {status.oppScore}
+                              </div>
+                              <div className="flex-1 text-right">
+                                <span className="text-[10px] uppercase font-bold text-slate-500 block">Lawan:</span>
+                                <span className="font-extrabold text-black block truncate">
+                                  {status.opponents.map((p) => p.name).join(" & ")}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {status.type === "upcoming" && (
+                        <div className="flex flex-col gap-2.5">
+                          <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000]">
+                            <div className="text-xs font-black uppercase text-slate-600 mb-1.5">
+                              {status.courtName} • Ronde {status.roundNumber}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-[10px] uppercase font-bold text-slate-500 block">Partner Ganda Kamu:</span>
+                                <span className="font-extrabold text-black text-sm">
+                                  {status.partner ? `🤝 ${status.partner.name}` : "Tunggal (Single)"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] uppercase font-bold text-slate-500 block">Lawan Tanding:</span>
+                                <span className="font-extrabold text-black text-sm">
+                                  ⚔️ {status.opponents.map((p) => p.name).join(" & ")}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-[10px] text-slate-600 font-bold mt-2 pt-2 border-t border-black/10">
+                              💡 Siap-siap di dekat lapangan begitu ronde yang sedang berjalan selesai.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {status.type === "resting" && (
+                        <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] text-xs">
+                          <p className="font-bold text-black mb-1">
+                            Kamu sedang dalam giliran istirahat / rehat santai. 🥤
+                          </p>
+                          <p className="text-slate-600 text-[11px] leading-relaxed">
+                            Total match yang sudah kamu mainkan: <strong>{status.completedCount} match</strong>. Algoritma rotasi akan otomatis menjadwalkanmu kembali di ronde selanjutnya agar menit bermain seimbang.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
+              )}
             </div>
 
             {/* Lapangan Sedang Berlangsung */}
