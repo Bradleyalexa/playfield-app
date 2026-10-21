@@ -98,3 +98,12 @@ input[type="number"] {
   appearance: textfield;
 }
 
+/* Hide scrollbar for clean carousels and tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

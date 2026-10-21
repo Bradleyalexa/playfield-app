@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -71,6 +71,15 @@ export default function HomePage() {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<MatchmakingAlgorithm>("fair_playtime");
   const [customInitialMatchesCount, setCustomInitialMatchesCount] = useState(6);
   const [isCustomMatchesCountInput, setIsCustomMatchesCountInput] = useState(false);
+  const algoCarouselRef = useRef<HTMLDivElement>(null);
+  const [algoViewMode, setAlgoViewMode] = useState<"carousel" | "grid">("carousel");
+
+  const scrollAlgoCarousel = (direction: "left" | "right") => {
+    if (algoCarouselRef.current) {
+      const scrollAmount = direction === "left" ? -310 : 310;
+      algoCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
 
   // Pengaturan Biaya & Patungan (Nomor 6)
   const [billingModelChoice, setBillingModelChoice] = useState<BillingModel>("track_equipment");
@@ -979,75 +988,232 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* 6. Pilihan Algoritma Mabar (Dengan Banner Trigger Modal Penjelasan di Tengah) */}
+              {/* 6. Pilihan Algoritma Mabar (Carousel Deck & Grid Toggle) */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-2">
-                  6. Pilih Algoritma Rotasi Lapangan & Matchmaking (7 Algoritma)
-                </label>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Shuffle className="h-4 w-4 stroke-[3]" />
+                    <label className="text-xs font-black uppercase tracking-wider text-black">
+                      6. Pilih Algoritma Rotasi Lapangan (7 Algoritma)
+                    </label>
+                  </div>
+
+                  {/* Switch Mode Tampilan: Carousel vs Grid */}
+                  <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setAlgoViewMode("carousel")}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-black border-2 border-black transition-all cursor-pointer flex items-center gap-1 ${
+                        algoViewMode === "carousel"
+                          ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                          : "bg-white text-black hover:bg-slate-50"
+                      }`}
+                      title="Tampilan Carousel Geser (Lebih Hemat Ruang)"
+                    >
+                      <span>🎠 Geser / Slider</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAlgoViewMode("grid")}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-black border-2 border-black transition-all cursor-pointer flex items-center gap-1 ${
+                        algoViewMode === "grid"
+                          ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                          : "bg-white text-black hover:bg-slate-50"
+                      }`}
+                      title="Tampilan Grid (Lihat Semua 7 Sekaligus)"
+                    >
+                      <span>⊞ Grid Semua</span>
+                    </button>
+                  </div>
+                </div>
 
                 {/* Banner Trigger Modal Penjelasan Algoritma Lengkap */}
                 <div
                   onClick={() => setIsAlgoExplainerOpen(true)}
-                  className="mb-3.5 p-3 sm:p-3.5 rounded-2xl bg-white border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#ccff00]/20 hover:shadow-[5px_5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer flex items-center justify-between gap-3 group"
+                  className="mb-3 p-2.5 sm:p-3 rounded-2xl bg-white border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-[#ccff00]/20 hover:shadow-[4px_4px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer flex items-center justify-between gap-3 group"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-10 w-10 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center font-black shrink-0 group-hover:scale-105 transition-transform">
-                      <BookOpen className="h-5 w-5 stroke-[2.5]" />
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-8 w-8 rounded-lg bg-[#ccff00] text-black border-2 border-black shadow-[1px_1px_0px_#000] flex items-center justify-center font-black shrink-0 group-hover:scale-105 transition-transform text-sm">
+                      <BookOpen className="h-4 w-4 stroke-[2.5]" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs sm:text-sm font-black uppercase tracking-tight text-black truncate">
-                          Pelajari Cara Kerja & Perbandingan Lengkap 7 Algoritma
+                        <span className="text-xs font-black uppercase tracking-tight text-black truncate">
+                          Pelajari Cara Kerja &amp; Perbandingan 7 Algoritma
                         </span>
-                        <span className="text-[10px] font-mono font-black uppercase bg-black text-[#ccff00] px-2 py-0.2 rounded hidden sm:inline">
-                          BACA DETAIL
+                        <span className="text-[9px] font-mono font-black uppercase bg-black text-[#ccff00] px-1.5 py-0.2 rounded hidden sm:inline">
+                          PANDUAN
                         </span>
                       </div>
-                      <p className="text-[11px] font-semibold text-black/70 truncate">
-                        Klik di sini untuk melihat formula antrean, penyeimbangan skill ganda, dan simulasi kasus di GOR
+                      <p className="text-[10px] font-semibold text-black/70 truncate">
+                        Lihat formula antrean, penyeimbang skill ganda, dan rekomendasi kasus GOR
                       </p>
                     </div>
                   </div>
 
-                  <span className="text-xs font-mono font-black text-black bg-[#faf8f2] border-2 border-black px-3 py-1.5 rounded-xl shadow-[2px_2px_0px_#000] shrink-0 group-hover:bg-[#ccff00] transition-colors">
-                    Buka Panduan →
+                  <span className="text-[11px] font-mono font-black text-black bg-[#faf8f2] border-2 border-black px-2.5 py-1 rounded-lg shadow-[1px_1px_0px_#000] shrink-0 group-hover:bg-[#ccff00] transition-colors">
+                    Detail →
                   </span>
                 </div>
 
-                {/* Grid 7 Card Algoritma */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {Object.values(ALGORITHM_REGISTRY).map((algo) => {
-                    const isSelected = selectedAlgorithm === algo.id;
-                    return (
-                      <div
-                        key={algo.id}
-                        onClick={() => setSelectedAlgorithm(algo.id)}
-                        className={`p-3.5 rounded-2xl border-3 border-black transition-all cursor-pointer flex flex-col justify-between ${
-                          isSelected
-                            ? "bg-[#ccff00]/25 shadow-[4px_4px_0px_#000] ring-2 ring-black -translate-y-0.5"
-                            : "bg-[#faf8f2] hover:bg-white shadow-[2px_2px_0px_#000]"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-2 mb-1.5">
-                            <span className="font-black text-sm text-black flex items-center gap-1.5">
-                              <span>{algo.icon}</span>
-                              <span>{algo.shortName}</span>
-                            </span>
-                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border-2 border-black ${algo.badgeColor}`}>
-                              {algo.badge}
-                            </span>
+                {/* TAMPILAN 1: MODE CAROUSEL / SLIDER */}
+                {algoViewMode === "carousel" ? (
+                  <div className="relative flex flex-col gap-2">
+                    {/* Carousel Scroll Container */}
+                    <div
+                      ref={algoCarouselRef}
+                      className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 px-1 -mx-1 no-scrollbar select-none"
+                    >
+                      {Object.values(ALGORITHM_REGISTRY).map((algo, idx) => {
+                        const isSelected = selectedAlgorithm === algo.id;
+                        return (
+                          <div
+                            key={algo.id}
+                            onClick={() => setSelectedAlgorithm(algo.id)}
+                            className={`w-[260px] sm:w-[290px] shrink-0 snap-start p-3.5 rounded-2xl border-3 border-black transition-all cursor-pointer flex flex-col justify-between ${
+                              isSelected
+                                ? "bg-[#ccff00]/25 shadow-[4px_4px_0px_#000] ring-2 ring-black -translate-y-0.5"
+                                : "bg-white hover:bg-[#faf8f2] shadow-[2px_2px_0px_#000]"
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1.5 mb-2">
+                                <span className="font-black text-sm text-black flex items-center gap-1.5 truncate">
+                                  <span>{algo.icon}</span>
+                                  <span className="truncate">{algo.shortName}</span>
+                                </span>
+                                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-black shrink-0 ${algo.badgeColor}`}>
+                                  {algo.badge}
+                                </span>
+                              </div>
+                              <p className="text-xs font-medium text-black/80 leading-relaxed mb-2 line-clamp-3">
+                                {algo.description}
+                              </p>
+                            </div>
+                            <div className="pt-2 border-t border-black/15 flex items-center justify-between">
+                              <span className="text-[9px] font-mono font-bold text-black/60 truncate mr-2">
+                                🎯 {algo.bestFor.replace("Mabar ", "")}
+                              </span>
+                              {isSelected ? (
+                                <span className="text-[9px] font-mono font-black text-black bg-[#ccff00] px-1.5 py-0.5 rounded border border-black shrink-0 shadow-[1px_1px_0px_#000]">
+                                  ✓ DIPILIH
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-mono font-bold text-slate-500 hover:text-black shrink-0">
+                                  Pilih →
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-xs font-medium text-black/80 leading-relaxed mb-2">
-                            {algo.description}
-                          </p>
+                        );
+                      })}
+                    </div>
+
+                    {/* Kontrol Navigasi Carousel (Dots + Tombol Kiri/Kanan) */}
+                    <div className="flex items-center justify-between pt-1">
+                      {/* Dots Indicator */}
+                      <div className="flex items-center gap-1.5">
+                        {Object.values(ALGORITHM_REGISTRY).map((algo, idx) => (
+                          <button
+                            key={algo.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedAlgorithm(algo.id);
+                              if (algoCarouselRef.current) {
+                                const card = algoCarouselRef.current.children[idx] as HTMLElement;
+                                card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+                              }
+                            }}
+                            className={`h-2.5 rounded-full transition-all cursor-pointer ${
+                              selectedAlgorithm === algo.id
+                                ? "w-6 bg-black"
+                                : "w-2 bg-black/25 hover:bg-black/60"
+                            }`}
+                            title={algo.shortName}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Tombol Panah Geser */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono font-bold text-slate-500 mr-1 hidden sm:inline">
+                          Geser kartu
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => scrollAlgoCarousel("left")}
+                          className="h-8 w-8 rounded-lg bg-white border-2 border-black flex items-center justify-center font-black hover:bg-slate-100 shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer text-sm"
+                          title="Geser ke Kiri"
+                        >
+                          ←
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => scrollAlgoCarousel("right")}
+                          className="h-8 w-8 rounded-lg bg-[#ccff00] border-2 border-black flex items-center justify-center font-black hover:bg-[#b8e600] shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer text-sm"
+                          title="Geser ke Kanan"
+                        >
+                          →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* TAMPILAN 2: MODE GRID SEMUA */
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {Object.values(ALGORITHM_REGISTRY).map((algo) => {
+                      const isSelected = selectedAlgorithm === algo.id;
+                      return (
+                        <div
+                          key={algo.id}
+                          onClick={() => setSelectedAlgorithm(algo.id)}
+                          className={`p-3.5 rounded-2xl border-3 border-black transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? "bg-[#ccff00]/25 shadow-[4px_4px_0px_#000] ring-2 ring-black -translate-y-0.5"
+                              : "bg-[#faf8f2] hover:bg-white shadow-[2px_2px_0px_#000]"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-1.5">
+                              <span className="font-black text-sm text-black flex items-center gap-1.5">
+                                <span>{algo.icon}</span>
+                                <span>{algo.shortName}</span>
+                              </span>
+                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border-2 border-black ${algo.badgeColor}`}>
+                                {algo.badge}
+                              </span>
+                            </div>
+                            <p className="text-xs font-medium text-black/80 leading-relaxed mb-2">
+                              {algo.description}
+                            </p>
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-black/60 pt-2 border-t border-black/15">
+                            🎯 Cocok untuk: {algo.bestFor}
+                          </span>
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-black/60 pt-2 border-t border-black/15">
-                          🎯 Cocok untuk: {algo.bestFor}
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Callout Ringkas Algoritma yang Sedang Dipilih */}
+                <div className="mt-3 p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-xl shrink-0">{ALGORITHM_REGISTRY[selectedAlgorithm].icon}</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black uppercase text-black truncate">
+                          Algoritma Aktif: {ALGORITHM_REGISTRY[selectedAlgorithm].shortName}
+                        </span>
+                        <span className={`text-[8px] font-mono font-black uppercase px-1.5 py-0.2 rounded border border-black shrink-0 ${ALGORITHM_REGISTRY[selectedAlgorithm].badgeColor}`}>
+                          {ALGORITHM_REGISTRY[selectedAlgorithm].badge}
                         </span>
                       </div>
-                    );
-                  })}
+                      <p className="text-[10px] text-slate-600 font-bold truncate">
+                        {ALGORITHM_REGISTRY[selectedAlgorithm].bestFor}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Konfigurasi Tambahan Jika Memilih Algoritma Custom Manual: Bebas Tentukan Jumlah Match Awal */}
@@ -1115,13 +1281,13 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* 6. Biaya Shuttlecock / Bola (Opsional Host) */}
+              {/* 7. Biaya Shuttlecock / Bola (Opsional Host) */}
               <div className="p-4 sm:p-5 rounded-2xl bg-[#faf8f2] border-3 border-black shadow-[4px_4px_0px_#000] flex flex-col gap-4">
                 <div className="flex items-center justify-between pb-2 border-b-2 border-black">
                   <div className="flex items-center gap-2">
                     <Flame className="h-4 w-4 stroke-[3]" />
                     <span className="text-xs font-black uppercase tracking-wider text-black">
-                      6. Model Pembayaran &amp; Biaya Mabar (Cock &amp; Sewa Lapangan)
+                      7. Model Pembayaran &amp; Biaya Mabar (Cock &amp; Sewa Lapangan)
                     </span>
                   </div>
                   <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] ${
