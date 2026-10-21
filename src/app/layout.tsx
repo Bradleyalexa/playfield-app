@@ -25,8 +25,12 @@ export const metadata: Metadata = {
   description:
     "Aplikasi pengatur game untuk host mabar olahraga (Badminton, Tennis, Padel) di Indonesia. Smart WhatsApp list parser, rotasi ganda seimbang, tracker shuttlecock, dan mode TV GOR display.",
   icons: {
-    icon: "/Playfield_icon.png",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/Playfield_icon.png", type: "image/png" },
+    ],
     apple: "/Playfield_icon.png",
+    shortcut: "/Playfield_icon.png",
   },
 };
 

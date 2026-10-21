@@ -167,12 +167,12 @@ export function DonateCreatorModal({ isOpen, onClose }: DonateCreatorModalProps)
           <div className="flex items-center justify-between gap-2 text-xs">
             <div>
               <span className="font-black text-black">BCA: </span>
-              <span className="font-mono font-bold text-black">8271-928-371</span>
+              <span className="font-mono font-bold text-black">604-201-3010</span>
               <span className="text-[10px] text-slate-600 block">a.n Alexander (Creator Playfield)</span>
             </div>
             <button
               type="button"
-              onClick={() => handleCopy("8271928371", "BCA")}
+              onClick={() => handleCopy("6042013010", "BCA")}
               className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#ccff00] border border-black font-black text-[10px] uppercase shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
             >
               {copiedBank === "BCA" ? <Check className="h-3 w-3 stroke-[3]" /> : <Copy className="h-3 w-3" />}
