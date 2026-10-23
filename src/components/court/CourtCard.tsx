@@ -43,14 +43,14 @@ export function CourtCard({
         <p className="text-xs font-bold text-slate-600 mt-2 max-w-xs">
           Match sebelumnya telah selesai. Panggil giliran pemain berikutnya atau susun match manual:
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-4 w-full max-w-xs">
+        <div className="flex items-stretch justify-center gap-2.5 mt-4 w-full max-w-sm">
           {onNextRound && (
             <button
               type="button"
               onClick={onNextRound}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#ccff00] text-black font-black text-xs uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#ccff00] text-black font-black text-xs uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer whitespace-nowrap"
             >
-              <FastForward className="h-4 w-4 stroke-[3]" />
+              <FastForward className="h-4 w-4 stroke-[3] shrink-0" />
               <span>Ronde Berikutnya</span>
             </button>
           )}
@@ -58,9 +58,9 @@ export function CourtCard({
             <button
               type="button"
               onClick={() => onManualMatch(court.courtNumber)}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white text-black font-black text-xs uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white text-black font-black text-xs uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer whitespace-nowrap"
             >
-              <Plus className="h-4 w-4 stroke-[3]" />
+              <Plus className="h-4 w-4 stroke-[3] shrink-0" />
               <span>Susun Manual</span>
             </button>
           )}
