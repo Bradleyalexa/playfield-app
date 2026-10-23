@@ -95,6 +95,9 @@ export default function HomePage() {
   const [accountNumberInput, setAccountNumberInput] = useState<string>("");
   const [accountHolderInput, setAccountHolderInput] = useState<string>("");
 
+  // Izin Input Skor dari Penonton (Scan QR)
+  const [allowSpectatorScoreUpdate, setAllowSpectatorScoreUpdate] = useState(false);
+
   // Dropdown Sesi Tersimpan (Hanya Tampilkan 2 Recent)
   const [isRecentDropdownOpen, setIsRecentDropdownOpen] = useState(false);
 
@@ -270,6 +273,7 @@ export default function HomePage() {
     demo.courtLocation = courtLocation.trim() || undefined;
     demo.googleMapsUrl = googleMapsUrl.trim() || undefined;
     demo.players = initialPlayers;
+    demo.allowSpectatorScoreUpdate = allowSpectatorScoreUpdate;
 
     // Konfigurasi Equipment (Cock / Bola & Slop)
     const isTrackingEquipment = billingModelChoice === "track_equipment";
@@ -1694,6 +1698,32 @@ export default function HomePage() {
                     </span>
                   </div>
                 )}
+              </div>
+
+              {/* Opsi Izin Skor Penonton (Gotong Royong Wasit) */}
+              <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border-2 border-black bg-[#faf8f2] shadow-[2px_2px_0px_#000]">
+                <div className="pr-3">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="font-black text-xs uppercase text-black">
+                      📱 Izinkan Penonton/Wasit Bantu Input Skor (Scan QR)
+                    </span>
+                    <span className="text-[10px] font-mono font-bold bg-[#ffde00] border border-black px-1.5 py-0.2 rounded">
+                      Opsional
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-600 leading-tight">
+                    Bila dicentang, penonton yang scan QR code bisa bantu ketik skor &amp; klik tim pemenang dari HP mereka. Jika tidak, hanya bisa melihat (read-only).
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={allowSpectatorScoreUpdate}
+                    onChange={(e) => setAllowSpectatorScoreUpdate(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-black after:border-2 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#ccff00] border-2 border-black shadow-[1px_1px_0px_#000]"></div>
+                </label>
               </div>
 
               {/* Submit Button */}

@@ -267,6 +267,9 @@ export interface GameSession {
   // Pengaturan Biaya & Split Bill Patungan
   billing?: SessionBillingConfig;
 
+  // Izin input skor dari penonton/wasit (Scan QR / Link Publik)
+  allowSpectatorScoreUpdate?: boolean;
+
   sultanSponsor?: string;
   createdAt: string;
   updatedAt: string;

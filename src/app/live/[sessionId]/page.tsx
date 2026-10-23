@@ -17,6 +17,8 @@ import {
   QrCode,
   Search,
   X,
+  Lock,
+  Check,
 } from "lucide-react";
 import { Navbar } from "../../../components/common/Navbar";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
@@ -40,6 +42,39 @@ function LiveSpectatorContent({ params }: LivePageProps) {
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
   const [isSpectatorQrOpen, setIsSpectatorQrOpen] = useState(false);
   const [sharingPlayer, setSharingPlayer] = useState<Player | null>(null);
+  const [spectatorToast, setSpectatorToast] = useState<string | null>(null);
+
+  // Update Skor Pertandingan oleh Penonton / Wasit (Jika Diizinkan Host)
+  const handleSpectatorUpdateScore = (courtNumber: number, scoreA: number, scoreB: number) => {
+    if (!session || !session.allowSpectatorScoreUpdate) return;
+    const clampedA = Math.max(0, scoreA);
+    const clampedB = Math.max(0, scoreB);
+
+    const updatedMatches = session.matches.map((m) => {
+      if (m.courtNumber === courtNumber && m.status === "in_progress") {
+        return { ...m, scoreA: clampedA, scoreB: clampedB };
+      }
+      return m;
+    });
+
+    const updatedCourts = session.courts.map((c) => {
+      if (c.courtNumber === courtNumber && c.currentMatch) {
+        return { ...c, currentMatch: { ...c.currentMatch, scoreA: clampedA, scoreB: clampedB } };
+      }
+      return c;
+    });
+
+    const updated: GameSession = {
+      ...session,
+      matches: updatedMatches,
+      courts: updatedCourts,
+    };
+
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    setSpectatorToast(`Skor Lapangan #${courtNumber} diperbarui: ${clampedA} - ${clampedB}`);
+    setTimeout(() => setSpectatorToast(null), 3000);
+  };
 
   // Fitur Cari Giliran Saya (Match Finder)
   const [searchPlayerName, setSearchPlayerName] = useState("");
@@ -565,6 +600,26 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                 </button>
               </div>
 
+              {/* Banner Hak Akses Wasit Penonton */}
+              {session.allowSpectatorScoreUpdate ? (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#ccff00]/25 border-2 border-black text-xs font-black shadow-[2px_2px_0px_#000] animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🟢</span>
+                    <span>Mode Wasit Aktif: Anda diizinkan Host untuk bantu update skor pertandingan!</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-mono bg-black text-[#ccff00] px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] shrink-0">
+                    Wasit Penonton ON
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#faf8f2] border-2 border-dashed border-black/30 text-[11px] font-bold text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-3.5 w-3.5 text-slate-500" />
+                    <span>Mode Baca Saja (Host belum mengaktifkan izin update skor penonton)</span>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {session.courts.map((court) => {
                   const match = court.currentMatch;
@@ -641,11 +696,37 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                             </div>
                           </div>
 
-                          <div className="mt-2.5 pt-2 border-t-2 border-black text-center">
-                            <span className="font-mono-sport text-4xl sm:text-5xl font-black text-black tracking-tight">
-                              {match.scoreA}
-                            </span>
-                          </div>
+                          {/* Skor Tim A */}
+                          {session.allowSpectatorScoreUpdate ? (
+                            <div className="mt-2.5 pt-2 border-t-2 border-black flex items-center justify-center gap-1.5 sm:gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleSpectatorUpdateScore(court.courtNumber, match.scoreA - 1, match.scoreB)}
+                                disabled={match.scoreA <= 0}
+                                className="h-8 w-8 rounded-lg bg-white hover:bg-slate-100 disabled:opacity-40 text-black font-black text-base border-2 border-black shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center cursor-pointer shrink-0"
+                                title="Kurangi 1 Poin Tim A"
+                              >
+                                -
+                              </button>
+                              <span className="font-mono-sport text-3xl sm:text-5xl font-black text-black tracking-tight min-w-[42px] text-center">
+                                {match.scoreA}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleSpectatorUpdateScore(court.courtNumber, match.scoreA + 1, match.scoreB)}
+                                className="h-8 w-8 rounded-lg bg-[#ccff00] hover:bg-[#b8e600] text-black font-black text-base border-2 border-black shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center cursor-pointer shrink-0"
+                                title="Tambah 1 Poin Tim A"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="mt-2.5 pt-2 border-t-2 border-black text-center">
+                              <span className="font-mono-sport text-4xl sm:text-5xl font-black text-black tracking-tight">
+                                {match.scoreA}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Tim B */}
@@ -680,13 +761,69 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                             </div>
                           </div>
 
-                          <div className="mt-2.5 pt-2 border-t-2 border-black text-center">
-                            <span className="font-mono-sport text-4xl sm:text-5xl font-black text-black tracking-tight">
-                              {match.scoreB}
-                            </span>
-                          </div>
+                          {/* Skor Tim B */}
+                          {session.allowSpectatorScoreUpdate ? (
+                            <div className="mt-2.5 pt-2 border-t-2 border-black flex items-center justify-center gap-1.5 sm:gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleSpectatorUpdateScore(court.courtNumber, match.scoreA, match.scoreB - 1)}
+                                disabled={match.scoreB <= 0}
+                                className="h-8 w-8 rounded-lg bg-white hover:bg-slate-100 disabled:opacity-40 text-black font-black text-base border-2 border-black shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center cursor-pointer shrink-0"
+                                title="Kurangi 1 Poin Tim B"
+                              >
+                                -
+                              </button>
+                              <span className="font-mono-sport text-3xl sm:text-5xl font-black text-black tracking-tight min-w-[42px] text-center">
+                                {match.scoreB}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleSpectatorUpdateScore(court.courtNumber, match.scoreA, match.scoreB + 1)}
+                                className="h-8 w-8 rounded-lg bg-[#7dd3fc] hover:bg-[#38bdf8] text-black font-black text-base border-2 border-black shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center cursor-pointer shrink-0"
+                                title="Tambah 1 Poin Tim B"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="mt-2.5 pt-2 border-t-2 border-black text-center">
+                              <span className="font-mono-sport text-4xl sm:text-5xl font-black text-black tracking-tight">
+                                {match.scoreB}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
+
+                      {/* Shortcut 1-Tap Pemenang (Hanya Muncul Jika Host Mengizinkan Wasit Penonton) */}
+                      {session.allowSpectatorScoreUpdate && (
+                        <div className="flex items-center gap-1.5 mt-3 pt-2.5 border-t-2 border-black">
+                          <button
+                            type="button"
+                            onClick={() => handleSpectatorUpdateScore(court.courtNumber, 21, match.scoreB > 0 ? match.scoreB : 15)}
+                            className={`flex-1 py-1.5 px-2 rounded-lg border-2 border-black text-[10px] font-black uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer truncate ${
+                              match.scoreA > match.scoreB
+                                ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                                : "bg-white hover:bg-emerald-50 text-slate-800"
+                            }`}
+                            title="Klik cepat: Tim A Menang (Otomatis isi 21)"
+                          >
+                            👑 Tim A Menang
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSpectatorUpdateScore(court.courtNumber, match.scoreA > 0 ? match.scoreA : 15, 21)}
+                            className={`flex-1 py-1.5 px-2 rounded-lg border-2 border-black text-[10px] font-black uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer truncate ${
+                              match.scoreB > match.scoreA
+                                ? "bg-[#7dd3fc] text-black shadow-[2px_2px_0px_#000]"
+                                : "bg-white hover:bg-sky-50 text-slate-800"
+                            }`}
+                            title="Klik cepat: Tim B Menang (Otomatis isi 21)"
+                          >
+                            👑 Tim B Menang
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -761,6 +898,13 @@ function LiveSpectatorContent({ params }: LivePageProps) {
           </>
         )}
       </main>
+
+      {/* Floating Toast Feedback Update Skor Wasit Penonton */}
+      {spectatorToast && (
+        <div className="fixed bottom-6 right-4 sm:right-6 z-50 flex items-center gap-2 p-3 rounded-xl bg-black text-[#ccff00] border-2 border-black font-black text-xs shadow-[4px_4px_0px_#000] animate-in fade-in slide-in-from-bottom-2">
+          <span>⚡ {spectatorToast}</span>
+        </div>
+      )}
 
       {/* Modal Keseluruhan Match & Jadwal Proyeksi untuk Penonton / Pemain */}
       <AllMatchesModal

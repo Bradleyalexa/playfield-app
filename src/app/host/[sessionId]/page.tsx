@@ -411,6 +411,23 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
   };
 
+  // 2b. Toggle Hak Akses Penonton Update Skor (Scan QR / Link Publik)
+  const handleToggleSpectatorScoreUpdate = () => {
+    if (!session) return;
+    const nextVal = !session.allowSpectatorScoreUpdate;
+    const updated: GameSession = {
+      ...session,
+      allowSpectatorScoreUpdate: nextVal,
+    };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    AudioAnnouncer.announceGeneral(
+      nextVal
+        ? "Izin skor penonton telah diaktifkan. Penonton sekarang bisa bantu input skor dari HP."
+        : "Izin skor penonton dinonaktifkan. Papan penonton kembali ke mode baca saja."
+    );
+  };
+
   // 3. Selesaikan Pertandingan Lapangan Ini
   const handleFinishMatch = (courtNumber: number) => {
     const prevSnapshot: GameSession = JSON.parse(JSON.stringify(session));
@@ -1216,7 +1233,31 @@ function HostDashboardContent({ params }: HostPageProps) {
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Tombol Toggle Izin Wasit/Skor Penonton */}
+            <button
+              type="button"
+              onClick={handleToggleSpectatorScoreUpdate}
+              className={`flex items-center gap-1.5 font-black uppercase text-xs px-3 py-1.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ${
+                session.allowSpectatorScoreUpdate
+                  ? "bg-[#ccff00] text-black"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+              title="Aktifkan atau kunci hak input skor dari penonton yang scan QR code"
+            >
+              {session.allowSpectatorScoreUpdate ? (
+                <>
+                  <Check className="h-3.5 w-3.5 stroke-[3] text-black" />
+                  <span>Izin Skor Penonton: ON</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="h-3.5 w-3.5 stroke-[2.5] text-slate-500" />
+                  <span>Izin Skor Penonton: OFF</span>
+                </>
+              )}
+            </button>
+
             {/* Tombol Tampilkan QR Code Penonton */}
             <button
               type="button"
