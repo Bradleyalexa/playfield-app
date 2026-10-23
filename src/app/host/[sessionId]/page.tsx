@@ -482,6 +482,80 @@ function HostDashboardContent({ params }: HostPageProps) {
     setUndoFinishData(null);
   };
 
+  // 3b. Selesaikan Match Lapangan Ini & Langsung Putar Ronde Berikutnya dalam 1-Klik
+  const handleFinishAndNextRound = (courtNumber: number) => {
+    const currentMatch = session.matches.find((m) => m.courtNumber === courtNumber && m.status === "in_progress");
+    if (!currentMatch) return;
+
+    try {
+      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+    } catch {}
+
+    const winnerTeam = currentMatch.scoreA > currentMatch.scoreB ? "A" : "B";
+    const winners = winnerTeam === "A" ? currentMatch.teamA : currentMatch.teamB;
+    AudioAnnouncer.announceWinner(courtNumber, winnerTeam, winners, currentMatch.scoreA, currentMatch.scoreB);
+
+    // Update match status & gamesPlayed pemain
+    const updatedPlayers = session.players.map((p) => {
+      const playedInThis =
+        currentMatch.teamA.some((t) => t.id === p.id) || currentMatch.teamB.some((t) => t.id === p.id);
+      if (playedInThis) {
+        return {
+          ...p,
+          gamesPlayed: p.gamesPlayed + 1,
+          lastPlayedRound: session.currentRound,
+        };
+      }
+      return p;
+    });
+
+    const updatedMatches = session.matches.map((m) => {
+      if (m.id === currentMatch.id) {
+        return { ...m, status: "completed" as const, endedAt: new Date().toISOString() };
+      }
+      return m;
+    });
+
+    const nextRoundNumber = session.currentRound + 1;
+    const result = generateBalancedMatches(
+      updatedPlayers,
+      session.courtCount,
+      nextRoundNumber,
+      session.algorithm || "playfields_mix",
+      updatedMatches
+    );
+
+    if (result.matches.length === 0) {
+      alert("Pemain aktif kurang dari 4 orang untuk membentuk match ganda!");
+      return;
+    }
+
+    // Arsipkan match in_progress sebelumnya jika ada
+    const finalArchivedMatches = updatedMatches.map((m) => {
+      if (m.status === "in_progress") {
+        return { ...m, status: "completed" as const, endedAt: new Date().toISOString() };
+      }
+      return m;
+    });
+
+    const updatedCourts = session.courts.map((c) => {
+      const matchForCourt = result.matches.find((m) => m.courtNumber === c.courtNumber);
+      return { ...c, currentMatch: matchForCourt };
+    });
+
+    const updated: GameSession = {
+      ...session,
+      currentRound: nextRoundNumber,
+      players: updatedPlayers,
+      matches: [...finalArchivedMatches, ...result.matches],
+      courts: updatedCourts,
+    };
+
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    AudioAnnouncer.announceGeneral(`Ronde ${nextRoundNumber} dimulai. Seluruh pemain harap bersiap di lapangan.`);
+  };
+
   // 4. Mulai Ronde Berikutnya (Algoritma Penyeimbang Otomatis)
   const handleNextRound = () => {
     // Pastikan seluruh lapangan terdaftar (auto-heal jika kurang dari session.courtCount)
@@ -1211,7 +1285,7 @@ function HostDashboardContent({ params }: HostPageProps) {
                   <span className="bg-[#ccff00] px-1.5 py-0.5 rounded border border-black text-[11px]">➕ Pemain Telat Datang</span>
                 </div>
                 <p className="font-bold text-slate-700 leading-relaxed text-[11px]">
-                  Pemain baru dapat ditambahkan kapan saja lewat form roster atau tombol WhatsApp Paste. Pemain baru otomatis tercatat dengan jam terbang <strong className="text-black">0x Main</strong>, sehingga algoritma Playfield akan <u>langsung memprioritaskan mereka masuk ke lapangan</u> pada ronde berikutnya atau saat kocok ulang.
+                  Pemain baru dapat ditambahkan kapan saja lewat form roster atau tombol WhatsApp Paste. Pemain baru otomatis tercatat dengan jumlah main <strong className="text-black">0x Main</strong>, sehingga algoritma Playfield akan <u>langsung memprioritaskan mereka masuk ke lapangan</u> pada ronde berikutnya atau saat kocok ulang.
                 </p>
               </div>
 
@@ -1268,6 +1342,9 @@ function HostDashboardContent({ params }: HostPageProps) {
                 onUpdateScore={handleUpdateScore}
                 onFinishMatch={handleFinishMatch}
                 onAddCockToMatch={handleAddCockToCourt}
+                onNextRound={handleNextRound}
+                onFinishAndNextRound={handleFinishAndNextRound}
+                onManualMatch={() => setIsCreateMatchModalOpen(true)}
               />
             ))}
           </div>

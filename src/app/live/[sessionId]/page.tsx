@@ -698,7 +698,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
               <div className="flex items-center justify-between pb-3 border-b-3 border-black">
                 <h2 className="text-sm sm:text-base font-black uppercase text-black flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-amber-500 stroke-[2.5]" />
-                  <span>Daftar Giliran & Jam Terbang Pemain</span>
+                  <span>Daftar Giliran & Total Main Pemain</span>
                 </h2>
                 <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-black">
                   Rotasi Adil ({session.players.length} Pemain)

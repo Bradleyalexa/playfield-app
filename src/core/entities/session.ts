@@ -6,8 +6,8 @@ export type SportType = "badminton" | "tennis" | "padel";
 export type SessionStatus = "active" | "completed" | "archived";
 
 export type MatchmakingAlgorithm =
-  | "playfields_mix"  // Playfield's (Smart All-in-One: Jam Terbang + Level + Gender Seimbang Tanpa Wajib Skor)
-  | "fair_playtime"   // Jam Terbang Rata (Paling lama istirahat & main paling sedikit)
+  | "playfields_mix"  // Playfield's (Smart All-in-One: Pemerataan Giliran + Level + Gender Seimbang Tanpa Wajib Skor)
+  | "fair_playtime"   // Giliran Main Rata (Paling lama istirahat & main paling sedikit)
   | "mixed_doubles"   // Ganda Campuran (Cowo + Cewe / Gender Balanced)
   | "skill_tiered"    // Seimbang Level (Kombinasi tier seimbang antar tim)
   | "king_of_court"   // Raja Lapangan (Pemenang bertahan di court 1)
@@ -34,17 +34,17 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
     badge: "REKOMENDASI UTAMA",
     badgeColor: "bg-[#ccff00] text-black border-2 border-black",
     icon: "🔥",
-    description: "Algoritma cerdas unggulan Playfield: otomatis seimbangkan jam terbang adil, level skill anti-jomplang, dan komposisi gender tanpa perlu pusing input skor.",
+    description: "Algoritma cerdas unggulan Playfield: otomatis seimbangkan pemerataan giliran main (jumlah match rata), level skill anti-jomplang, dan komposisi gender tanpa perlu pusing input skor.",
     bestFor: "Paling direkomendasikan untuk 95% mabar komunitas. Adil, reli seru seimbang, dan 100% bebas ribet.",
   },
   fair_playtime: {
     id: "fair_playtime",
-    name: "Jam Terbang Rata (Fair Rest & Play)",
-    shortName: "Jam Terbang Rata",
+    name: "Giliran Main Rata (Fair Play & Rest)",
+    shortName: "Giliran Main Rata",
     badge: "POPULER",
     badgeColor: "bg-[#7dd3fc] text-black",
     icon: "⚖️",
-    description: "Memprioritaskan pemain yang paling sedikit bermain dan paling lama duduk istirahat agar waktu sewa dinikmati rata.",
+    description: "Memprioritaskan pemain yang paling sedikit bermain dan paling lama duduk istirahat agar jatah waktu sewa dinikmati rata.",
     bestFor: "Mabar komunitas rutin dengan jumlah pemain lebih dari kapasitas lapangan (ada antrean istirahat).",
   },
   mixed_doubles: {

@@ -22,7 +22,7 @@ interface DetailedAlgoInfo {
 const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   playfields_mix: {
     id: "playfields_mix",
-    formula: "Jam Terbang Rata + Gender Seimbang + Skill Anti-Jomplang (All-in-One)",
+    formula: "Pemerataan Giliran Main + Gender Seimbang + Skill Anti-Jomplang (All-in-One)",
     howItWorks: [
       "Prioritas Antrean Adil: Pemain yang paling sedikit bermain dan paling lama duduk istirahat otomatis dipanggil ke lapangan lebih dulu.",
       "Distribusi Gender Pintar: Jika ada pemain pria (M) dan wanita (W), sistem otomatis menyusun komposisi seimbang (XD vs XD atau didampingi pasangan yang tepat).",
@@ -30,7 +30,7 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
       "100% Bebas Repot: Host tidak diwajibkan menginput angka skor sama sekali! Selesai match tinggal klik 1 tombol dan rotasi langsung berjalan mulus."
     ],
     exampleScenario:
-      "Dalam sesi mabar campuran dengan pemain berbagai level, sistem secara otomatis memastikan semua peserta mendapatkan menit bermain yang sama rata, tidak ada partai yang berat sebelah, dan cewek maupun cowok bertanding secara nyaman tanpa drama.",
+      "Dalam sesi mabar campuran dengan pemain berbagai level, sistem secara otomatis memastikan semua peserta mendapatkan jumlah bermain yang sama rata, tidak ada partai yang berat sebelah, dan cewek maupun cowok bertanding secara nyaman tanpa drama.",
     advantages: [
       "Algoritma paling lengkap dan direkomendasikan untuk 95% mabar komunitas.",
       "Host tidak perlu pusing memilih algoritma yang mana; semua formula terbaik sudah digabung jadi satu.",
@@ -41,7 +41,7 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
     id: "fair_playtime",
     formula: "Main Paling Sedikit + Duduk Paling Lama = Masuk Lapangan Duluan",
     howItWorks: [
-      "Pemain dengan jumlah jam terbang (games played) paling sedikit berada di prioritas teratas antrean.",
+      "Pemain dengan total main (games played) paling sedikit berada di prioritas teratas antrean agar semua pemain dapat jatah bermain yang rata.",
       "Jika ada beberapa pemain dengan games played sama, pemain yang paling lama duduk istirahat didahulukan masuk lapangan.",
       "4 pemain terpilih diurutkan dari skill tertinggi ke terendah [Suhu, Hore, Hore, Kentang]. Sistem memasangkan Suhu + Kentang melawan 2 pemain Hore agar kekuatan tim berimbang.",
       "Pemain pria (M) dan wanita (W) tetap berpeluang main bersama secara alami jika gilirannya tiba."

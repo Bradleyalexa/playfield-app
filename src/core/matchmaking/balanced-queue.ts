@@ -121,7 +121,7 @@ export function generateBalancedMatches(
 
     switch (algorithm) {
       case "playfields_mix": {
-        // Playfield's Mix: Perpaduan cerdas Jam Terbang Rata + Keseimbangan Gender + Keseimbangan Tier (100% Bebas Input Skor)
+        // Playfield's Mix: Perpaduan cerdas Pemerataan Giliran Main + Keseimbangan Gender + Keseimbangan Tier (100% Bebas Input Skor)
         const males = courtFour.filter((p) => p.gender === "M").sort((a, b) => b.skillLevel - a.skillLevel);
         const females = courtFour.filter((p) => p.gender === "F").sort((a, b) => b.skillLevel - a.skillLevel);
 
@@ -211,7 +211,7 @@ export function generateBalancedMatches(
 
       case "fair_playtime":
       default: {
-        // Standar jam terbang rata + penyeimbangan skill
+        // Standar giliran main rata + penyeimbangan skill anti-jomplang
         courtFour.sort((a, b) => b.skillLevel - a.skillLevel);
         teamA = [courtFour[0], courtFour[3]];
         teamB = [courtFour[1], courtFour[2]];

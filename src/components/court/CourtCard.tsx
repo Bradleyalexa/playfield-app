@@ -1,6 +1,6 @@
 "use client";
 
-import { Volume2, CheckCircle2, Flame } from "lucide-react";
+import { Volume2, CheckCircle2, Flame, FastForward, Plus } from "lucide-react";
 import { Court, Match } from "../../core/entities/match";
 import { getTierLabel } from "../../core/entities/player";
 import { SportConfig } from "../../core/entities/session";
@@ -14,6 +14,9 @@ interface CourtCardProps {
   onUpdateScore: (courtNumber: number, scoreA: number, scoreB: number) => void;
   onFinishMatch: (courtNumber: number) => void;
   onAddCockToMatch?: (courtNumber: number) => void;
+  onNextRound?: () => void;
+  onFinishAndNextRound?: (courtNumber: number) => void;
+  onManualMatch?: (courtNumber: number) => void;
 }
 
 export function CourtCard({
@@ -23,18 +26,45 @@ export function CourtCard({
   onUpdateScore,
   onFinishMatch,
   onAddCockToMatch,
+  onNextRound,
+  onFinishAndNextRound,
+  onManualMatch,
 }: CourtCardProps) {
   if (!match) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border-3 border-dashed border-black bg-white/70 p-8 text-center shadow-[4px_4px_0px_#000]">
+      <div className="flex flex-col items-center justify-center rounded-2xl border-3 border-dashed border-black bg-white/70 p-6 sm:p-8 text-center shadow-[4px_4px_0px_#000]">
         <div className="h-14 w-14 rounded-xl bg-black flex items-center justify-center text-[#ccff00] font-black text-xl mb-3 border-2 border-black shadow-[2px_2px_0px_#000]">
           #{court.courtNumber}
         </div>
         <h3 className="font-black text-black text-lg uppercase tracking-wide">{court.courtName}</h3>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 border border-amber-500 text-amber-900 text-[10px] font-mono font-black uppercase mt-2 shadow-[1px_1px_0px_#000]">
-          <span>⏸️ MENUNGGU RONDE BERIKUTNYA</span>
+          <span>⏸️ LAPANGAN KOSONG</span>
         </span>
-        <p className="text-xs font-bold text-slate-600 mt-2">Lapangan sedang kosong. Klik &apos;Ronde Berikutnya&apos; untuk rotasi.</p>
+        <p className="text-xs font-bold text-slate-600 mt-2 max-w-xs">
+          Match sebelumnya telah selesai. Panggil giliran pemain berikutnya atau susun match manual:
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-4 w-full max-w-xs">
+          {onNextRound && (
+            <button
+              type="button"
+              onClick={onNextRound}
+              className="flex-1 min-w-[140px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#ccff00] text-black font-black text-xs uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+            >
+              <FastForward className="h-4 w-4 stroke-[3]" />
+              <span>Ronde Berikutnya</span>
+            </button>
+          )}
+          {onManualMatch && (
+            <button
+              type="button"
+              onClick={() => onManualMatch(court.courtNumber)}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white text-black font-black text-xs uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+            >
+              <Plus className="h-4 w-4 stroke-[3]" />
+              <span>Susun Manual</span>
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -265,12 +295,12 @@ export function CourtCard({
       </div>
 
       {/* Tombol Aksi Lapangan */}
-      <div className="flex items-center gap-2 mt-auto">
+      <div className="flex flex-wrap items-center gap-2 mt-auto">
         {onAddCockToMatch && sportConfig.equipment.enabled !== false && (
           <button
             onClick={() => onAddCockToMatch(court.courtNumber)}
             title="Tambah pemakaian shuttlecock untuk match ini"
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border-2 border-black bg-[#ffde00] py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 rounded-lg border-2 border-black bg-[#ffde00] py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
             <Flame className="h-3.5 w-3.5 fill-black" />
             <span>
@@ -282,16 +312,23 @@ export function CourtCard({
 
         <button
           onClick={() => onFinishMatch(court.courtNumber)}
-          className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all ${
-            validation.isFinished
-              ? "bg-[#ccff00] text-black"
-              : "bg-black text-white hover:bg-neutral-800"
-          }`}
-          title="Selesaikan match di lapangan ini dan panggil giliran pemain berikutnya"
+          className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-black uppercase tracking-wider border-2 border-black bg-white hover:bg-slate-100 text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+          title="Selesaikan match di lapangan ini saja (status jadi kosong menunggu ronde berikutnya)"
         >
           <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.5]" />
-          <span>{match.scoreA === 0 && match.scoreB === 0 ? "Selesai (Rotasi)" : "Selesaikan Match"}</span>
+          <span>Selesai Saja</span>
         </button>
+
+        {onFinishAndNextRound && (
+          <button
+            onClick={() => onFinishAndNextRound(court.courtNumber)}
+            className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-black uppercase tracking-wider border-2 border-black bg-[#ccff00] hover:bg-[#b8e600] text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            title="Selesaikan match ini dan langsung putar ronde berikutnya"
+          >
+            <FastForward className="h-3.5 w-3.5 stroke-[3]" />
+            <span>Selesai & Next ⏩</span>
+          </button>
+        )}
       </div>
     </div>
   );
