@@ -508,7 +508,7 @@ function HostDashboardContent({ params }: HostPageProps) {
       session.players,
       session.courtCount,
       nextRoundNumber,
-      session.algorithm || "fair_playtime",
+      session.algorithm || "playfields_mix",
       session.matches
     );
 
@@ -678,7 +678,7 @@ function HostDashboardContent({ params }: HostPageProps) {
       eligiblePool,
       emptyOrResetCourts.length,
       session.currentRound,
-      session.algorithm || "fair_playtime",
+      session.algorithm || "playfields_mix",
       session.matches.filter((m) => m.status === "completed")
     );
 
@@ -914,11 +914,11 @@ function HostDashboardContent({ params }: HostPageProps) {
               </span>
               <span
                 className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border-2 border-black ${
-                  (ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"]).badgeColor
+                  (ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).badgeColor
                 }`}
               >
-                {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"]).icon}{" "}
-                {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"]).shortName}
+                {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).icon}{" "}
+                {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).shortName}
               </span>
               {rentalInfo.dayDateLabel && (
                 <span className="text-[11px] font-mono font-black text-black bg-[#ccff00] px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">

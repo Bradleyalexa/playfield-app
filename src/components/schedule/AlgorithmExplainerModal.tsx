@@ -20,6 +20,23 @@ interface DetailedAlgoInfo {
 }
 
 const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
+  playfields_mix: {
+    id: "playfields_mix",
+    formula: "Jam Terbang Rata + Gender Seimbang + Skill Anti-Jomplang (All-in-One)",
+    howItWorks: [
+      "Prioritas Antrean Adil: Pemain yang paling sedikit bermain dan paling lama duduk istirahat otomatis dipanggil ke lapangan lebih dulu.",
+      "Distribusi Gender Pintar: Jika ada pemain pria (M) dan wanita (W), sistem otomatis menyusun komposisi seimbang (XD vs XD atau didampingi pasangan yang tepat).",
+      "Keseimbangan Level Otomatis: Menyandingkan pemain level atas dengan pemula melawan pasangan level menengah agar pertandingan sengit dan reli tetap hidup.",
+      "100% Bebas Repot: Host tidak diwajibkan menginput angka skor sama sekali! Selesai match tinggal klik 1 tombol dan rotasi langsung berjalan mulus."
+    ],
+    exampleScenario:
+      "Dalam sesi mabar campuran dengan pemain berbagai level, sistem secara otomatis memastikan semua peserta mendapatkan menit bermain yang sama rata, tidak ada partai yang berat sebelah, dan cewek maupun cowok bertanding secara nyaman tanpa drama.",
+    advantages: [
+      "Algoritma paling lengkap dan direkomendasikan untuk 95% mabar komunitas.",
+      "Host tidak perlu pusing memilih algoritma yang mana; semua formula terbaik sudah digabung jadi satu.",
+      "Ramah host: pertandingan bisa diselesaikan seketika tanpa perlu mencatat skor."
+    ],
+  },
   fair_playtime: {
     id: "fair_playtime",
     formula: "Main Paling Sedikit + Duduk Paling Lama = Masuk Lapangan Duluan",
@@ -141,7 +158,7 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
 export function AlgorithmExplainerModal({
   isOpen,
   onClose,
-  selectedAlgorithm = "fair_playtime",
+  selectedAlgorithm = "playfields_mix",
   onSelectAlgorithm,
 }: AlgorithmExplainerModalProps) {
   const [activeTab, setActiveTab] = useState<MatchmakingAlgorithm>(selectedAlgorithm);

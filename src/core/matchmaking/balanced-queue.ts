@@ -49,7 +49,7 @@ export function generateBalancedMatches(
   allPlayers: Player[],
   courtCount: number,
   roundNumber: number,
-  algorithm: MatchmakingAlgorithm = "fair_playtime",
+  algorithm: MatchmakingAlgorithm = "playfields_mix",
   previousMatches: Match[] = []
 ): MatchmakingResult {
   // 1. Filter hanya pemain aktif
@@ -92,7 +92,7 @@ export function generateBalancedMatches(
     selectedPlayers = [...kingPair, ...chosenNonKings];
     restingPlayers = nonKings.slice(chosenNonKings.length);
   } else {
-    // Prioritas umum: Main paling sedikit, lalu istirahat paling lama
+    // Prioritas umum (playfields_mix, fair_playtime, dll): Main paling sedikit, lalu istirahat paling lama
     const sorted = [...activePool].sort((a, b) => {
       if (a.gamesPlayed !== b.gamesPlayed) {
         return a.gamesPlayed - b.gamesPlayed;
@@ -120,6 +120,34 @@ export function generateBalancedMatches(
     let teamB: Player[] = [];
 
     switch (algorithm) {
+      case "playfields_mix": {
+        // Playfield's Mix: Perpaduan cerdas Jam Terbang Rata + Keseimbangan Gender + Keseimbangan Tier (100% Bebas Input Skor)
+        const males = courtFour.filter((p) => p.gender === "M").sort((a, b) => b.skillLevel - a.skillLevel);
+        const females = courtFour.filter((p) => p.gender === "F").sort((a, b) => b.skillLevel - a.skillLevel);
+
+        if (males.length >= 2 && females.length >= 2) {
+          // 2 Pria & 2 Wanita: Ganda Campuran Seimbang (Pria Terkuat + Wanita Berkembang vs Pria Menengah + Wanita Terkuat)
+          teamA = [males[0], females[females.length - 1]];
+          teamB = [males[1], females[0]];
+        } else if (females.length === 1 && males.length === 3) {
+          // 1 Wanita & 3 Pria: Wanita dipasangkan dengan Pria terkuat (males[0])
+          teamA = [males[0], females[0]];
+          teamB = [males[1], males[2]];
+        } else if (males.length === 1 && females.length === 3) {
+          // 1 Pria & 3 Wanita: Pria dipasangkan dengan Wanita level berkembang, melawan 2 wanita menengah
+          teamA = [males[0], females[females.length - 1]];
+          teamB = [females[0], females[1]];
+        } else {
+          // Sesama Gender (Semua Pria atau Semua Wanita): Penyeimbangan Tier Anti-Jomplang
+          courtFour.sort((a, b) => b.skillLevel - a.skillLevel);
+          // Tim A: Tier Tertinggi (0) + Tier Terendah (3)
+          // Tim B: Tier Menengah (1) + Tier Menengah (2)
+          teamA = [courtFour[0], courtFour[3]];
+          teamB = [courtFour[1], courtFour[2]];
+        }
+        break;
+      }
+
       case "mixed_doubles": {
         // Ganda Campuran: Pisahkan Cowo (M) dan Cewe (F)
         const males = courtFour.filter((p) => p.gender === "M");
@@ -319,7 +347,7 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
         virtualPlayers,
         courtCount,
         r,
-        session.algorithm || "fair_playtime",
+        session.algorithm || "playfields_mix",
         session.matches
       );
 

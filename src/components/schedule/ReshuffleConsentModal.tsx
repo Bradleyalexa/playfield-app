@@ -23,7 +23,7 @@ export function ReshuffleConsentModal({
   if (!isOpen) return null;
 
   const activePlayers = session.players.filter((p) => p.status === "active");
-  const algo = ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"];
+  const algo = ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"];
 
   // Filter pemain & lapangan
   const lockedCourts = session.courts.filter(

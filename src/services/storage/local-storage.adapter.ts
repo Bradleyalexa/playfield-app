@@ -154,7 +154,7 @@ export class LocalStorageAdapter {
       startTime: "19:00",
       durationHours: 2,
       matchDurationMinutes: 15,
-      algorithm: "fair_playtime",
+      algorithm: "playfields_mix",
       estimatedMatchesCount: Math.ceil((2 * 60 / 15) * courtCount) + 10,
       courtLocation: "GOR Tomang Barat, Lapangan 1-2",
       googleMapsUrl: "https://maps.google.com/?q=GOR+Tomang+Barat",

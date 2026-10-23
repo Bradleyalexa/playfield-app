@@ -223,9 +223,39 @@ export function CourtCard({
         </div>
       </div>
 
+      {/* Shortcut Cepat Pemenang (1-Klik Cepat Jika Host Malas Ketik Angka di HP) */}
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <button
+          type="button"
+          onClick={() => onUpdateScore(court.courtNumber, 21, match.scoreB > 0 ? match.scoreB : 15)}
+          className={`flex-1 py-1.5 px-2 rounded-lg border-2 border-black text-[10px] font-black uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer truncate ${
+            match.scoreA > match.scoreB
+              ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+              : "bg-white hover:bg-emerald-50 text-slate-800"
+          }`}
+          title="Klik cepat: Tim A Menang (Otomatis isi 21)"
+        >
+          👑 Tim A Menang
+        </button>
+        <button
+          type="button"
+          onClick={() => onUpdateScore(court.courtNumber, match.scoreA > 0 ? match.scoreA : 15, 21)}
+          className={`flex-1 py-1.5 px-2 rounded-lg border-2 border-black text-[10px] font-black uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer truncate ${
+            match.scoreB > match.scoreA
+              ? "bg-[#7dd3fc] text-black shadow-[2px_2px_0px_#000]"
+              : "bg-white hover:bg-sky-50 text-slate-800"
+          }`}
+          title="Klik cepat: Tim B Menang (Otomatis isi 21)"
+        >
+          👑 Tim B Menang
+        </button>
+      </div>
+
       {/* Status Bar */}
       <div className="flex items-center justify-between text-xs py-2 px-3 rounded-lg bg-[#faf8f2] border-2 border-black mb-3">
-        <span className="font-bold text-slate-800 text-[11px] truncate uppercase">{validation.statusText}</span>
+        <span className="font-bold text-slate-800 text-[11px] truncate uppercase">
+          {match.scoreA === 0 && match.scoreB === 0 ? "⚡ Sedang Bertanding (Skor Opsional)" : validation.statusText}
+        </span>
         {validation.isFinished && (
           <span className="flex items-center gap-1 font-black text-black text-[11px] bg-[#ccff00] px-2 py-0.5 rounded border border-black">
             <CheckCircle2 className="h-3 w-3 stroke-[3]" />
@@ -257,9 +287,10 @@ export function CourtCard({
               ? "bg-[#ccff00] text-black"
               : "bg-black text-white hover:bg-neutral-800"
           }`}
+          title="Selesaikan match di lapangan ini dan panggil giliran pemain berikutnya"
         >
           <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.5]" />
-          <span>Selesaikan Match</span>
+          <span>{match.scoreA === 0 && match.scoreB === 0 ? "Selesai (Rotasi)" : "Selesaikan Match"}</span>
         </button>
       </div>
     </div>

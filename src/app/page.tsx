@@ -70,7 +70,7 @@ export default function HomePage() {
   const [customMatchDurationInput, setCustomMatchDurationInput] = useState("25");
 
   // Algoritma & Jumlah Match Manual
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<MatchmakingAlgorithm>("fair_playtime");
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<MatchmakingAlgorithm>("playfields_mix");
   const [customInitialMatchesCount, setCustomInitialMatchesCount] = useState(6);
   const [isCustomMatchesCountInput, setIsCustomMatchesCountInput] = useState(false);
   const algoCarouselRef = useRef<HTMLDivElement>(null);

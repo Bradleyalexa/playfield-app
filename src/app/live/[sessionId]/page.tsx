@@ -203,7 +203,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
   }
 
   const isCompleted = session.status === "completed";
-  const algo = ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"];
+  const algo = ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"];
 
   return (
     <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col font-sans selection:bg-[#ccff00] selection:text-black">

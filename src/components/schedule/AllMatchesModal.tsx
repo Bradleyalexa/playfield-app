@@ -23,7 +23,7 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
   if (!isOpen) return null;
 
   const algoDetails =
-    ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["fair_playtime"];
+    ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"];
 
   const filteredRounds = projectedRounds.filter((r) => {
     if (filterMode === "active_past") return r.isCompleted || r.isCurrent;
