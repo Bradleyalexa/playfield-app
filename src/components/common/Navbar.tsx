@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Trophy, Tv, Users, BookOpen, PlusCircle, Home, HelpCircle, Sparkles } from "lucide-react";
+import { Trophy, Tv, Users, BookOpen, PlusCircle, Home } from "lucide-react";
 
 interface NavbarProps {
   sessionId?: string;
@@ -38,30 +38,16 @@ export function Navbar({ publicSlug }: NavbarProps) {
       hostOnly: false,
     },
     {
-      name: "Cara Pakai",
-      shortName: "Panduan",
-      href: "/cara-pakai",
-      icon: BookOpen,
-      hostOnly: false,
-    },
-    {
-      name: "FAQ",
-      shortName: "FAQ",
-      href: "/faq",
-      icon: HelpCircle,
-      hostOnly: false,
-    },
-    {
-      name: "Edukasi Sport",
+      name: "Pojok Edukasi",
       shortName: "Edukasi",
       href: "/education",
-      icon: Sparkles,
+      icon: BookOpen,
       hostOnly: false,
     },
   ];
 
   // Tombol Dashboard Host HANYA boleh muncul jika pengguna sedang berada di dashboard Host (/host)
-  // Di halaman penonton (/live), panduan (/cara-pakai, /faq), edukasi (/education), maupun publik, link Host TIDAK BOLEH muncul.
+  // Di halaman penonton (/live), edukasi (/education), panduan, maupun publik, link Host TIDAK BOLEH muncul.
   const isInfoPage =
     pathname.startsWith("/education") ||
     pathname.startsWith("/cara-pakai") ||

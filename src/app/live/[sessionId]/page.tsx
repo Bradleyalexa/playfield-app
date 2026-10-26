@@ -302,6 +302,16 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                   <span className="bg-black text-white text-[10px] font-black px-2 py-0.5 rounded font-mono border border-black">
                     RONDE #{session.currentRound}
                   </span>
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-black text-[#ccff00] border-2 border-black shadow-[2px_2px_0px_#000]"
+                    title="Realtime sync aktif tiap 7 detik"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00] animate-ping shrink-0" />
+                    <span className="text-[10px] font-black font-mono tracking-wider">LIVE</span>
+                    <span className="text-[9px] font-mono font-bold text-slate-300 hidden sm:inline">
+                      • Terhubung
+                    </span>
+                  </div>
                 </div>
 
                 <h1 className="text-xl sm:text-3xl font-black text-black uppercase tracking-tight truncate">
@@ -373,43 +383,32 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                   ℹ️ {rentalInfo.description}
                 </p>
 
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="grid grid-cols-3 gap-2 mt-0.5 w-full">
                   <button
                     onClick={() => setIsSpectatorQrOpen(true)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#ffde00] text-black border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#ffe640] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-xl bg-[#ffde00] text-black border-2 border-black font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-[#ffe640] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer text-center"
                     title="Buka QR Code Penonton"
                   >
-                    <QrCode className="h-4 w-4 stroke-[2.5]" />
-                    <span>Bagikan QR</span>
+                    <QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 stroke-[2.5] shrink-0" />
+                    <span className="truncate">Bagikan QR</span>
                   </button>
 
                   <button
                     onClick={() => setIsMatchRecapModalOpen(true)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#ccff00] text-black border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-xl bg-[#ccff00] text-black border-2 border-black font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer text-center"
                     title="Buka Rekap Hasil Seluruh Pertandingan"
                   >
-                    <Trophy className="h-4 w-4 stroke-[2.5]" />
-                    <span>Rekap Hasil ({session.matches.filter((m) => m.status === "completed").length})</span>
+                    <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 stroke-[2.5] shrink-0" />
+                    <span className="truncate">Rekap ({session.matches.filter((m) => m.status === "completed").length})</span>
                   </button>
 
                   <button
                     onClick={() => setIsAllMatchesModalOpen(true)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white text-black border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#ccff00] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-xl bg-white text-black border-2 border-black font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-[#ccff00] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer text-center"
                   >
-                    <Calendar className="h-4 w-4 stroke-[2.5]" />
-                    <span>Jadwal Lengkap</span>
+                    <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 stroke-[2.5] shrink-0" />
+                    <span className="truncate">Jadwal</span>
                   </button>
-
-                  <div
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black text-[#ccff00] border-2 border-black shadow-[2px_2px_0px_#000]"
-                    title="Realtime sync aktif tiap 7 detik"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-ping shrink-0" />
-                    <span className="text-xs font-black font-mono tracking-wider">LIVE</span>
-                    <span className="text-[10px] font-mono font-bold text-slate-300 hidden md:inline">
-                      • Terhubung
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
