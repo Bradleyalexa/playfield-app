@@ -681,6 +681,37 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
   };
 
+  // 6e. Toggle Kehadiran Pemain (Check-in Hadir / Belum Tiba OTW)
+  const handleTogglePlayerArrival = (playerId: string) => {
+    const target = session.players.find((p) => p.id === playerId);
+    const nextArrived = target?.isArrived === false ? true : false;
+    const updatedPlayers = session.players.map((p) => {
+      if (p.id === playerId) {
+        return { ...p, isArrived: nextArrived };
+      }
+      return p;
+    });
+    const updated: GameSession = { ...session, players: updatedPlayers };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+
+    if (target && nextArrived) {
+      AudioAnnouncer.announceGeneral(`${target.name} telah check-in hadir di lokasi mabar.`);
+    }
+  };
+
+  // 6f. Check-in Semua Pemain Sekaligus
+  const handleMarkAllArrived = () => {
+    const updatedPlayers = session.players.map((p) => ({
+      ...p,
+      isArrived: true,
+    }));
+    const updated: GameSession = { ...session, players: updatedPlayers };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    AudioAnnouncer.announceGeneral("Semua pemain telah ditandai hadir di lokasi.");
+  };
+
   // 6b. Hapus Pemain dari Roster
   const handleRemovePlayer = (playerId: string) => {
     const targetPlayer = session.players.find((p) => p.id === playerId);
@@ -751,9 +782,9 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   // Eksekusi Kocok Ulang / Reshuffle Rotasi Pertandingan (Setelah Host Setuju di Modal)
   const executeReshuffle = () => {
-    const activePlayers = session.players.filter((p) => p.status === "active");
+    const activePlayers = session.players.filter((p) => p.status === "active" && p.isArrived !== false);
     if (activePlayers.length < 4) {
-      alert("Pemain aktif saat ini kurang dari 4 orang untuk membentuk pertandingan ganda!");
+      alert("Pemain aktif yang sudah hadir saat ini kurang dari 4 orang untuk membentuk pertandingan ganda!");
       return;
     }
 
@@ -842,6 +873,7 @@ function HostDashboardContent({ params }: HostPageProps) {
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
+      isArrived: true,
       eloRating: 1000 + (skillLevel - 2) * 100,
       createdAt: new Date().toISOString(),
     };
@@ -858,7 +890,7 @@ function HostDashboardContent({ params }: HostPageProps) {
     const emptyOrResetCourts = session.courts.filter(
       (c) => !c.currentMatch || (c.currentMatch.scoreA === 0 && c.currentMatch.scoreB === 0)
     );
-    const activePool = updatedPlayers.filter((p) => p.status === "active");
+    const activePool = updatedPlayers.filter((p) => p.status === "active" && p.isArrived !== false);
     if (emptyOrResetCourts.length > 0 && activePool.length >= 4) {
       setReshuffleTriggerReason("player_added");
       setReshuffleExtraNotice(
@@ -882,7 +914,7 @@ function HostDashboardContent({ params }: HostPageProps) {
     const emptyOrResetCourts = session.courts.filter(
       (c) => !c.currentMatch || (c.currentMatch.scoreA === 0 && c.currentMatch.scoreB === 0)
     );
-    const activePool = updatedPlayers.filter((p) => p.status === "active");
+    const activePool = updatedPlayers.filter((p) => p.status === "active" && p.isArrived !== false);
     if (emptyOrResetCourts.length > 0 && activePool.length >= 4) {
       setReshuffleTriggerReason("player_added");
       setReshuffleExtraNotice(
@@ -1419,6 +1451,8 @@ function HostDashboardContent({ params }: HostPageProps) {
           onOpenWaModal={() => setIsWaModalOpen(true)}
           onAddSinglePlayer={handleAddSinglePlayer}
           onRemovePlayer={handleRemovePlayer}
+          onTogglePlayerArrival={handleTogglePlayerArrival}
+          onMarkAllArrived={handleMarkAllArrived}
         />
 
         {/* Floating Undo Toast saat Selesaikan Match (Safety Net 6 Detik) */}

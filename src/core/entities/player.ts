@@ -17,6 +17,7 @@ export interface Player {
   status: PlayerStatus;
   eloRating: number;
   createdAt: string;
+  isArrived?: boolean; // true: sudah tiba di GOR (aktif matchmaking), false: belum tiba / OTW (ditahan dari rotasi lapangan)
 }
 
 export function getTierFromSkill(skill: SkillLevel): PublicTier {

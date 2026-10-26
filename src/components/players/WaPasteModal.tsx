@@ -23,6 +23,8 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
 
   if (!isOpen) return null;
 
+  const [markAsArrived, setMarkAsArrived] = useState(true);
+
   const toggleGender = (idx: number) => {
     const current = parsed[idx].gender;
     setOverrideGenders((prev) => ({
@@ -33,7 +35,7 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
 
   const handleImport = () => {
     if (parsed.length === 0) return;
-    const players = createPlayersFromParsed(parsed);
+    const players = createPlayersFromParsed(parsed, markAsArrived);
     onImportPlayers(players);
     setRawText("");
     setOverrideGenders({});
@@ -149,6 +151,28 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
               })}
             </div>
           )}
+        </div>
+
+        {/* Check-in Toggle */}
+        <div className="flex items-center justify-between mb-4 px-3.5 py-2.5 rounded-xl bg-amber-50/70 border-2 border-black shadow-[2px_2px_0px_#000]">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={markAsArrived}
+              onChange={(e) => setMarkAsArrived(e.target.checked)}
+              className="h-4 w-4 rounded border-2 border-black accent-black cursor-pointer"
+            />
+            <div className="flex flex-col">
+              <span className="text-xs font-black text-black">
+                Tandai Pemain Sudah Tiba di Lokasi (Check-in)
+              </span>
+              <span className="text-[10px] font-bold text-slate-600">
+                {markAsArrived
+                  ? "Pemain langsung aktif & masuk jadwal rotasi ronde pertama"
+                  : "Pemain ditandai Belum Datang (OTW) & ditahan sampai tiba di GOR"}
+              </span>
+            </div>
+          </label>
         </div>
 
         {/* Action Buttons */}

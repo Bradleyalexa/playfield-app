@@ -71,7 +71,10 @@ export function parseWhatsAppList(rawText: string): ParsedPlayerResult[] {
 /**
  * Convert parsed results into full Player entities
  */
-export function createPlayersFromParsed(parsed: ParsedPlayerResult[]): Player[] {
+export function createPlayersFromParsed(
+  parsed: ParsedPlayerResult[],
+  defaultArrived: boolean = true
+): Player[] {
   return parsed.map((item, index) => {
     const id = `p-${Date.now()}-${index + 1}`;
     return {
@@ -85,6 +88,7 @@ export function createPlayersFromParsed(parsed: ParsedPlayerResult[]): Player[] 
       status: "active",
       eloRating: 1000 + (item.skillLevel - 2) * 100,
       createdAt: new Date().toISOString(),
+      isArrived: defaultArrived,
     };
   });
 }

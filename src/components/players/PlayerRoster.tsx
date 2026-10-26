@@ -12,6 +12,8 @@ interface PlayerRosterProps {
   onOpenWaModal: () => void;
   onAddSinglePlayer: (name: string, gender: "M" | "F", skillLevel: 1 | 2 | 3) => void;
   onRemovePlayer?: (playerId: string) => void;
+  onTogglePlayerArrival?: (playerId: string) => void;
+  onMarkAllArrived?: () => void;
 }
 
 export function PlayerRoster({
@@ -20,6 +22,8 @@ export function PlayerRoster({
   onOpenWaModal,
   onAddSinglePlayer,
   onRemovePlayer,
+  onTogglePlayerArrival,
+  onMarkAllArrived,
 }: PlayerRosterProps) {
   const [quickName, setQuickName] = useState("");
   const [selectedGender, setSelectedGender] = useState<"M" | "F">("M");
@@ -37,16 +41,21 @@ export function PlayerRoster({
 
   const maleCount = session.players.filter((p) => p.gender === "M").length;
   const femaleCount = session.players.filter((p) => p.gender === "F").length;
+  const arrivedCount = session.players.filter((p) => p.isArrived !== false).length;
+  const notArrivedCount = session.players.filter((p) => p.isArrived === false).length;
 
   // Filter Tab Roster
-  const [filterTab, setFilterTab] = useState<"all" | "playing" | "resting" | "paused">("all");
-  const restingCount = session.players.filter((p) => !activePlayingIds.has(p.id) && p.status !== "paused").length;
+  const [filterTab, setFilterTab] = useState<"all" | "playing" | "resting" | "paused" | "not_arrived">("all");
+  const restingCount = session.players.filter(
+    (p) => !activePlayingIds.has(p.id) && p.status !== "paused" && p.isArrived !== false
+  ).length;
   const pausedCount = session.players.filter((p) => p.status === "paused").length;
 
   const filteredPlayers = session.players.filter((p) => {
     if (filterTab === "playing") return activePlayingIds.has(p.id);
-    if (filterTab === "resting") return !activePlayingIds.has(p.id) && p.status !== "paused";
+    if (filterTab === "resting") return !activePlayingIds.has(p.id) && p.status !== "paused" && p.isArrived !== false;
     if (filterTab === "paused") return p.status === "paused";
+    if (filterTab === "not_arrived") return p.isArrived === false;
     return true;
   });
 
@@ -68,6 +77,19 @@ export function PlayerRoster({
       isNowPaused
         ? `⏸️ ${target.name} diistirahatkan (dilewati rotasi ronde depan)`
         : `▶️ ${target.name} siap main kembali di ronde depan!`
+    );
+    setTimeout(() => setToastMsg(null), 3500);
+  };
+
+  const handleToggleArrivalWithFeedback = (playerId: string) => {
+    const target = session.players.find((p) => p.id === playerId);
+    if (!target) return;
+    const willBeArrived = target.isArrived === false;
+    onTogglePlayerArrival?.(playerId);
+    setToastMsg(
+      willBeArrived
+        ? `✅ ${target.name} telah check-in hadir (siap masuk jadwal rotasi)!`
+        : `⏳ ${target.name} ditandai belum tiba (OTW).`
     );
     setTimeout(() => setToastMsg(null), 3500);
   };
@@ -98,39 +120,59 @@ export function PlayerRoster({
               {activePlayingIds.size} DI LAPANGAN
             </span>
             <span className="font-mono text-xs font-bold text-black/70 bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
-              {maleCount} Men (M) • {femaleCount} Women (W)
+              {arrivedCount} Hadir {notArrivedCount > 0 ? `• ${notArrivedCount} OTW` : ""}
+            </span>
+            <span className="font-mono text-xs font-bold text-black/60 bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
+              {maleCount} M • {femaleCount} W
             </span>
           </div>
           <p className="text-xs font-bold text-slate-600 mt-0.5">
-            Pemain cadangan otomatis dirotasi pada ronde berikutnya berdasarkan algoritma mabar.
+            Hanya pemain yang sudah check-in hadir yang dirotasi ke lapangan oleh algoritma mabar.
           </p>
         </div>
 
-        <button
-          onClick={onOpenWaModal}
-          className="flex items-center gap-1.5 rounded-lg bg-[#ccff00] border-2 border-black px-3.5 py-1.5 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer shrink-0"
-        >
-          <ClipboardPaste className="h-4 w-4 stroke-[2.5]" />
-          <span>Paste Chat WA</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {notArrivedCount > 0 && onMarkAllArrived && (
+            <button
+              type="button"
+              onClick={onMarkAllArrived}
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-300 border-2 border-black px-3 py-1.5 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer shrink-0 hover:bg-emerald-400"
+              title="Tandai semua pemain sudah tiba di lokasi GOR"
+            >
+              <UserCheck className="h-4 w-4 stroke-[2.5]" />
+              <span>Hadir Semua ({notArrivedCount})</span>
+            </button>
+          )}
+
+          <button
+            onClick={onOpenWaModal}
+            className="flex items-center gap-1.5 rounded-lg bg-[#ccff00] border-2 border-black px-3.5 py-1.5 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer shrink-0"
+          >
+            <ClipboardPaste className="h-4 w-4 stroke-[2.5]" />
+            <span>Paste Chat WA</span>
+          </button>
+        </div>
       </div>
 
-      {/* Panduan Ikon Aksi Pemain (Sangat Membantu di Smartphone karena Tidak Bisa Hover) */}
+      {/* Panduan Ikon Aksi Pemain */}
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 p-2 rounded-xl bg-[#faf8f2] border-2 border-black text-[10px] sm:text-xs font-bold text-slate-800 shadow-[2px_2px_0px_#000]">
         <span className="font-black uppercase bg-[#ccff00] text-black px-2.5 py-0.5 rounded-lg border-2 border-black text-[10px] font-mono tracking-wider shadow-[1.5px_1.5px_0px_#000]">
           PANDUAN IKON
         </span>
-        <span className="inline-flex items-center gap-1 bg-white border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
-          <span className="font-black">⏸️ Pause:</span> Rehatkan (Dilewati rotasi)
+        <span className="inline-flex items-center gap-1 bg-amber-100 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">⏳ OTW:</span> Belum tiba di GOR
+        </span>
+        <span className="inline-flex items-center gap-1 bg-emerald-100 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">✅ Hadir:</span> Sudah siap main
         </span>
         <span className="inline-flex items-center gap-1 bg-white border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
-          <span className="font-black">▶️ Play:</span> Siap main lagi
+          <span className="font-black">⏸️ Pause:</span> Rehatkan
         </span>
         <span className="inline-flex items-center gap-1 bg-[#00e5ff]/40 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
-          <span className="font-black">🔄 Share:</span> Rekap WA / Story IG
+          <span className="font-black">🔄 Share:</span> Rekap WA / Story
         </span>
         <span className="inline-flex items-center gap-1 bg-rose-50 border border-rose-400 text-rose-800 px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
-          <span className="font-black">🗑️ Hapus:</span> Keluar grup
+          <span className="font-black">🗑️ Hapus:</span> Keluar
         </span>
       </div>
 
@@ -242,6 +284,19 @@ export function PlayerRoster({
             ⏸️ Rehat ({pausedCount})
           </button>
         )}
+        {notArrivedCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setFilterTab("not_arrived")}
+            className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider border-2 border-black transition-all cursor-pointer whitespace-nowrap ${
+              filterTab === "not_arrived"
+                ? "bg-[#ffde00] text-black shadow-[2px_2px_0px_#000]"
+                : "bg-amber-100 text-amber-950 hover:bg-amber-200"
+            }`}
+          >
+            ⏳ Belum Tiba ({notArrivedCount})
+          </button>
+        )}
       </div>
 
       {/* Grid Pemain */}
@@ -254,13 +309,16 @@ export function PlayerRoster({
           filteredPlayers.map((player) => {
           const isPlaying = activePlayingIds.has(player.id);
           const isPaused = player.status === "paused";
+          const isArrived = player.isArrived !== false;
           const tier = getTierLabel(player.publicTier);
 
           return (
             <div
               key={player.id}
               className={`flex items-center justify-between p-2.5 rounded-xl border-2 border-black transition-all ${
-                isPlaying
+                !isArrived
+                  ? "bg-amber-50/70 border-dashed border-amber-500 shadow-none"
+                  : isPlaying
                   ? "bg-[#ccff00]/25 shadow-[3px_3px_0px_#000] translate-x-[-1px] translate-y-[-1px]"
                   : isPaused
                   ? "bg-slate-200/80 border-dashed opacity-80 shadow-none"
@@ -280,7 +338,16 @@ export function PlayerRoster({
                     {player.gender === "M" ? "M" : "W"}
                   </span>
                   {/* Status Badge Langsung Terlihat di HP */}
-                  {isPaused ? (
+                  {!isArrived ? (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleArrivalWithFeedback(player.id)}
+                      title="Klik untuk check-in hadir di lokasi"
+                      className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-200 hover:bg-amber-300 border border-black text-amber-950 cursor-pointer shadow-[1px_1px_0px_#000]"
+                    >
+                      ⏳ OTW / Belum Tiba
+                    </button>
+                  ) : isPaused ? (
                     <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-[#ffde00] border border-black text-black">
                       ⏸️ Rehat
                     </span>
@@ -288,7 +355,16 @@ export function PlayerRoster({
                     <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-[#ccff00] border border-black text-black">
                       🔥 Di Lapangan
                     </span>
-                  ) : null}
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleArrivalWithFeedback(player.id)}
+                      title="Pemain sudah hadir. Klik jika ingin ubah ke Belum Tiba (OTW)"
+                      className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 text-emerald-800 cursor-pointer"
+                    >
+                      ✅ Hadir
+                    </button>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
@@ -300,22 +376,35 @@ export function PlayerRoster({
                 </div>
               </div>
 
-              {/* Action Buttons: Pause, Share Story Card & Remove */}
+              {/* Action Buttons: Check-in, Pause, Share Story Card & Remove */}
               <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
-                {/* Tombol Play/Pause (Tahan / Lanjutkan Pemain) */}
-                <button
-                  onClick={() => handleTogglePauseWithFeedback(player.id)}
-                  title={
-                    isPaused
-                      ? "Play: Aktifkan pemain kembali siap masuk lapangan"
-                      : "Pause: Rehatkan pemain (toilet/cedera/lelah) agar dilewati rotasi ronde depan"
-                  }
-                  className={`h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ${
-                    isPaused ? "bg-[#ffde00] text-black" : "bg-white text-black hover:bg-slate-100"
-                  }`}
-                >
-                  {isPaused ? <Play className="h-3.5 w-3.5 stroke-[3]" /> : <Pause className="h-3.5 w-3.5 stroke-[3]" />}
-                </button>
+                {!isArrived ? (
+                  /* Tombol Quick Check-in untuk Pemain yang Baru Datang */
+                  <button
+                    type="button"
+                    onClick={() => handleToggleArrivalWithFeedback(player.id)}
+                    title={`Tandai ${player.name} sudah tiba di GOR`}
+                    className="h-8 sm:h-7 px-2.5 rounded-lg border-2 border-black bg-[#ccff00] text-black font-black text-xs flex items-center gap-1 shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer hover:bg-[#b8e600]"
+                  >
+                    <UserCheck className="h-3.5 w-3.5 stroke-[3]" />
+                    <span>Check-in</span>
+                  </button>
+                ) : (
+                  /* Tombol Play/Pause (Tahan / Lanjutkan Pemain) */
+                  <button
+                    onClick={() => handleTogglePauseWithFeedback(player.id)}
+                    title={
+                      isPaused
+                        ? "Play: Aktifkan pemain kembali siap masuk lapangan"
+                        : "Pause: Rehatkan pemain (toilet/cedera/lelah) agar dilewati rotasi ronde depan"
+                    }
+                    className={`h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ${
+                      isPaused ? "bg-[#ffde00] text-black" : "bg-white text-black hover:bg-slate-100"
+                    }`}
+                  >
+                    {isPaused ? <Play className="h-3.5 w-3.5 stroke-[3]" /> : <Pause className="h-3.5 w-3.5 stroke-[3]" />}
+                  </button>
+                )}
 
                 {/* Tombol Share (Buka Modal Share Rekap Pemain) */}
                 <button

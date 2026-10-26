@@ -88,6 +88,14 @@ function LiveSpectatorContent({ params }: LivePageProps) {
   const getPlayerLiveStatus = (player: Player) => {
     if (!session) return null;
 
+    // 0. Cek apakah pemain belum tiba di lokasi (isArrived === false)
+    if (player.isArrived === false) {
+      return {
+        type: "not_arrived" as const,
+        completedCount: 0,
+      };
+    }
+
     // 1. Cek apakah sedang bertanding di lapangan aktif saat ini
     for (const court of session.courts) {
       const match = court.currentMatch;
@@ -510,6 +518,11 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                         </div>
 
                         {/* Status Badge */}
+                        {status.type === "not_arrived" && (
+                          <span className="flex items-center gap-1 font-mono font-black text-[10px] uppercase bg-amber-300 text-amber-950 px-2.5 py-1 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000]">
+                            ⏳ Belum Tiba (OTW)
+                          </span>
+                        )}
                         {status.type === "playing" && (
                           <span className="flex items-center gap-1 font-mono font-black text-[10px] uppercase bg-[#ccff00] text-black px-2.5 py-1 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] animate-pulse">
                             🔥 Sedang Main
@@ -528,6 +541,20 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                       </div>
 
                       {/* Konten Status Khusus */}
+                      {status.type === "not_arrived" && (
+                        <div className="p-3.5 rounded-xl bg-amber-50 border-2 border-black shadow-[2px_2px_0px_#000] text-xs">
+                          <p className="font-black text-amber-950 mb-1 flex items-center gap-1.5 text-xs uppercase">
+                            <span>📍 Status: Belum Check-in di Lokasi</span>
+                          </p>
+                          <p className="text-amber-900 text-[11px] leading-relaxed">
+                            Kamu saat ini berstatus belum tiba di GOR. Algoritma Playfield otomatis memprioritaskan pemain yang sudah hadir di lapangan terlebih dahulu.
+                          </p>
+                          <div className="mt-2.5 pt-2 border-t border-black/10 text-[11px] font-black text-black">
+                            👉 Begitu kamu sampai di lokasi GOR, <strong>segera beri tahu Host mabar</strong> untuk tap check-in namamu agar langsung dijadwalkan!
+                          </div>
+                        </div>
+                      )}
+
                       {status.type === "playing" && (
                         <div className="flex flex-col gap-2.5">
                           <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000]">
@@ -872,7 +899,11 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                     return (
                       <div
                         key={p.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-[#faf8f2] border-2 border-black text-xs shadow-[2px_2px_0px_#000] hover:bg-white transition-all"
+                        className={`flex items-center justify-between p-3 rounded-xl border-2 border-black text-xs transition-all ${
+                          p.isArrived === false
+                            ? "bg-amber-50/70 border-dashed border-amber-500 opacity-90"
+                            : "bg-[#faf8f2] hover:bg-white shadow-[2px_2px_0px_#000]"
+                        }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 pr-2">
                           <span className="font-mono font-black text-xs w-5 text-center shrink-0">
@@ -893,6 +924,11 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                           >
                             {tier.label.replace("Tier ", "")}
                           </span>
+                          {p.isArrived === false && (
+                            <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-200 border border-black text-amber-950 shrink-0">
+                              ⏳ OTW
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-1.5 shrink-0">

@@ -29,7 +29,12 @@ export function CreateCustomMatchModal({
 
   if (!isOpen) return null;
 
-  const activePlayers = session.players.filter((p) => p.status === "active");
+  const activePlayers = [...session.players.filter((p) => p.status === "active")].sort((a, b) => {
+    const arrivedA = a.isArrived !== false ? 1 : 0;
+    const arrivedB = b.isArrived !== false ? 1 : 0;
+    if (arrivedA !== arrivedB) return arrivedB - arrivedA;
+    return a.name.localeCompare(b.name);
+  });
 
   const playerA1 = session.players.find((p) => p.id === teamAPlayer1Id);
   const playerA2 = session.players.find((p) => p.id === teamAPlayer2Id);
@@ -157,13 +162,14 @@ export function CreateCustomMatchModal({
                   <option value="">-- Pilih Pemain 1 --</option>
                   {activePlayers.map((p) => {
                     const tier = getTierLabel(p.publicTier);
+                    const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
                     return (
                       <option
                         key={p.id}
                         value={p.id}
                         disabled={selectedIds.has(p.id) && teamAPlayer1Id !== p.id}
                       >
-                        {p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
+                        {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
                       </option>
                     );
                   })}
@@ -182,13 +188,14 @@ export function CreateCustomMatchModal({
                   <option value="">-- Pilih Pemain 2 --</option>
                   {activePlayers.map((p) => {
                     const tier = getTierLabel(p.publicTier);
+                    const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
                     return (
                       <option
                         key={p.id}
                         value={p.id}
                         disabled={selectedIds.has(p.id) && teamAPlayer2Id !== p.id}
                       >
-                        {p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
+                        {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
                       </option>
                     );
                   })}
@@ -214,13 +221,14 @@ export function CreateCustomMatchModal({
                   <option value="">-- Pilih Pemain 1 --</option>
                   {activePlayers.map((p) => {
                     const tier = getTierLabel(p.publicTier);
+                    const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
                     return (
                       <option
                         key={p.id}
                         value={p.id}
                         disabled={selectedIds.has(p.id) && teamBPlayer1Id !== p.id}
                       >
-                        {p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
+                        {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
                       </option>
                     );
                   })}
@@ -239,13 +247,14 @@ export function CreateCustomMatchModal({
                   <option value="">-- Pilih Pemain 2 --</option>
                   {activePlayers.map((p) => {
                     const tier = getTierLabel(p.publicTier);
+                    const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
                     return (
                       <option
                         key={p.id}
                         value={p.id}
                         disabled={selectedIds.has(p.id) && teamBPlayer2Id !== p.id}
                       >
-                        {p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
+                        {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
                       </option>
                     );
                   })}

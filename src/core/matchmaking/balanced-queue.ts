@@ -53,8 +53,9 @@ export function generateBalancedMatches(
   algorithm: MatchmakingAlgorithm = "playfields_mix",
   previousMatches: Match[] = []
 ): MatchmakingResult {
-  // 1. Filter hanya pemain aktif
-  const activePool = allPlayers.filter((p) => p.status === "active");
+  // 1. Filter hanya pemain aktif yang SUDAH TIBA di lokasi (GOR)
+  // Pemain yang belum datang (isArrived === false) otomatis ditahan dari rotasi lapangan
+  const activePool = allPlayers.filter((p) => p.status === "active" && p.isArrived !== false);
 
   const playersPerCourt = 4; // Format ganda (2 vs 2)
   const totalSlotsNeeded = courtCount * playersPerCourt;
