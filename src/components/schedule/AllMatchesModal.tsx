@@ -49,6 +49,8 @@ export function AllMatchesModal({
   const [scheduleRounds, setScheduleRounds] = useState<ProjectedRound[]>([]);
   const [isCustomOrder, setIsCustomOrder] = useState<boolean>(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
+  const [touchTargetIndex, setTouchTargetIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setScheduleRounds(initialProjectedRounds);
@@ -124,7 +126,7 @@ export function AllMatchesModal({
     setIsCustomOrder(false);
   };
 
-  // Drag and Drop Handlers
+  // Drag and Drop Handlers (Desktop Mouse)
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = "move";
@@ -141,6 +143,37 @@ export function AllMatchesModal({
       handleSwapRounds(draggedIndex, targetIndex);
     }
     setDraggedIndex(null);
+  };
+
+  // Touch Handlers (Mobile Smartphone Hold & Drag)
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    setTouchDragIndex(index);
+    setTouchTargetIndex(index);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchDragIndex === null) return;
+    const touch = e.touches[0];
+    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+    const roundCard = elem?.closest("[data-round-index]");
+    if (roundCard) {
+      const targetIdx = Number(roundCard.getAttribute("data-round-index"));
+      if (!isNaN(targetIdx) && targetIdx !== touchTargetIndex) {
+        setTouchTargetIndex(targetIdx);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (
+      touchDragIndex !== null &&
+      touchTargetIndex !== null &&
+      touchDragIndex !== touchTargetIndex
+    ) {
+      handleSwapRounds(touchDragIndex, touchTargetIndex);
+    }
+    setTouchDragIndex(null);
+    setTouchTargetIndex(null);
   };
 
   const filteredRounds = scheduleRounds.filter((r) => {
@@ -297,6 +330,14 @@ export function AllMatchesModal({
           </div>
         </div>
 
+        {/* Banner Info Hold & Drag untuk Host */}
+        <div className="flex items-center gap-2 px-3 sm:px-5 py-2 bg-[#ffde00]/30 border-b-2 border-black text-xs font-bold text-black shrink-0">
+          <span className="text-base shrink-0">💡</span>
+          <span className="text-[10px] sm:text-[11px] leading-tight">
+            <strong>Info Host:</strong> Ronde masa depan (prediksi) bisa ditukar urutannya! Anda bisa <strong>Tahan & Geser (Hold & Drag)</strong> pada pegangan <span className="bg-white px-1.5 py-0.5 rounded border border-black font-mono font-black text-[9px] shadow-[1px_1px_0px_#000]">⋮⋮ Tahan & Geser</span> di HP/Desktop, atau tekan tombol <strong>🔼 Naik / 🔽 Turun</strong>.
+          </span>
+        </div>
+
         {/* Scrollable Body: Daftar Ronde & Match - DIBERIKAN RUANG MAKSIMAL & PROPORSI CEPAT */}
         <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-5 space-y-3 sm:space-y-4">
           {filteredRounds.length === 0 ? (
@@ -324,12 +365,15 @@ export function AllMatchesModal({
               return (
                 <div
                   key={round.roundNumber}
+                  data-round-index={actualIndex}
                   draggable={isUpcoming}
                   onDragStart={(e) => handleDragStart(e, actualIndex)}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, actualIndex)}
                   className={`rounded-xl sm:rounded-2xl border-2 sm:border-[3px] border-black p-2.5 sm:p-4 transition-all ${
-                    isCurrent
+                    touchTargetIndex === actualIndex && touchDragIndex !== actualIndex
+                      ? "ring-4 ring-[#ccff00] scale-[1.01] bg-[#ffde00]/25"
+                      : isCurrent
                       ? "bg-white shadow-[4px_4px_0px_#000] ring-2 sm:ring-3 ring-[#ccff00]"
                       : isPast
                       ? "bg-white/80 shadow-[2px_2px_0px_#000] sm:shadow-[3px_3px_0px_#000]"
@@ -340,12 +384,16 @@ export function AllMatchesModal({
                   <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b-2 border-black mb-2.5 sm:mb-3">
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
                       {isUpcoming && (
-                        <span
-                          className="cursor-grab active:cursor-grabbing text-black/40 hover:text-black hidden sm:inline"
-                          title="Tahan & Drag untuk tukar urutan ronde"
+                        <div
+                          onTouchStart={(e) => handleTouchStart(e, actualIndex)}
+                          onTouchMove={handleTouchMove}
+                          onTouchEnd={handleTouchEnd}
+                          className="flex items-center gap-1 cursor-grab active:cursor-grabbing px-2 py-0.5 rounded-lg bg-white hover:bg-slate-100 border border-black text-black shadow-[1px_1px_0px_#000] select-none touch-none"
+                          title="Tahan & Geser untuk menukar urutan ronde"
                         >
-                          <GripVertical className="h-4 w-4" />
-                        </span>
+                          <GripVertical className="h-3.5 w-3.5 stroke-[2.5]" />
+                          <span className="text-[9px] font-black uppercase font-mono">Tahan & Geser</span>
+                        </div>
                       )}
 
                       <span className="font-mono text-xs sm:text-sm font-black px-2 sm:px-2.5 py-0.5 rounded bg-black text-white">

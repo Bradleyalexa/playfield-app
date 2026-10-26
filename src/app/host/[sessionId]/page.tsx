@@ -1288,97 +1288,102 @@ function HostDashboardContent({ params }: HostPageProps) {
         )}
 
         {/* Top Control Bar: Info Sesi & Tombol Aksi Cepat */}
-        <div className="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 border-black bg-white shadow-[4px_4px_0px_#000] sm:shadow-[6px_6px_0px_#000] overflow-hidden">
-          <div className="w-full min-w-0 flex-1 overflow-hidden">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="rounded-lg bg-black px-2.5 py-0.5 text-xs font-black text-white uppercase font-mono border border-black">
-                {session.sport}
-              </span>
-              <span
-                className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border-2 border-black ${
-                  (ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).badgeColor
-                }`}
-              >
-                {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).icon}{" "}
-                {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).shortName}
-              </span>
-              {session.algorithm === "hybrid_2plus2" && (
+        <div className="w-full flex flex-col gap-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 border-black bg-white shadow-[4px_4px_0px_#000] sm:shadow-[6px_6px_0px_#000]">
+          {/* Header Row: Title & Info Sesi (Left) + Jam & Timer (Right) */}
+          <div className="w-full flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                <span className="rounded-lg bg-black px-2.5 py-0.5 text-xs font-black text-white uppercase font-mono border border-black">
+                  {session.sport}
+                </span>
                 <span
-                  className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border-2 border-black shadow-[1px_1px_0px_#000] ${
-                    Math.floor((session.currentRound - 1) / 2) % 2 === 0
-                      ? "bg-[#d946ef] text-white"
-                      : "bg-[#00e5ff] text-black"
+                  className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border-2 border-black ${
+                    (ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).badgeColor
                   }`}
                 >
-                  {Math.floor((session.currentRound - 1) / 2) % 2 === 0
-                    ? "🔀 Fase: Mix Level"
-                    : "⚡ Fase: Level Sama"}
+                  {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).icon}{" "}
+                  {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).shortName}
                 </span>
-              )}
-              {rentalInfo.dayDateLabel && (
-                <span className="text-[11px] font-mono font-black text-black bg-[#ccff00] px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
-                  📅 {rentalInfo.dayDateLabel}
-                </span>
-              )}
-              <span className="text-[11px] font-mono font-bold text-black/70 bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
-                🕒 Sewa: {rentalInfo.scheduleLabel} ({rentalInfo.durationLabel})
-              </span>
-            </div>
-            <h1 className="text-lg sm:text-2xl lg:text-3xl font-black text-black uppercase tracking-tight break-words whitespace-normal leading-tight">
-              {session.title}
-            </h1>
-            <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-wider font-mono">
-              RONDE #{session.currentRound} • {session.courtCount} LAPANGAN • {session.players.length} PEMAIN TERDAFTAR
-            </p>
-            {session.courtLocation && (
-              <div className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-slate-700">
-                <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-                <span className="truncate max-w-[280px] sm:max-w-md">{session.courtLocation}</span>
-                {session.googleMapsUrl && (
-                  <a
-                    href={session.googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 text-emerald-950 font-black text-[10px] uppercase transition-colors"
+                {session.algorithm === "hybrid_2plus2" && (
+                  <span
+                    className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border-2 border-black shadow-[1px_1px_0px_#000] ${
+                      Math.floor((session.currentRound - 1) / 2) % 2 === 0
+                        ? "bg-[#d946ef] text-white"
+                        : "bg-[#00e5ff] text-black"
+                    }`}
                   >
-                    <span>Maps</span>
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
+                    {Math.floor((session.currentRound - 1) / 2) % 2 === 0
+                      ? "🔀 Fase: Mix Level"
+                      : "⚡ Fase: Level Sama"}
+                  </span>
+                )}
+                {rentalInfo.dayDateLabel && (
+                  <span className="text-[11px] font-mono font-black text-black bg-[#ccff00] px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
+                    📅 {rentalInfo.dayDateLabel}
+                  </span>
+                )}
+                <span className="text-[11px] font-mono font-bold text-black/70 bg-[#faf8f2] px-2 py-0.5 rounded border border-black">
+                  🕒 Sewa: {rentalInfo.scheduleLabel} ({rentalInfo.durationLabel})
+                </span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-black uppercase tracking-tight break-words leading-tight">
+                {session.title}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider font-mono">
+                  RONDE #{session.currentRound} • {session.courtCount} LAPANGAN • {session.players.length} PEMAIN TERDAFTAR
+                </p>
+                {session.courtLocation && (
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                    <span>•</span>
+                    <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                    <span className="truncate max-w-[280px] sm:max-w-md">{session.courtLocation}</span>
+                    {session.googleMapsUrl && (
+                      <a
+                        href={session.googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 text-emerald-950 font-black text-[10px] uppercase transition-colors"
+                      >
+                        <span>Maps</span>
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-
-          {/* Quick Action Badges & Time Tracker */}
-          <div className="flex flex-col md:items-end gap-2.5">
-            {/* Waktu Sekarang & Countdown Sewa */}
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Jam Dinding Sekarang */}
-              <div
-                className="flex items-center gap-1.5 rounded-xl bg-[#ffde00] border-2 border-black px-3 py-1.5 font-mono-sport text-xs font-black text-black shadow-[2px_2px_0px_#000]"
-                title="Waktu Lokal Sekarang"
-              >
-                <Clock className="h-3.5 w-3.5 stroke-[2.5]" />
-                <span>{currentTime || "--:--:--"}</span>
-              </div>
-
-              {/* Sisa Waktu Sewa Lapangan */}
-              <div
-                className={`flex items-center gap-1.5 rounded-xl ${rentalInfo.bgClass} ${rentalInfo.textClass} border-2 border-black px-3 py-1.5 font-mono-sport text-xs font-black shadow-[2px_2px_0px_#000]`}
-                title={rentalInfo.description}
-              >
-                <Timer className="h-3.5 w-3.5 stroke-[2.5]" />
-                <span className="uppercase text-[9px] font-sans font-bold">{rentalInfo.label}:</span>
-                <span>{rentalInfo.formattedTime}</span>
-              </div>
             </div>
 
-            {/* Deskripsi Jelas Status Waktu Sewa */}
-            <p className="text-[11px] font-bold text-slate-600 md:text-right max-w-xs leading-tight">
-              ℹ️ {rentalInfo.description}
-            </p>
+            {/* Jam & Countdown Sewa */}
+            <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-1.5 shrink-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className="flex items-center gap-1.5 rounded-xl bg-[#ffde00] border-2 border-black px-3 py-1.5 font-mono-sport text-xs font-black text-black shadow-[2px_2px_0px_#000]"
+                  title="Waktu Lokal Sekarang"
+                >
+                  <Clock className="h-3.5 w-3.5 stroke-[2.5]" />
+                  <span>{currentTime || "--:--:--"}</span>
+                </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className={`flex items-center gap-1.5 rounded-xl ${rentalInfo.bgClass} ${rentalInfo.textClass} border-2 border-black px-3 py-1.5 font-mono-sport text-xs font-black shadow-[2px_2px_0px_#000]`}
+                  title={rentalInfo.description}
+                >
+                  <Timer className="h-3.5 w-3.5 stroke-[2.5]" />
+                  <span className="uppercase text-[9px] font-sans font-bold">{rentalInfo.label}:</span>
+                  <span>{rentalInfo.formattedTime}</span>
+                </div>
+              </div>
+              <p className="text-[11px] font-bold text-slate-600 lg:text-right max-w-xs leading-tight">
+                ℹ️ {rentalInfo.description}
+              </p>
+            </div>
+          </div>
+
+          {/* Toolbar Tombol Aksi Cepat */}
+          <div className="pt-3.5 border-t-2 border-black/15 flex flex-wrap items-center gap-2">
             {/* Tombol Rekap Hasil Pertandingan */}
             <button
               onClick={() => setIsMatchRecapModalOpen(true)}
@@ -1513,7 +1518,6 @@ function HostDashboardContent({ params }: HostPageProps) {
                 <span>Selesaikan Mabar 🏁</span>
               </button>
             )}
-            </div>
           </div>
         </div>
 
