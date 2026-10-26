@@ -49,7 +49,7 @@ import { SpectatorQrModal } from "../../../components/common/SpectatorQrModal";
 import { MatchRecapModal } from "../../../components/schedule/MatchRecapModal";
 import { calculateRentalTimeInfo, RentalTimeInfo } from "../../../lib/time-tracker";
 import { Match, getMatchWinner } from "../../../core/entities/match";
-import { getTierFromSkill, Player } from "../../../core/entities/player";
+import { getTierFromSkill, Player, SkillLevel } from "../../../core/entities/player";
 import {
   ALGORITHM_REGISTRY,
   EquipmentConfig,
@@ -1111,7 +1111,7 @@ function HostDashboardContent({ params }: HostPageProps) {
   };
 
   // 7. Tambah Pemain Manual Tunggal
-  const handleAddSinglePlayer = (name: string, gender: "M" | "F", skillLevel: 1 | 2 | 3) => {
+  const handleAddSinglePlayer = (name: string, gender: "M" | "F", skillLevel: SkillLevel) => {
     const newPlayer: Player = {
       id: `p-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
       name,
@@ -1122,7 +1122,7 @@ function HostDashboardContent({ params }: HostPageProps) {
       lastPlayedRound: 0,
       status: "active",
       isArrived: true,
-      eloRating: 1000 + (skillLevel - 2) * 100,
+      eloRating: 1000 + (skillLevel - 3) * 100,
       createdAt: new Date().toISOString(),
     };
 

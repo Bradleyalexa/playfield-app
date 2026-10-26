@@ -45,8 +45,8 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
     badge: "HYBRID FAVORIT",
     badgeColor: "bg-[#d946ef] text-white border-2 border-black",
     icon: "🔀",
-    description: "Format favorit mabar: Game 1–2 otomatis Mix Level (Advanced + Beginner vs Intermediate) untuk pemanasan & membaur, lalu Game 3–4 otomatis Level Sama (Advanced vs Advanced / Beginner vs Beginner) untuk adu skill maksimal.",
-    bestFor: "Komunitas dengan disparitas level beragam: 2 game awal ramah & membimbing Beginner, 2 game akhir kompetitif adu skill.",
+    description: "Format favorit mabar: Game 1–2 otomatis Mix Level (Pro/Adv + Newbie/Beg vs Intermediate) untuk pemanasan & membaur, lalu Game 3–4 otomatis Level Sama (Pro/Adv vs Pro/Adv, Beg/Newbie vs Beg/Newbie) untuk adu skill maksimal.",
+    bestFor: "Komunitas dengan disparitas level beragam: 2 game awal ramah & membimbing pemain baru, 2 game akhir kompetitif adu skill.",
   },
   fair_playtime: {
     id: "fair_playtime",
@@ -75,8 +75,8 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
     badge: "ANTI JOMPLANG",
     badgeColor: "bg-[#00e5ff] text-black",
     icon: "⚡",
-    description: "Memadukan pemain tingkat atas (Advanced) dengan Beginner melawan pasangan Intermediate agar tensi reli tetap seru.",
-    bestFor: "Komunitas dengan disparitas skill yang tinggi agar pemain Beginner tidak kena bantai.",
+    description: "Memadukan pemain tier atas (Pro/Advanced) dengan Newbie/Beginner melawan pasangan Intermediate agar tensi reli tetap seru.",
+    bestFor: "Komunitas dengan disparitas skill yang tinggi agar pemain baru tidak kena bantai.",
   },
   king_of_court: {
     id: "king_of_court",

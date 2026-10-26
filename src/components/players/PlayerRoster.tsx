@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Pause, Play, Share2, ClipboardPaste, Plus, UserCheck, Trash2, Clock, Pencil, X } from "lucide-react";
-import { getTierLabel, getTierFromSkill, Player } from "../../core/entities/player";
+import { getTierLabel, getTierFromSkill, Player, SkillLevel } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
 import { PlayerShareModal } from "./PlayerShareModal";
 
@@ -10,7 +10,7 @@ interface PlayerRosterProps {
   session: GameSession;
   onTogglePlayerPause: (playerId: string) => void;
   onOpenWaModal: () => void;
-  onAddSinglePlayer: (name: string, gender: "M" | "F", skillLevel: 1 | 2 | 3) => void;
+  onAddSinglePlayer: (name: string, gender: "M" | "F", skillLevel: SkillLevel) => void;
   onRemovePlayer?: (playerId: string) => void;
   onTogglePlayerArrival?: (playerId: string) => void;
   onMarkAllArrived?: () => void;
@@ -31,7 +31,7 @@ export function PlayerRoster({
 }: PlayerRosterProps) {
   const [quickName, setQuickName] = useState("");
   const [selectedGender, setSelectedGender] = useState<"M" | "F">("M");
-  const [selectedSkill, setSelectedSkill] = useState<1 | 2 | 3>(2);
+  const [selectedSkill, setSelectedSkill] = useState<SkillLevel>(3);
   const [sharingPlayer, setSharingPlayer] = useState<Player | null>(null);
 
   // Cari siapa saja yang sedang bermain di lapangan
@@ -76,7 +76,7 @@ export function PlayerRoster({
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [editName, setEditName] = useState("");
   const [editGender, setEditGender] = useState<"M" | "F">("M");
-  const [editSkill, setEditSkill] = useState<1 | 2 | 3>(2);
+  const [editSkill, setEditSkill] = useState<SkillLevel>(3);
   const [editArrived, setEditArrived] = useState(true);
 
   const openEditModal = (player: Player) => {
@@ -96,7 +96,7 @@ export function PlayerRoster({
       gender: editGender,
       skillLevel: editSkill,
       publicTier: getTierFromSkill(editSkill),
-      eloRating: 1000 + (editSkill - 2) * 100,
+      eloRating: 1000 + (editSkill - 3) * 100,
       isArrived: editArrived,
     };
     onUpdatePlayer?.(updated);
@@ -114,14 +114,14 @@ export function PlayerRoster({
     setTimeout(() => setToastMsg(null), 3000);
   };
 
-  // 1-Click Fast Cycle Skill Level (Beginner -> Intermediate -> Advanced)
+  // 1-Click Fast Cycle Skill Level (Newbie -> Beginner -> Intermediate -> Advanced -> Pro)
   const handleCyclePlayerSkill = (player: Player) => {
-    const nextSkill = (player.skillLevel === 1 ? 2 : player.skillLevel === 2 ? 3 : 1) as 1 | 2 | 3;
+    const nextSkill = (player.skillLevel === 5 ? 1 : player.skillLevel + 1) as SkillLevel;
     const updated: Player = {
       ...player,
       skillLevel: nextSkill,
       publicTier: getTierFromSkill(nextSkill),
-      eloRating: 1000 + (nextSkill - 2) * 100,
+      eloRating: 1000 + (nextSkill - 3) * 100,
     };
     onUpdatePlayer?.(updated);
     const tier = getTierLabel(updated.publicTier);
@@ -300,12 +300,14 @@ export function PlayerRoster({
         <div className="flex items-center gap-1">
           <select
             value={selectedSkill}
-            onChange={(e) => setSelectedSkill(Number(e.target.value) as 1 | 2 | 3)}
+            onChange={(e) => setSelectedSkill(Number(e.target.value) as SkillLevel)}
             className="rounded-lg bg-white border-2 border-black px-2.5 py-1.5 text-xs font-bold text-black cursor-pointer shadow-[1px_1px_0px_#000]"
           >
-            <option value={1}>Beginner</option>
-            <option value={2}>Intermediate</option>
-            <option value={3}>Advanced</option>
+            <option value={1}>Newbie</option>
+            <option value={2}>Beginner</option>
+            <option value={3}>Intermediate</option>
+            <option value={4}>Advanced</option>
+            <option value={5}>Pro</option>
           </select>
 
           <button
@@ -620,12 +622,23 @@ export function PlayerRoster({
                 <label className="block text-xs font-black uppercase text-black mb-1">
                   Level Kemampuan (Skill Tier)
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
                   <button
                     type="button"
                     onClick={() => setEditSkill(1)}
-                    className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
+                    className={`py-2 px-1 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
                       editSkill === 1
+                        ? "bg-[#e2e8f0] text-black shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    Newbie
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditSkill(2)}
+                    className={`py-2 px-1 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
+                      editSkill === 2
                         ? "bg-[#fef08a] text-black shadow-[2px_2px_0px_#000]"
                         : "bg-white text-slate-600 hover:bg-slate-50"
                     }`}
@@ -634,9 +647,9 @@ export function PlayerRoster({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditSkill(2)}
-                    className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
-                      editSkill === 2
+                    onClick={() => setEditSkill(3)}
+                    className={`py-2 px-1 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
+                      editSkill === 3
                         ? "bg-[#a7f3d0] text-black shadow-[2px_2px_0px_#000]"
                         : "bg-white text-slate-600 hover:bg-slate-50"
                     }`}
@@ -645,14 +658,25 @@ export function PlayerRoster({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditSkill(3)}
-                    className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
-                      editSkill === 3
+                    onClick={() => setEditSkill(4)}
+                    className={`py-2 px-1 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
+                      editSkill === 4
                         ? "bg-[#7dd3fc] text-black shadow-[2px_2px_0px_#000]"
                         : "bg-white text-slate-600 hover:bg-slate-50"
                     }`}
                   >
                     Advanced
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditSkill(5)}
+                    className={`col-span-2 sm:col-span-1 py-2 px-1 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
+                      editSkill === 5
+                        ? "bg-[#f472b6] text-black shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    Pro
                   </button>
                 </div>
               </div>

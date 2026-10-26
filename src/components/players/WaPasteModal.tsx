@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Clipboard, Check, Users } from "lucide-react";
-import { getTierFromSkill, getTierLabel, Player } from "../../core/entities/player";
+import { getTierFromSkill, getTierLabel, Player, SkillLevel } from "../../core/entities/player";
 import { createPlayersFromParsed, parseWhatsAppList } from "../../core/matchmaking/wa-parser";
 
 interface WaPasteModalProps {
@@ -14,12 +14,14 @@ interface WaPasteModalProps {
 export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalProps) {
   const [rawText, setRawText] = useState("");
   const [overrideGenders, setOverrideGenders] = useState<Record<number, "M" | "F">>({});
+  const [overrideSkills, setOverrideSkills] = useState<Record<number, SkillLevel>>({});
   const [markAsArrived, setMarkAsArrived] = useState(true);
 
   const baseParsed = parseWhatsAppList(rawText);
   const parsed = baseParsed.map((p, idx) => ({
     ...p,
     gender: overrideGenders[idx] !== undefined ? overrideGenders[idx] : p.gender,
+    skillLevel: overrideSkills[idx] !== undefined ? overrideSkills[idx] : p.skillLevel,
   }));
 
   if (!isOpen) return null;
@@ -32,12 +34,22 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
     }));
   };
 
+  const cycleSkill = (idx: number) => {
+    const current = parsed[idx].skillLevel;
+    const next = (current === 5 ? 1 : current + 1) as SkillLevel;
+    setOverrideSkills((prev) => ({
+      ...prev,
+      [idx]: next,
+    }));
+  };
+
   const handleImport = () => {
     if (parsed.length === 0) return;
     const players = createPlayersFromParsed(parsed, markAsArrived);
     onImportPlayers(players);
     setRawText("");
     setOverrideGenders({});
+    setOverrideSkills({});
     onClose();
   };
 
@@ -46,9 +58,9 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
 2. Kevin Sanjaya [Pro - M]
 3. Siti Rahmawati (Beg - W)
 4. Budi Santoso (Inter)
-5. Rian Ardianto (M)
-6. Dewi Lestari (Beg - W)
-7. Fajar Alfian (Inter)
+5. Rian Ardianto (Adv - M)
+6. Dewi Lestari (Newbie - W)
+7. Fajar Alfian (Pro)
 8. Agus Pratama (Inter)`;
 
   return (
@@ -111,8 +123,8 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
             <span className="text-xs font-black uppercase tracking-wider text-black">
               Hasil Deteksi ({parsed.length} Pemain):
             </span>
-            <span className="text-[10px] font-bold text-black/50">
-              💡 Klik label M/W untuk ubah gender
+            <span className="text-[10px] font-bold text-black/60">
+              💡 Klik M/W untuk ubah gender • Klik Level untuk ubah skill
             </span>
           </div>
 
@@ -142,9 +154,14 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
                     >
                       {p.gender === "M" ? "M" : "W"}
                     </button>
-                    <span className={`text-[9px] px-1 py-0.2 rounded ${tier.badgeColor}`}>
-                      {tier.label.replace("Tier ", "")}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => cycleSkill(idx)}
+                      title={`Klik untuk ubah skill ${p.name}: saat ini ${tier.label} (Newbie → Beg → Inter → Adv → Pro)`}
+                      className={`text-[9px] px-1.5 py-0.2 rounded border border-black cursor-pointer shadow-[1px_1px_0px_#000] active:scale-95 ${tier.badgeColor}`}
+                    >
+                      {tier.label.replace("Tier ", "")} ▾
+                    </button>
                   </div>
                 );
               })}

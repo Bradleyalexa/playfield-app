@@ -39,14 +39,18 @@ export function parseWhatsAppList(rawText: string): ParsedPlayerResult[] {
       gender = "F";
     }
 
-    // 3. Deteksi Skill Level (Beginner / Intermediate / Advanced)
-    let skillLevel: SkillLevel = 2; // Default Intermediate
-    if (/\b(beg|beginner|pemula|kentang|dasar|baru|level\s*1)\b/i.test(cleanLine)) {
+    // 3. Deteksi Skill Level (1: Newbie, 2: Beginner, 3: Intermediate, 4: Advanced, 5: Pro)
+    let skillLevel: SkillLevel = 3; // Default Intermediate
+    if (/\b(newbie|pemula\s*baru|nol|zero|level\s*1)\b/i.test(cleanLine)) {
       skillLevel = 1;
-    } else if (/\b(pro|suhu|pelatnas|atlet|advance|ahli|level\s*3)\b/i.test(cleanLine)) {
-      skillLevel = 3;
-    } else if (/\b(inter|intermediate|menengah|sedang|hore|level\s*2)\b/i.test(cleanLine)) {
+    } else if (/\b(pro|master|pelatnas|atlet|level\s*5)\b/i.test(cleanLine)) {
+      skillLevel = 5;
+    } else if (/\b(adv|advanced|mahir|suhu|level\s*4)\b/i.test(cleanLine)) {
+      skillLevel = 4;
+    } else if (/\b(beg|beginner|pemula|kentang|dasar|level\s*2)\b/i.test(cleanLine)) {
       skillLevel = 2;
+    } else if (/\b(inter|intermediate|menengah|sedang|hore|level\s*3)\b/i.test(cleanLine)) {
+      skillLevel = 3;
     }
 
     // 4. Bersihkan nama dari tag kurung: (L), (Pro), [Lunas], [Tamu], dll.
@@ -86,7 +90,7 @@ export function createPlayersFromParsed(
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
-      eloRating: 1000 + (item.skillLevel - 2) * 100,
+      eloRating: 1000 + (item.skillLevel - 3) * 100,
       createdAt: new Date().toISOString(),
       isArrived: defaultArrived,
     };

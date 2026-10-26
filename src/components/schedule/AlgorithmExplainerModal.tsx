@@ -90,18 +90,18 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   },
   skill_tiered: {
     id: "skill_tiered",
-    formula: "Advanced + Beginner Lawan Sepasang Intermediate (Total Level Tim Berimbang)",
+    formula: "Kombinasi Total Level Tim Berimbang 5 Tingkat (Anti-Jomplang)",
     howItWorks: [
-      "Sistem membaca level keahlian pemain: Beginner (Level 1), Intermediate (Level 2), dan Advanced (Level 3).",
-      "Sistem melarang pasangan Advanced + Advanced bermain melawan Beginner + Beginner.",
-      "Kombinasi tim wajib memiliki total skor keahlian yang seimbang, contohnya Advanced (3) + Beginner (1) = Total 4 melawan Intermediate (2) + Intermediate (2) = Total 4.",
+      "Sistem membaca level keahlian 5 tingkat: Newbie (1), Beginner (2), Intermediate (3), Advanced (4), dan Pro (5).",
+      "Sistem melarang pasangan tier atas (Pro/Adv) melawan pasangan tier bawah (Newbie/Beg).",
+      "Kombinasi tim disusun agar total skor keahlian berimbang, contohnya Pro (5) + Newbie (1) = Total 6 melawan Advanced (4) + Beginner (2) = Total 6, atau Intermediate (3) + Intermediate (3) = Total 6.",
       "Pria (M) dan wanita (W) bebas dipasangkan selama level kekuatannya berimbang."
     ],
     exampleScenario:
-      "Jika pemain Advanced bermain, dia akan dipasangkan dengan pemain Beginner untuk menghadapi dua pemain Intermediate. Pertandingan menjadi sengit karena reli tetap hidup.",
+      "Jika ada pemain Pro atau Advanced, dia akan dipasangkan dengan Newbie atau Beginner untuk menghadapi pasangan Intermediate. Pertandingan menjadi sengit karena reli tetap hidup dan pemain berkembang bisa belajar rotasi.",
     advantages: [
       "Mencegah pembantaian skor sepihak (anti-skor 21-2).",
-      "Pemain Beginner bisa belajar rotasi dan positioning karena didampingi oleh pemain Advanced.",
+      "Pemain Newbie dan Beginner bisa belajar rotasi dan positioning karena didampingi oleh pemain mahir.",
       "Semua level pemain pulang dengan rasa puas dan berkeringat."
     ],
   },

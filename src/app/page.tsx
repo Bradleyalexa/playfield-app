@@ -43,7 +43,7 @@ import { WaPasteModal } from "../components/players/WaPasteModal";
 import { DonateCreatorModal } from "../components/common/DonateCreatorModal";
 import { HelpGuideModal } from "../components/common/HelpGuideModal";
 import { CARA_PAKAI_STEPS, FAQ_ITEMS, FAQ_CATEGORIES } from "../data/app-guide-data";
-import { Player, getTierFromSkill, getTierLabel } from "../core/entities/player";
+import { Player, SkillLevel, getTierFromSkill, getTierLabel } from "../core/entities/player";
 import { generateBalancedMatches, addMinutesToTimeString } from "../core/matchmaking/balanced-queue";
 import {
   ALGORITHM_REGISTRY,
@@ -152,8 +152,8 @@ export default function HomePage() {
       id: "p1",
       name: "Hendra Setiawan",
       gender: "M",
-      skillLevel: 3,
-      publicTier: "advanced",
+      skillLevel: 5,
+      publicTier: "pro",
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
@@ -164,8 +164,8 @@ export default function HomePage() {
       id: "p2",
       name: "Kevin Sanjaya",
       gender: "M",
-      skillLevel: 3,
-      publicTier: "advanced",
+      skillLevel: 5,
+      publicTier: "pro",
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
@@ -176,8 +176,8 @@ export default function HomePage() {
       id: "p3",
       name: "Greysia Polii",
       gender: "F",
-      skillLevel: 3,
-      publicTier: "advanced",
+      skillLevel: 5,
+      publicTier: "pro",
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
@@ -188,8 +188,8 @@ export default function HomePage() {
       id: "p4",
       name: "Apriyani Rahayu",
       gender: "F",
-      skillLevel: 3,
-      publicTier: "advanced",
+      skillLevel: 5,
+      publicTier: "pro",
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
@@ -200,7 +200,7 @@ export default function HomePage() {
   const [isWaModalOpen, setIsWaModalOpen] = useState(false);
   const [quickPlayerName, setQuickPlayerName] = useState("");
   const [quickGender, setQuickGender] = useState<"M" | "F">("M");
-  const [quickSkill, setQuickSkill] = useState<1 | 2 | 3>(2);
+  const [quickSkill, setQuickSkill] = useState<SkillLevel>(3);
 
   const handleAddQuickPlayer = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -214,7 +214,7 @@ export default function HomePage() {
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
-      eloRating: 1000 + (quickSkill - 2) * 100,
+      eloRating: 1000 + (quickSkill - 3) * 100,
       createdAt: new Date().toISOString(),
     };
     setInitialPlayers((prev) => [...prev, newP]);
@@ -245,12 +245,12 @@ export default function HomePage() {
     setInitialPlayers((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;
-        const nextSkill = (p.skillLevel === 1 ? 2 : p.skillLevel === 2 ? 3 : 1) as 1 | 2 | 3;
+        const nextSkill = (p.skillLevel === 5 ? 1 : p.skillLevel + 1) as SkillLevel;
         return {
           ...p,
           skillLevel: nextSkill,
           publicTier: getTierFromSkill(nextSkill),
-          eloRating: 1000 + (nextSkill - 2) * 100,
+          eloRating: 1000 + (nextSkill - 3) * 100,
         };
       })
     );
@@ -266,10 +266,10 @@ export default function HomePage() {
 
   const handleLoadDemo4Players = () => {
     setInitialPlayers([
-      { id: `p-${Date.now()}-1`, name: "Hendra Setiawan", gender: "M", skillLevel: 3, publicTier: "advanced", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1300, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-2`, name: "Kevin Sanjaya", gender: "M", skillLevel: 3, publicTier: "advanced", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1320, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-3`, name: "Greysia Polii", gender: "F", skillLevel: 3, publicTier: "advanced", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1290, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-4`, name: "Apriyani Rahayu", gender: "F", skillLevel: 3, publicTier: "advanced", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1280, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-1`, name: "Hendra Setiawan", gender: "M", skillLevel: 5, publicTier: "pro", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1300, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-2`, name: "Kevin Sanjaya", gender: "M", skillLevel: 5, publicTier: "pro", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1320, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-3`, name: "Greysia Polii", gender: "F", skillLevel: 5, publicTier: "pro", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1290, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-4`, name: "Apriyani Rahayu", gender: "F", skillLevel: 5, publicTier: "pro", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1280, createdAt: new Date().toISOString() },
     ]);
   };
 
@@ -963,12 +963,14 @@ export default function HomePage() {
                   {/* Skill Tier Selector */}
                   <select
                     value={quickSkill}
-                    onChange={(e) => setQuickSkill(parseInt(e.target.value, 10) as 1 | 2 | 3)}
+                    onChange={(e) => setQuickSkill(parseInt(e.target.value, 10) as SkillLevel)}
                     className="rounded-lg bg-[#faf8f2] border-2 border-black px-2.5 py-1.5 text-xs font-black text-black cursor-pointer"
                   >
-                    <option value={1}>Beginner</option>
-                    <option value={2}>Intermediate</option>
-                    <option value={3}>Advanced</option>
+                    <option value={1}>Newbie</option>
+                    <option value={2}>Beginner</option>
+                    <option value={3}>Intermediate</option>
+                    <option value={4}>Advanced</option>
+                    <option value={5}>Pro</option>
                   </select>
 
                   <button

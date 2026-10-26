@@ -117,10 +117,10 @@ export class LocalStorageAdapter {
     const defaultPreset = presets[0];
 
     const demoPlayers = [
-      { id: "p1", name: "Hendra Setiawan", gender: "M" as const, skillLevel: 3 as const, publicTier: "advanced" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1250, createdAt: new Date().toISOString() },
-      { id: "p2", name: "Kevin Sanjaya", gender: "M" as const, skillLevel: 3 as const, publicTier: "advanced" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1300, createdAt: new Date().toISOString() },
-      { id: "p3", name: "Greysia Polii", gender: "F" as const, skillLevel: 3 as const, publicTier: "advanced" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1290, createdAt: new Date().toISOString() },
-      { id: "p4", name: "Apriyani Rahayu", gender: "F" as const, skillLevel: 3 as const, publicTier: "advanced" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1280, createdAt: new Date().toISOString() },
+      { id: "p1", name: "Hendra Setiawan", gender: "M" as const, skillLevel: 5 as const, publicTier: "pro" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1250, createdAt: new Date().toISOString() },
+      { id: "p2", name: "Kevin Sanjaya", gender: "M" as const, skillLevel: 5 as const, publicTier: "pro" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1300, createdAt: new Date().toISOString() },
+      { id: "p3", name: "Greysia Polii", gender: "F" as const, skillLevel: 5 as const, publicTier: "pro" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1290, createdAt: new Date().toISOString() },
+      { id: "p4", name: "Apriyani Rahayu", gender: "F" as const, skillLevel: 5 as const, publicTier: "pro" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1280, createdAt: new Date().toISOString() },
     ];
 
     const courtCount = 2;

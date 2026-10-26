@@ -47,7 +47,7 @@ export const CARA_PAKAI_STEPS: GuideStep[] = [
       "Cukup copy teks daftar absen dari grup WhatsApp Anda, lalu klik tombol 'Paste dari WhatsApp'. Smart Parser Playfield otomatis membaca nama, gender, dan level keahlian.",
     features: [
       "Deteksi Gender Otomatis: Mengenali tanda (M/W, Pria/Wanita, Cowok/Cewek) untuk menyusun komposisi seimbang.",
-      "Standar 3 Level Skill: Otomatis membagi pemain ke Beginner, Intermediate, atau Advanced.",
+      "Standar 5 Level Skill: Otomatis membagi pemain ke Newbie, Beginner, Intermediate, Advanced, atau Pro.",
       "Status Hadir vs OTW: Tandai siapa yang sudah tiba di GOR vs yang masih di jalan. Pemain OTW otomatis ditahan dari rotasi hingga mereka tiba.",
     ],
     tips: "💡 Tips: Anda tetap bisa menambah, mengedit, atau menghapus nama pemain kapan saja selama mabar berlangsung.",
@@ -188,9 +188,9 @@ export const FAQ_ITEMS: FaqItem[] = [
     categoryLabel: "Matchmaking & Level",
     question: "Bagaimana standardisasi level skill yang digunakan di Playfield?",
     answer:
-      "Playfield menggunakan 3 tingkatan skill yang jelas, objektif, dan profesional:\n\n1. Beginner (Level 1): Pemula antusias, fokus reli dasar dan kenyamanan bermain.\n2. Intermediate (Level 2): Pemain level menengah, reli konsisten dan penempatan bola terarah.\n3. Advanced (Level 3): Pemain tingkat mahir, pukulan tajam, footwork rapi, dan taktik matang.\n\nSistem matchmaking menyeimbangkan total skor keahlian antartim agar pertandingan berjalan sengit tanpa ada pembantaian skor sepihak.",
-    highlight: "Standar 3 Tingkat: Beginner, Intermediate, & Advanced",
-    tags: ["Level Skill", "Beginner", "Intermediate", "Advanced"],
+      "Playfield membagi level pemain ke dalam 5 tingkatan skill yang diadaptasi dari standar komunitas badminton Indonesia:\n\n1. Newbie (Level 1): Pemain baru pertama kali main/pegang raket, latihan servis aman dan pengenalan dasar.\n2. Beginner (Level 2): Pemula yang sudah paham aturan main, reli dasar teratur, dan servis aman.\n3. Intermediate (Level 3): Pemain level menengah, reli konsisten, drive aktif, dan rotasi teratur.\n4. Advanced (Level 4): Pemain mahir, smash tajam, defense rapat, footwork rapi, dan taktik matang.\n5. Pro (Level 5): Atlet / semi-pro / master berkecepatan tinggi, fisik prima, dan akurasi turnamen.\n\nSistem matchmaking menyeimbangkan total skor keahlian antartim agar pertandingan berjalan sengit tanpa ada pembantaian skor sepihak.",
+    highlight: "Standar 5 Tingkat: Newbie, Beginner, Intermediate, Advanced, & Pro",
+    tags: ["Level Skill", "Newbie", "Beginner", "Intermediate", "Advanced", "Pro"],
   },
   {
     id: "faq-7",
@@ -198,7 +198,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     categoryLabel: "Matchmaking & Level",
     question: "Apa itu Algoritma Hybrid 2+2 dan kapan sebaiknya digunakan?",
     answer:
-      "Hybrid 2+2 adalah format mabar terfavorit di mana 2 game awal otomatis disusun Mix Level (Advanced + Beginner vs 2 Intermediate) untuk pemanasan ramah dan membaurkan suasana. Kemudian pada game 3 dan 4, sistem otomatis beralih ke Level Sama (Advanced vs Advanced, Beginner vs Beginner) agar pemain bisa adu skill maksimal dengan lawan selevel.",
+      "Hybrid 2+2 adalah format mabar terfavorit di mana 2 game awal otomatis disusun Mix Level (Pro/Advanced + Newbie/Beginner vs Pasangan Intermediate) untuk pemanasan ramah dan membaurkan suasana. Kemudian pada game 3 dan 4, sistem otomatis beralih ke Level Sama (Pro/Advanced vs Pro/Advanced, Beginner/Newbie vs Beginner/Newbie) agar pemain bisa adu skill maksimal dengan lawan selevel.",
     highlight: "Pemanasan Membaur di Awal, Adu Skill Kompetitif di Akhir",
     tags: ["Hybrid 2+2", "Algoritma", "Mix Level", "Level Sama"],
   },
