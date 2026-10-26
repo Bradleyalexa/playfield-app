@@ -1251,6 +1251,19 @@ function HostDashboardContent({ params }: HostPageProps) {
                 {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).icon}{" "}
                 {(ALGORITHM_REGISTRY[session.algorithm] || ALGORITHM_REGISTRY["playfields_mix"]).shortName}
               </span>
+              {session.algorithm === "hybrid_2plus2" && (
+                <span
+                  className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border-2 border-black shadow-[1px_1px_0px_#000] ${
+                    Math.floor((session.currentRound - 1) / 2) % 2 === 0
+                      ? "bg-[#d946ef] text-white"
+                      : "bg-[#00e5ff] text-black"
+                  }`}
+                >
+                  {Math.floor((session.currentRound - 1) / 2) % 2 === 0
+                    ? "🔀 Fase: Mix Level"
+                    : "⚡ Fase: Level Sama"}
+                </span>
+              )}
               {rentalInfo.dayDateLabel && (
                 <span className="text-[11px] font-mono font-black text-black bg-[#ccff00] px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
                   📅 {rentalInfo.dayDateLabel}

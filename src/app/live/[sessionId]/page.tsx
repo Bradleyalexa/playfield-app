@@ -286,6 +286,19 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                   >
                     {algo.icon} {algo.shortName}
                   </span>
+                  {session.algorithm === "hybrid_2plus2" && (
+                    <span
+                      className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] ${
+                        Math.floor((session.currentRound - 1) / 2) % 2 === 0
+                          ? "bg-[#d946ef] text-white"
+                          : "bg-[#00e5ff] text-black"
+                      }`}
+                    >
+                      {Math.floor((session.currentRound - 1) / 2) % 2 === 0
+                        ? "🔀 Mix Level"
+                        : "⚡ Level Sama"}
+                    </span>
+                  )}
                   <span className="bg-black text-white text-[10px] font-black px-2 py-0.5 rounded font-mono border border-black">
                     RONDE #{session.currentRound}
                   </span>

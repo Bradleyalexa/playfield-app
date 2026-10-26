@@ -7,6 +7,7 @@ export type SessionStatus = "active" | "completed" | "archived";
 
 export type MatchmakingAlgorithm =
   | "playfields_mix"  // Playfield's (Smart All-in-One: Pemerataan Giliran + Level + Gender Seimbang Tanpa Wajib Skor)
+  | "hybrid_2plus2"   // Hybrid 2+2 (Game 1-2 Mix Level, Game 3-4 Level Sama / Same Tier)
   | "fair_playtime"   // Giliran Main Rata (Paling lama istirahat & main paling sedikit)
   | "mixed_doubles"   // Ganda Campuran (Cowo + Cewe / Gender Balanced)
   | "skill_tiered"    // Seimbang Level (Kombinasi tier seimbang antar tim)
@@ -36,6 +37,16 @@ export const ALGORITHM_REGISTRY: Record<MatchmakingAlgorithm, AlgorithmDetails> 
     icon: "🔥",
     description: "Algoritma cerdas unggulan Playfield: otomatis seimbangkan pemerataan giliran main (jumlah match rata), level skill anti-jomplang, dan komposisi gender tanpa perlu pusing input skor.",
     bestFor: "Paling direkomendasikan untuk 95% mabar komunitas. Adil, reli seru seimbang, dan 100% bebas ribet.",
+  },
+  hybrid_2plus2: {
+    id: "hybrid_2plus2",
+    name: "Hybrid 2+2 (Mix Level & Level Sama)",
+    shortName: "Hybrid 2+2",
+    badge: "HYBRID FAVORIT",
+    badgeColor: "bg-[#d946ef] text-white border-2 border-black",
+    icon: "🔀",
+    description: "Format favorit mabar: Game 1–2 otomatis Mix Level (Suhu + Pemula vs Menengah) untuk pemanasan & membaur, lalu Game 3–4 otomatis Level Sama (Suhu vs Suhu / Pemula vs Pemula) untuk adu skill maksimal.",
+    bestFor: "Komunitas dengan disparitas level beragam: 2 game awal ramah & membimbing pemula, 2 game akhir kompetitif adu skill.",
   },
   fair_playtime: {
     id: "fair_playtime",

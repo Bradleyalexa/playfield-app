@@ -37,6 +37,24 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
       "Ramah host: pertandingan bisa diselesaikan seketika tanpa perlu mencatat skor."
     ],
   },
+  hybrid_2plus2: {
+    id: "hybrid_2plus2",
+    formula: "Game 1–2: Mix Level (Baurkan) ➜ Game 3–4: Level Sama (Adu Skill Kasta)",
+    howItWorks: [
+      "Fase 1 (Game 1 & 2 - Mix Level): Sistem otomatis menyusun pasangan silang tier (Suhu + Pemula vs 2 Menengah). Tujuannya untuk mencairkan suasana, pemanasan seimbang, membimbing pemula, dan reli tetap hidup.",
+      "Fase 2 (Game 3 & 4 - Level Sama): Sistem otomatis mengelompokkan lapangan berdasarkan kasta skill. Lapangan 1 khusus partai Suhu vs Suhu (reli kencang adu skill), Lapangan 2 khusus partai Menengah/Pemula sesamanya agar main lepas tanpa canggung.",
+      "Rotasi Berkelanjutan: Jika sesi mabar berlanjut melebihi 4 ronde (ronde 5, 6, dst.), sistem mengulang siklus 2 Mix + 2 Level Sama secara dinamis.",
+      "Jatah Main Adil: Tetap memprioritaskan antrean pemain yang paling sedikit main dan paling lama istirahat agar waktu sewa dinikmati rata."
+    ],
+    exampleScenario:
+      "Di 2 game awal, mantan atlet dipasangkan dengan pemain pemula untuk pemanasan ramah. Begitu stamina panas di game 3 dan 4, 4 pemain Suhu langsung dipertemukan di Lapangan 1 untuk duel sengit, sementara 4 Pemula bermain di Lapangan 2 dengan percaya diri.",
+    advantages: [
+      "Format mabar paling ideal: membaur di awal, adu skill kompetitif di akhir.",
+      "Pemain pemula senang karena sempat dibimbing suhu, lalu bisa main lepas sesama pemula.",
+      "Pemain berpengalaman puas karena mendapatkan jatah partai keras sesama pemain selevel.",
+      "100% otomatis: host tidak perlu repot mengganti algoritma atau kocok manual di tengah sesi."
+    ],
+  },
   fair_playtime: {
     id: "fair_playtime",
     formula: "Main Paling Sedikit + Duduk Paling Lama = Masuk Lapangan Duluan",

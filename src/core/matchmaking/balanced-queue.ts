@@ -115,13 +115,89 @@ export function generateBalancedMatches(
   const matches: Match[] = [];
   const actualCourtsToMake = Math.floor(selectedPlayers.length / 4);
 
-  // 3. Pembagian Pasangan per Lapangan berdasarkan Algoritma
+  // 3. Pengelompokan Pemain per Lapangan
+  let courtPlayerGroups: Player[][] = [];
+
+  if (algorithm === "hybrid_2plus2") {
+    // HYBRID 2+2:
+    // Game 1 & 2 (atau ronde ganjil-block): FASE MIX LEVEL (Pemanasan & Baurkan)
+    // Game 3 & 4 (atau ronde genap-block): FASE LEVEL SAMA (Adu Skill Sesama Tier)
+    const isMixPhase = Math.floor((roundNumber - 1) / 2) % 2 === 0;
+
+    if (!isMixPhase) {
+      // FASE 2: LEVEL SAMA (Sesama Tier Kasta)
+      // Urutkan semua pemain terpilih dari skill tertinggi ke terendah
+      // Lapangan 1 = 4 pemain skill tertinggi (Suhu vs Suhu)
+      // Lapangan 2 = 4 pemain berikutnya (Menengah vs Menengah)
+      // Lapangan 3 = 4 pemain berikutnya (Pemula vs Pemula)
+      const sortedBySkill = [...selectedPlayers].sort((a, b) => b.skillLevel - a.skillLevel);
+      for (let c = 0; c < actualCourtsToMake; c++) {
+        courtPlayerGroups.push(sortedBySkill.slice(c * 4, (c + 1) * 4));
+      }
+    } else {
+      // FASE 1: MIX LEVEL (Silang Tier)
+      // Distribusikan pemain lintas tier secara merata ke tiap lapangan (Cross-Tier Snake Distribution)
+      const sortedBySkill = [...selectedPlayers].sort((a, b) => b.skillLevel - a.skillLevel);
+      const groups: Player[][] = Array.from({ length: actualCourtsToMake }, () => []);
+
+      for (let layer = 0; layer < 4; layer++) {
+        const layerSlice = sortedBySkill.slice(layer * actualCourtsToMake, (layer + 1) * actualCourtsToMake);
+        if (layer % 2 === 1) {
+          layerSlice.reverse(); // Snake draft agar total kekuatan tiap lapangan imbang
+        }
+        for (let c = 0; c < actualCourtsToMake; c++) {
+          if (layerSlice[c]) {
+            groups[c].push(layerSlice[c]);
+          }
+        }
+      }
+      courtPlayerGroups = groups;
+    }
+  } else {
+    for (let c = 0; c < actualCourtsToMake; c++) {
+      courtPlayerGroups.push(selectedPlayers.slice(c * 4, (c + 1) * 4));
+    }
+  }
+
+  // 4. Pembagian Pasangan per Lapangan berdasarkan Algoritma
   for (let c = 0; c < actualCourtsToMake; c++) {
-    const courtFour = selectedPlayers.slice(c * 4, (c + 1) * 4);
+    const courtFour = courtPlayerGroups[c] || selectedPlayers.slice(c * 4, (c + 1) * 4);
     let teamA: Player[] = [];
     let teamB: Player[] = [];
 
     switch (algorithm) {
+      case "hybrid_2plus2": {
+        const isMixPhase = Math.floor((roundNumber - 1) / 2) % 2 === 0;
+
+        if (isMixPhase) {
+          // Fase Mix Level: Pasangkan Terkuat + Terlemah vs 2 Menengah
+          const males = courtFour.filter((p) => p.gender === "M").sort((a, b) => b.skillLevel - a.skillLevel);
+          const females = courtFour.filter((p) => p.gender === "F").sort((a, b) => b.skillLevel - a.skillLevel);
+
+          if (males.length >= 2 && females.length >= 2) {
+            teamA = [males[0], females[females.length - 1]];
+            teamB = [males[1], females[0]];
+          } else if (females.length === 1 && males.length === 3) {
+            teamA = [males[0], females[0]];
+            teamB = [males[1], males[2]];
+          } else if (males.length === 1 && females.length === 3) {
+            teamA = [males[0], females[females.length - 1]];
+            teamB = [females[0], females[1]];
+          } else {
+            courtFour.sort((a, b) => b.skillLevel - a.skillLevel);
+            teamA = [courtFour[0], courtFour[3]];
+            teamB = [courtFour[1], courtFour[2]];
+          }
+        } else {
+          // Fase Level Sama: Karena 4 pemain di lapangan ini sudah se-tier/kasta sama,
+          // bentuk 2 tim yang paling seimbang di antara mereka
+          courtFour.sort((a, b) => b.skillLevel - a.skillLevel);
+          teamA = [courtFour[0], courtFour[3]];
+          teamB = [courtFour[1], courtFour[2]];
+        }
+        break;
+      }
+
       case "playfields_mix": {
         // Playfield's Mix: Perpaduan cerdas Pemerataan Giliran Main + Keseimbangan Gender + Keseimbangan Tier (100% Bebas Input Skor)
         const males = courtFour.filter((p) => p.gender === "M").sort((a, b) => b.skillLevel - a.skillLevel);

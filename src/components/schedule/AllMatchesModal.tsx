@@ -176,6 +176,19 @@ export function AllMatchesModal({ isOpen, onClose, session, onFastTrackMatch }: 
                         <Clock className="h-3.5 w-3.5" />
                         {round.timeRange}
                       </span>
+                      {session.algorithm === "hybrid_2plus2" && (
+                        <span
+                          className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] ${
+                            Math.floor((round.roundNumber - 1) / 2) % 2 === 0
+                              ? "bg-[#d946ef] text-white"
+                              : "bg-[#00e5ff] text-black"
+                          }`}
+                        >
+                          {Math.floor((round.roundNumber - 1) / 2) % 2 === 0
+                            ? "🔀 Mix Level"
+                            : "⚡ Level Sama"}
+                        </span>
+                      )}
                     </div>
 
                     <div>
