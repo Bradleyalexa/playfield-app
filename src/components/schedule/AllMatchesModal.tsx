@@ -831,22 +831,34 @@ export function AllMatchesModal({
           </button>
         </div>
 
-        {/* Floating Ghost Badge yang Mengikuti Jari Touchscreen / Gerakan Tangan */}
-        {touchCoords && touchDragIndex !== null && scheduleRounds[touchDragIndex] && (
-          <div
-            className="fixed z-50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black text-[#ccff00] border-2 border-white shadow-[0_12px_32px_rgba(0,0,0,0.5)] font-mono font-black text-xs uppercase select-none animate-in zoom-in-95 duration-75"
-            style={{
-              left: `${touchCoords.x}px`,
-              top: `${touchCoords.y}px`,
-            }}
-          >
-            <GripVertical className="h-4 w-4 stroke-[3] text-white animate-pulse" />
-            <span>Pindahkan Ronde #{scheduleRounds[touchDragIndex].roundNumber}</span>
-            <span className="text-[10px] text-white/70 font-sans font-bold">
-              ({scheduleRounds[touchDragIndex].timeRange})
-            </span>
-          </div>
-        )}
+        {/* Floating Ghost Badge yang Mengikuti Jari Touchscreen (Digeser Mengambang di Atas Jari agar Tidak Ketutupan) */}
+        {touchCoords && touchDragIndex !== null && scheduleRounds[touchDragIndex] && (() => {
+          const isFlippedBelow = touchCoords.y < 95;
+          const targetY = isFlippedBelow ? touchCoords.y + 58 : touchCoords.y - 58;
+
+          return (
+            <div
+              className="fixed z-50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black text-[#ccff00] border-2 border-white shadow-[0_14px_35px_rgba(0,0,0,0.6)] font-mono font-black text-xs uppercase select-none animate-in zoom-in-95 duration-75 max-w-[90vw]"
+              style={{
+                left: `${touchCoords.x}px`,
+                top: `${targetY}px`,
+              }}
+            >
+              <GripVertical className="h-4 w-4 stroke-[3] text-white animate-pulse" />
+              <span>Pindahkan Ronde #{scheduleRounds[touchDragIndex].roundNumber}</span>
+              <span className="text-[10px] text-white/70 font-sans font-bold">
+                ({scheduleRounds[touchDragIndex].timeRange})
+              </span>
+
+              {/* Segitiga Penunjuk ke Arah Titik Sentuh Jari */}
+              {isFlippedBelow ? (
+                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-black border-l-2 border-t-2 border-white rotate-45 pointer-events-none" />
+              ) : (
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-black border-r-2 border-b-2 border-white rotate-45 pointer-events-none" />
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
