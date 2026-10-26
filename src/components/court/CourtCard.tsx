@@ -201,39 +201,51 @@ export function CourtCard({
               const tier = getTierLabel(p.publicTier);
               const isLate = p.isArrived === false;
               return (
-                <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
-                  <div className="flex items-center gap-1.5 truncate">
-                    <span className={`font-extrabold truncate ${isLate ? "text-amber-900" : "text-black"}`}>
-                      {p.name}
-                    </span>
-                    <span
-                      className={`text-[8px] font-mono font-black px-1.5 py-0.2 rounded border ${
-                        p.gender === "M"
-                          ? "bg-blue-100 text-blue-900 border-blue-400"
-                          : "bg-pink-100 text-pink-900 border-pink-400"
-                      }`}
-                    >
-                      {p.gender === "M" ? "M" : "W"}
-                    </span>
-                    {isLate && (
-                      <span className="text-[8px] font-mono font-black px-1 py-0.2 rounded border bg-amber-200 text-amber-950 border-amber-500 animate-pulse">
-                        ⏳ OTW
+                <div
+                  key={p.id}
+                  className="p-1.5 rounded-lg bg-white/80 border border-black/25 flex flex-col gap-0.5 shadow-[1px_1px_0px_#000]"
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-1 min-w-0 flex-1">
+                      <span
+                        className={`text-[8px] font-mono font-black px-1 py-0.2 rounded border shrink-0 ${
+                          p.gender === "M"
+                            ? "bg-blue-100 text-blue-900 border-blue-400"
+                            : "bg-pink-100 text-pink-900 border-pink-400"
+                        }`}
+                      >
+                        {p.gender === "M" ? "M" : "W"}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded shrink-0 ${tier.badgeColor}`}>
-                      {tier.label.replace("Tier ", "")}
-                    </span>
+                      <span
+                        className={`font-black text-xs sm:text-sm leading-tight truncate ${
+                          isLate ? "text-amber-900" : "text-black"
+                        }`}
+                        title={p.name}
+                      >
+                        {p.name}
+                      </span>
+                    </div>
                     {onQuickSubstitute && (
                       <button
                         type="button"
                         onClick={() => onQuickSubstitute(court.courtNumber, p)}
-                        className="p-1 rounded bg-white hover:bg-amber-100 border border-black/40 text-slate-700 hover:text-black cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                        className="p-1 rounded bg-white hover:bg-amber-100 border border-black/40 text-slate-700 hover:text-black cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none shrink-0"
                         title={`Ganti ${p.name}`}
                       >
                         <RefreshCw className="h-2.5 w-2.5" />
                       </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 flex-wrap pl-3.5">
+                    <span
+                      className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded border ${tier.badgeColor}`}
+                    >
+                      {tier.label.replace("Tier ", "")}
+                    </span>
+                    {isLate && (
+                      <span className="text-[7px] font-mono font-black px-1 py-0.2 rounded border bg-amber-200 text-amber-950 border-amber-500 animate-pulse">
+                        ⏳ OTW
+                      </span>
                     )}
                   </div>
                 </div>
@@ -288,39 +300,51 @@ export function CourtCard({
               const tier = getTierLabel(p.publicTier);
               const isLate = p.isArrived === false;
               return (
-                <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
-                  <div className="flex items-center gap-1.5 truncate">
-                    <span className={`font-extrabold truncate ${isLate ? "text-amber-900" : "text-black"}`}>
-                      {p.name}
-                    </span>
-                    <span
-                      className={`text-[8px] font-mono font-black px-1.5 py-0.2 rounded border ${
-                        p.gender === "M"
-                          ? "bg-blue-100 text-blue-900 border-blue-400"
-                          : "bg-pink-100 text-pink-900 border-pink-400"
-                      }`}
-                    >
-                      {p.gender === "M" ? "M" : "W"}
-                    </span>
-                    {isLate && (
-                      <span className="text-[8px] font-mono font-black px-1 py-0.2 rounded border bg-amber-200 text-amber-950 border-amber-500 animate-pulse">
-                        ⏳ OTW
+                <div
+                  key={p.id}
+                  className="p-1.5 rounded-lg bg-white/80 border border-black/25 flex flex-col gap-0.5 shadow-[1px_1px_0px_#000]"
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-1 min-w-0 flex-1">
+                      <span
+                        className={`text-[8px] font-mono font-black px-1 py-0.2 rounded border shrink-0 ${
+                          p.gender === "M"
+                            ? "bg-blue-100 text-blue-900 border-blue-400"
+                            : "bg-pink-100 text-pink-900 border-pink-400"
+                        }`}
+                      >
+                        {p.gender === "M" ? "M" : "W"}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded shrink-0 ${tier.badgeColor}`}>
-                      {tier.label.replace("Tier ", "")}
-                    </span>
+                      <span
+                        className={`font-black text-xs sm:text-sm leading-tight truncate ${
+                          isLate ? "text-amber-900" : "text-black"
+                        }`}
+                        title={p.name}
+                      >
+                        {p.name}
+                      </span>
+                    </div>
                     {onQuickSubstitute && (
                       <button
                         type="button"
                         onClick={() => onQuickSubstitute(court.courtNumber, p)}
-                        className="p-1 rounded bg-white hover:bg-amber-100 border border-black/40 text-slate-700 hover:text-black cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                        className="p-1 rounded bg-white hover:bg-amber-100 border border-black/40 text-slate-700 hover:text-black cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none shrink-0"
                         title={`Ganti ${p.name}`}
                       >
                         <RefreshCw className="h-2.5 w-2.5" />
                       </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 flex-wrap pl-3.5">
+                    <span
+                      className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded border ${tier.badgeColor}`}
+                    >
+                      {tier.label.replace("Tier ", "")}
+                    </span>
+                    {isLate && (
+                      <span className="text-[7px] font-mono font-black px-1 py-0.2 rounded border bg-amber-200 text-amber-950 border-amber-500 animate-pulse">
+                        ⏳ OTW
+                      </span>
                     )}
                   </div>
                 </div>

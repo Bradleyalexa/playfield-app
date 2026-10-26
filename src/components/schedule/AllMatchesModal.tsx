@@ -152,13 +152,13 @@ export function AllMatchesModal({
   const totalMatchesCount = scheduleRounds.reduce((acc, r) => acc + r.matches.length, 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/60 backdrop-blur-xs font-sans selection:bg-[#ccff00] selection:text-black">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5 bg-black/60 backdrop-blur-xs font-sans selection:bg-[#ccff00] selection:text-black">
       <div
-        className="relative flex flex-col w-full max-w-4xl max-h-[94vh] sm:max-h-[90vh] bg-[#faf8f2] border-[3px] sm:border-[4px] border-black rounded-2xl sm:rounded-3xl shadow-[8px_8px_0px_#000] sm:shadow-[10px_10px_0px_#000] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="relative flex flex-col w-full max-w-4xl h-[86dvh] max-h-[86dvh] sm:h-auto sm:max-h-[88vh] bg-[#faf8f2] border-[3px] sm:border-[4px] border-black rounded-2xl sm:rounded-3xl shadow-[4px_4px_0px_#000] sm:shadow-[10px_10px_0px_#000] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal - Dibuat Hemat Ruang di Mobile */}
-        <div className="flex items-start justify-between p-3.5 sm:p-6 bg-white border-b-[3px] border-black shrink-0">
+        <div className="flex items-start justify-between p-3 sm:p-5 bg-white border-b-2 sm:border-b-[3px] border-black shrink-0">
           <div className="pr-2">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
               <span className="font-mono text-[10px] sm:text-xs uppercase px-2 py-0.5 rounded-full bg-[#ccff00] border border-black font-black">
@@ -297,8 +297,8 @@ export function AllMatchesModal({
           </div>
         </div>
 
-        {/* Scrollable Body: Daftar Ronde & Match - DIBERIKAN RUANG MAKSIMAL */}
-        <div className="flex-1 overflow-y-auto max-h-[66vh] sm:max-h-[72vh] p-3 sm:p-6 space-y-3.5 sm:space-y-5">
+        {/* Scrollable Body: Daftar Ronde & Match - DIBERIKAN RUANG MAKSIMAL & PROPORSI CEPAT */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-5 space-y-3 sm:space-y-4">
           {filteredRounds.length === 0 ? (
             <div className="py-12 text-center font-bold text-black/60 italic">
               Tidak ada ronde yang cocok dengan filter yang dipilih.
@@ -328,16 +328,16 @@ export function AllMatchesModal({
                   onDragStart={(e) => handleDragStart(e, actualIndex)}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, actualIndex)}
-                  className={`rounded-2xl border-[3px] border-black p-3 sm:p-5 transition-all ${
+                  className={`rounded-xl sm:rounded-2xl border-2 sm:border-[3px] border-black p-2.5 sm:p-4 transition-all ${
                     isCurrent
-                      ? "bg-white shadow-[6px_6px_0px_#000] ring-3 ring-[#ccff00]"
+                      ? "bg-white shadow-[4px_4px_0px_#000] ring-2 sm:ring-3 ring-[#ccff00]"
                       : isPast
-                      ? "bg-white/80 shadow-[3px_3px_0px_#000]"
-                      : "bg-[#faf8f2] shadow-[3px_3px_0px_#000] hover:border-black"
+                      ? "bg-white/80 shadow-[2px_2px_0px_#000] sm:shadow-[3px_3px_0px_#000]"
+                      : "bg-[#faf8f2] shadow-[2px_2px_0px_#000] sm:shadow-[3px_3px_0px_#000] hover:border-black"
                   }`}
                 >
                   {/* Round Header */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 sm:pb-3 border-b-2 border-black mb-3 sm:mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b-2 border-black mb-2.5 sm:mb-3">
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
                       {isUpcoming && (
                         <span
@@ -443,36 +443,36 @@ export function AllMatchesModal({
                       return (
                         <div
                           key={match.id}
-                          className="rounded-xl border-2 border-black bg-white p-2.5 sm:p-3.5 shadow-[2px_2px_0px_#000] flex flex-col justify-between"
+                          className="rounded-lg sm:rounded-xl border border-black bg-white p-2 sm:p-3 shadow-[1.5px_1.5px_0px_#000] sm:shadow-[2px_2px_0px_#000] flex flex-col justify-between"
                         >
-                          <div className="flex items-center justify-between pb-1.5 sm:pb-2 border-b border-black/20 mb-2">
+                          <div className="flex items-center justify-between pb-1 sm:pb-1.5 border-b border-black/15 mb-1.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-mono text-[11px] sm:text-xs font-black uppercase px-2 py-0.5 rounded bg-[#faf8f2] border border-black">
+                              <span className="font-mono text-[10px] sm:text-xs font-black uppercase px-1.5 py-0.2 rounded bg-[#faf8f2] border border-black">
                                 Lapangan {match.courtNumber}
                               </span>
                               {!isCurrent && !isPast && (
                                 isAllArrived ? (
-                                  <span className="text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#ccff00] text-black border border-black flex items-center gap-1 shadow-[1px_1px_0px_#000]">
-                                    <Sparkles className="h-2.5 w-2.5 fill-black" />
+                                  <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full bg-[#ccff00] text-black border border-black flex items-center gap-1 shadow-[1px_1px_0px_#000]">
+                                    <Sparkles className="h-2 w-2 fill-black" />
                                     Semua Hadir
                                   </span>
                                 ) : (
-                                  <span className="text-[9px] sm:text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-400 px-2 py-0.5 rounded-full">
+                                  <span className="text-[9px] font-bold text-amber-900 bg-amber-100 border border-amber-400 px-1.5 py-0.2 rounded-full">
                                     ⏳ {unarrivedCount} OTW
                                   </span>
                                 )
                               )}
                             </div>
-                            <span className="font-mono text-[10px] sm:text-[11px] font-bold text-black/60">
+                            <span className="font-mono text-[10px] font-bold text-black/60">
                               {match.estimatedStartTime} - {match.estimatedEndTime}
                             </span>
                           </div>
 
                           {/* Teams 2v2 */}
-                          <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-xs">
                             {/* Tim A */}
                             <div
-                              className={`rounded-lg border border-black p-2 sm:p-2.5 flex flex-col justify-between ${
+                              className={`rounded-md sm:rounded-lg border border-black p-1.5 sm:p-2.5 flex flex-col justify-between ${
                                 isWinnerA
                                   ? "bg-[#ccff00]/30 shadow-[1px_1px_0px_#000]"
                                   : "bg-emerald-50/80"
@@ -540,7 +540,7 @@ export function AllMatchesModal({
 
                             {/* Tim B */}
                             <div
-                              className={`rounded-lg border border-black p-2 sm:p-2.5 flex flex-col justify-between ${
+                              className={`rounded-md sm:rounded-lg border border-black p-1.5 sm:p-2.5 flex flex-col justify-between ${
                                 isWinnerB
                                   ? "bg-[#7dd3fc]/30 shadow-[1px_1px_0px_#000]"
                                   : "bg-sky-50/80"
