@@ -275,8 +275,8 @@ function LiveSpectatorContent({ params }: LivePageProps) {
         ) : (
           <>
             {/* Header Sesi (Neo-Brutalism Penuh) */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 border-black bg-white shadow-[6px_6px_0px_#000]">
-              <div className="min-w-0">
+            <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 border-black bg-white shadow-[6px_6px_0px_#000] overflow-hidden">
+              <div className="w-full min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   <span className="font-mono text-xs uppercase px-2.5 py-0.5 rounded-lg bg-[#ccff00] border-2 border-black font-black shadow-[2px_2px_0px_#000]">
                     {session.sport.toUpperCase()}
@@ -314,7 +314,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                   </div>
                 </div>
 
-                <h1 className="text-xl sm:text-3xl font-black text-black uppercase tracking-tight truncate">
+                <h1 className="text-lg sm:text-2xl lg:text-3xl font-black text-black uppercase tracking-tight break-words whitespace-normal leading-tight">
                   {session.title}
                 </h1>
 

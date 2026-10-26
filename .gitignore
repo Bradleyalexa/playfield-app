@@ -44,3 +44,6 @@ pnpm-debug.log*
 # Video exports
 brag-output/
 brag-output-*/
+
+# TypeScript
+*.tsbuildinfo
