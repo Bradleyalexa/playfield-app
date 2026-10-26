@@ -39,7 +39,7 @@ export function parseWhatsAppList(rawText: string): ParsedPlayerResult[] {
       gender = "F";
     }
 
-    // 3. Deteksi Skill Level (Beg / Inter / Pro / Suhu / Kentang)
+    // 3. Deteksi Skill Level (Beginner / Intermediate / Advanced)
     let skillLevel: SkillLevel = 2; // Default Intermediate
     if (/\b(beg|beginner|pemula|kentang|dasar|baru|level\s*1)\b/i.test(cleanLine)) {
       skillLevel = 1;

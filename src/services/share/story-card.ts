@@ -1,4 +1,4 @@
-import { Player } from "../../core/entities/player";
+import { Player, getTierLabel } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
 
 export interface StoryStats {
@@ -117,8 +117,9 @@ export class StoryCardGenerator {
     ctx.fillText(genderText, 330, 490);
 
     // Tier Box
+    const tierInfo = getTierLabel(stats.player.publicTier);
     const tierBg = "#fef08a";
-    const tierText = `🏆 TIER ${stats.player.publicTier.toUpperCase()}`;
+    const tierText = `🏆 ${tierInfo.label.toUpperCase()}`;
     drawNeoBox(ctx, 540, 445, 380, 70, tierBg, 8, 16, 6);
     ctx.fillStyle = "#000000";
     ctx.font = "900 28px system-ui, -apple-system, sans-serif";

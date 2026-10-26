@@ -49,7 +49,7 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
 5. Rian Ardianto (M)
 6. Dewi Lestari (Beg - W)
 7. Fajar Alfian (Inter)
-8. Agus Pratama (Hore)`;
+8. Agus Pratama (Inter)`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">

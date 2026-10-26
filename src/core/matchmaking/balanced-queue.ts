@@ -125,11 +125,11 @@ export function generateBalancedMatches(
     const isMixPhase = Math.floor((roundNumber - 1) / 2) % 2 === 0;
 
     if (!isMixPhase) {
-      // FASE 2: LEVEL SAMA (Sesama Tier Kasta)
+      // FASE 2: LEVEL SAMA (Sesama Level Skill)
       // Urutkan semua pemain terpilih dari skill tertinggi ke terendah
-      // Lapangan 1 = 4 pemain skill tertinggi (Suhu vs Suhu)
-      // Lapangan 2 = 4 pemain berikutnya (Menengah vs Menengah)
-      // Lapangan 3 = 4 pemain berikutnya (Pemula vs Pemula)
+      // Lapangan 1 = 4 pemain skill tertinggi (Advanced vs Advanced)
+      // Lapangan 2 = 4 pemain berikutnya (Intermediate vs Intermediate)
+      // Lapangan 3 = 4 pemain berikutnya (Beginner vs Beginner)
       const sortedBySkill = [...selectedPlayers].sort((a, b) => b.skillLevel - a.skillLevel);
       for (let c = 0; c < actualCourtsToMake; c++) {
         courtPlayerGroups.push(sortedBySkill.slice(c * 4, (c + 1) * 4));
@@ -189,7 +189,7 @@ export function generateBalancedMatches(
             teamB = [courtFour[1], courtFour[2]];
           }
         } else {
-          // Fase Level Sama: Karena 4 pemain di lapangan ini sudah se-tier/kasta sama,
+          // Fase Level Sama: Karena 4 pemain di lapangan ini sudah selevel,
           // bentuk 2 tim yang paling seimbang di antara mereka
           courtFour.sort((a, b) => b.skillLevel - a.skillLevel);
           teamA = [courtFour[0], courtFour[3]];

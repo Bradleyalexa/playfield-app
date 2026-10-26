@@ -1,8 +1,8 @@
 export type Gender = "M" | "F";
 
-export type SkillLevel = 1 | 2 | 3; // 1: Beginner (Kentang), 2: Intermediate (Hore), 3: Pro/Mahir (Suhu)
+export type SkillLevel = 1 | 2 | 3; // 1: Beginner, 2: Intermediate, 3: Advanced
 
-export type PublicTier = "kentang" | "hore" | "suhu";
+export type PublicTier = "beginner" | "intermediate" | "advanced" | "kentang" | "hore" | "suhu";
 
 export type PlayerStatus = "active" | "paused" | "departed";
 
@@ -23,37 +23,40 @@ export interface Player {
 export function getTierFromSkill(skill: SkillLevel): PublicTier {
   switch (skill) {
     case 1:
-      return "kentang";
+      return "beginner";
     case 2:
-      return "hore";
+      return "intermediate";
     case 3:
-      return "suhu";
+      return "advanced";
     default:
-      return "hore";
+      return "intermediate";
   }
 }
 
 export function getTierLabel(tier: PublicTier | string): { label: string; badgeColor: string; description: string } {
   switch (tier) {
     case "kentang":
+    case "beginner":
       return {
-        label: "Tier Kentang",
+        label: "Beginner",
         badgeColor: "bg-[#fef08a] text-black border-2 border-black shadow-[2px_2px_0px_#000] font-black uppercase",
-        description: "Pemula antusias, yang penting keringatan dan ceria",
+        description: "Pemain level pemula, fokus reli dasar dan keseruan bermain",
       };
     case "hore":
+    case "intermediate":
       return {
-        label: "Tier Hore",
+        label: "Intermediate",
         badgeColor: "bg-[#a7f3d0] text-black border-2 border-black shadow-[2px_2px_0px_#000] font-black uppercase",
-        description: "Reli jalan, penempatan bola lumayan, mabar rutin",
+        description: "Pemain level menengah, reli konsisten dan penempatan bola terarah",
       };
     case "suhu":
+    case "advanced":
     case "pelatnas": // Fallback kompatibilitas jika ada data lama
     default:
       return {
-        label: "Tier Suhu",
+        label: "Advanced",
         badgeColor: "bg-[#7dd3fc] text-black border-2 border-black shadow-[2px_2px_0px_#000] font-black uppercase",
-        description: "Pemain mahir/pro, pukulan tajam, footwork rapi & spesialis turnamen",
+        description: "Pemain tingkat mahir, pukulan tajam, footwork rapi, dan taktik matang",
       };
   }
 }

@@ -235,9 +235,9 @@ export function PlayerRoster({
             onChange={(e) => setSelectedSkill(Number(e.target.value) as 1 | 2 | 3)}
             className="rounded-lg bg-white border-2 border-black px-2.5 py-1.5 text-xs font-bold text-black cursor-pointer shadow-[1px_1px_0px_#000]"
           >
-            <option value={1}>Tier Kentang (Pemula)</option>
-            <option value={2}>Tier Hore (Menengah)</option>
-            <option value={3}>Tier Suhu (Mahir/Pro)</option>
+            <option value={1}>Beginner</option>
+            <option value={2}>Intermediate</option>
+            <option value={3}>Advanced</option>
           </select>
 
           <button

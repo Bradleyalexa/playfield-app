@@ -112,7 +112,7 @@ export default function HomePage() {
       name: "Hendra Setiawan",
       gender: "M",
       skillLevel: 3,
-      publicTier: "suhu",
+      publicTier: "advanced",
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
@@ -124,7 +124,7 @@ export default function HomePage() {
       name: "Kevin Sanjaya",
       gender: "M",
       skillLevel: 3,
-      publicTier: "suhu",
+      publicTier: "advanced",
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
@@ -136,7 +136,7 @@ export default function HomePage() {
       name: "Greysia Polii",
       gender: "F",
       skillLevel: 3,
-      publicTier: "suhu",
+      publicTier: "advanced",
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
@@ -148,7 +148,7 @@ export default function HomePage() {
       name: "Apriyani Rahayu",
       gender: "F",
       skillLevel: 3,
-      publicTier: "suhu",
+      publicTier: "advanced",
       gamesPlayed: 0,
       lastPlayedRound: 0,
       status: "active",
@@ -204,10 +204,10 @@ export default function HomePage() {
 
   const handleLoadDemo4Players = () => {
     setInitialPlayers([
-      { id: `p-${Date.now()}-1`, name: "Hendra Setiawan", gender: "M", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1300, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-2`, name: "Kevin Sanjaya", gender: "M", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1320, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-3`, name: "Greysia Polii", gender: "F", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1290, createdAt: new Date().toISOString() },
-      { id: `p-${Date.now()}-4`, name: "Apriyani Rahayu", gender: "F", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1280, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-1`, name: "Hendra Setiawan", gender: "M", skillLevel: 3, publicTier: "advanced", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1300, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-2`, name: "Kevin Sanjaya", gender: "M", skillLevel: 3, publicTier: "advanced", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1320, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-3`, name: "Greysia Polii", gender: "F", skillLevel: 3, publicTier: "advanced", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1290, createdAt: new Date().toISOString() },
+      { id: `p-${Date.now()}-4`, name: "Apriyani Rahayu", gender: "F", skillLevel: 3, publicTier: "advanced", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1280, createdAt: new Date().toISOString() },
     ]);
   };
 
@@ -977,9 +977,9 @@ export default function HomePage() {
                     onChange={(e) => setQuickSkill(parseInt(e.target.value, 10) as 1 | 2 | 3)}
                     className="rounded-lg bg-[#faf8f2] border-2 border-black px-2.5 py-1.5 text-xs font-black text-black cursor-pointer"
                   >
-                    <option value={1}>Kentang (Beginner)</option>
-                    <option value={2}>Hore (Intermediate)</option>
-                    <option value={3}>Suhu (Advanced)</option>
+                    <option value={1}>Beginner</option>
+                    <option value={2}>Intermediate</option>
+                    <option value={3}>Advanced</option>
                   </select>
 
                   <button

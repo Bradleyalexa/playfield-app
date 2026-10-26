@@ -79,8 +79,8 @@ CREATE TABLE IF NOT EXISTS players (
     user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
     display_name TEXT NOT NULL,
     gender TEXT CHECK (gender IN ('M', 'F')) DEFAULT 'M',
-    skill_level INTEGER DEFAULT 2,                    -- 1: Pemula/Newbie, 2: Menengah/Hobi, 3: Mahir/Suhu
-    public_tier TEXT DEFAULT 'hobi',                  -- 'newbie' | 'hobi' | 'suhu'
+    skill_level INTEGER DEFAULT 2,                    -- 1: Beginner, 2: Intermediate, 3: Advanced
+    public_tier TEXT DEFAULT 'intermediate',          -- 'beginner' | 'intermediate' | 'advanced'
     games_played INTEGER DEFAULT 0,
     status TEXT DEFAULT 'active',                     -- 'active' | 'paused' | 'departed'
     elo_rating INTEGER DEFAULT 1000,

@@ -26,7 +26,7 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
     howItWorks: [
       "Prioritas Antrean Adil: Pemain yang paling sedikit bermain dan paling lama duduk istirahat otomatis dipanggil ke lapangan lebih dulu.",
       "Distribusi Gender Pintar: Jika ada pemain pria (M) dan wanita (W), sistem otomatis menyusun komposisi seimbang (XD vs XD atau didampingi pasangan yang tepat).",
-      "Keseimbangan Level Otomatis: Menyandingkan pemain level atas dengan pemula melawan pasangan level menengah agar pertandingan sengit dan reli tetap hidup.",
+      "Keseimbangan Level Otomatis: Menyandingkan pemain Advanced dengan Beginner melawan pasangan Intermediate agar pertandingan sengit dan reli tetap hidup.",
       "100% Bebas Repot: Host tidak diwajibkan menginput angka skor sama sekali! Selesai match tinggal klik 1 tombol dan rotasi langsung berjalan mulus."
     ],
     exampleScenario:
@@ -39,19 +39,19 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
   },
   hybrid_2plus2: {
     id: "hybrid_2plus2",
-    formula: "Game 1–2: Mix Level (Baurkan) ➜ Game 3–4: Level Sama (Adu Skill Kasta)",
+    formula: "Game 1–2: Mix Level (Baurkan) ➜ Game 3–4: Level Sama (Adu Skill Selevel)",
     howItWorks: [
-      "Fase 1 (Game 1 & 2 - Mix Level): Sistem otomatis menyusun pasangan silang tier (Suhu + Pemula vs 2 Menengah). Tujuannya untuk mencairkan suasana, pemanasan seimbang, membimbing pemula, dan reli tetap hidup.",
-      "Fase 2 (Game 3 & 4 - Level Sama): Sistem otomatis mengelompokkan lapangan berdasarkan kasta skill. Lapangan 1 khusus partai Suhu vs Suhu (reli kencang adu skill), Lapangan 2 khusus partai Menengah/Pemula sesamanya agar main lepas tanpa canggung.",
+      "Fase 1 (Game 1 & 2 - Mix Level): Sistem otomatis menyusun pasangan silang level (Advanced + Beginner vs 2 Intermediate). Tujuannya untuk mencairkan suasana, pemanasan seimbang, membimbing Beginner, dan reli tetap hidup.",
+      "Fase 2 (Game 3 & 4 - Level Sama): Sistem otomatis mengelompokkan lapangan berdasarkan level skill. Lapangan 1 khusus partai Advanced vs Advanced (reli kencang adu skill), Lapangan 2 khusus partai Intermediate vs Intermediate atau Beginner vs Beginner agar main lepas tanpa canggung.",
       "Rotasi Berkelanjutan: Jika sesi mabar berlanjut melebihi 4 ronde (ronde 5, 6, dst.), sistem mengulang siklus 2 Mix + 2 Level Sama secara dinamis.",
       "Jatah Main Adil: Tetap memprioritaskan antrean pemain yang paling sedikit main dan paling lama istirahat agar waktu sewa dinikmati rata."
     ],
     exampleScenario:
-      "Di 2 game awal, mantan atlet dipasangkan dengan pemain pemula untuk pemanasan ramah. Begitu stamina panas di game 3 dan 4, 4 pemain Suhu langsung dipertemukan di Lapangan 1 untuk duel sengit, sementara 4 Pemula bermain di Lapangan 2 dengan percaya diri.",
+      "Di 2 game awal, pemain Advanced dipasangkan dengan pemain Beginner untuk pemanasan ramah. Begitu stamina panas di game 3 dan 4, 4 pemain Advanced langsung dipertemukan di Lapangan 1 untuk duel sengit, sementara 4 Beginner bermain di Lapangan 2 dengan percaya diri.",
     advantages: [
       "Format mabar paling ideal: membaur di awal, adu skill kompetitif di akhir.",
-      "Pemain pemula senang karena sempat dibimbing suhu, lalu bisa main lepas sesama pemula.",
-      "Pemain berpengalaman puas karena mendapatkan jatah partai keras sesama pemain selevel.",
+      "Pemain Beginner senang karena sempat didampingi Advanced, lalu bisa main lepas sesama Beginner.",
+      "Pemain Advanced puas karena mendapatkan jatah partai keras sesama pemain selevel.",
       "100% otomatis: host tidak perlu repot mengganti algoritma atau kocok manual di tengah sesi."
     ],
   },
@@ -61,7 +61,7 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
     howItWorks: [
       "Pemain dengan total main (games played) paling sedikit berada di prioritas teratas antrean agar semua pemain dapat jatah bermain yang rata.",
       "Jika ada beberapa pemain dengan games played sama, pemain yang paling lama duduk istirahat didahulukan masuk lapangan.",
-      "4 pemain terpilih diurutkan dari skill tertinggi ke terendah [Suhu, Hore, Hore, Kentang]. Sistem memasangkan Suhu + Kentang melawan 2 pemain Hore agar kekuatan tim berimbang.",
+      "4 pemain terpilih diurutkan dari skill tertinggi ke terendah [Advanced, Intermediate, Intermediate, Beginner]. Sistem memasangkan Advanced + Beginner melawan 2 pemain Intermediate agar kekuatan tim berimbang.",
       "Pemain pria (M) dan wanita (W) tetap berpeluang main bersama secara alami jika gilirannya tiba."
     ],
     exampleScenario:
@@ -78,30 +78,30 @@ const DETAILED_ALGO_DOCS: Record<MatchmakingAlgorithm, DetailedAlgoInfo> = {
     howItWorks: [
       "Sistem memisahkan antrean siap main menjadi pool Pria (M) dan pool Wanita (W).",
       "Pada setiap lapangan diupayakan format murni Ganda Campuran: Tim A (1 M + 1 W) vs Tim B (1 M + 1 W).",
-      "Jika jumlah wanita ganjil (misal 1 W dan 3 M dalam 1 lapangan), pemain wanita akan dipasangkan dengan pria berkemampuan tertinggi (Suhu) untuk melawan 2 pria berkemampuan menengah agar adil."
+      "Jika jumlah wanita ganjil (misal 1 W dan 3 M dalam 1 lapangan), pemain wanita akan dipasangkan dengan pria berkemampuan tertinggi (Advanced) untuk melawan 2 pria berkemampuan menengah (Intermediate) agar adil."
     ],
     exampleScenario:
       "Dalam mabar terdapat 6 Pria (M) dan 4 Wanita (W) di 2 lapangan. Sistem akan membagi 2 M + 2 W di Lapangan 1 (XD vs XD) dan 2 M + 2 W di Lapangan 2 (XD vs XD), sementara 2 M sisanya menunggu giliran.",
     advantages: [
-      "Menghindari situasi canggung di mana 2 pemain cowo smash keras ke 2 pemain cewe pemula.",
+      "Menghindari situasi jomplang dan memastikan semua pemain bertanding dengan rasa nyaman.",
       "Memberikan panggung yang nyaman dan inklusif bagi pemain wanita.",
       "Rotasi pasangan ganda campuran berjalan dinamis tiap ronde."
     ],
   },
   skill_tiered: {
     id: "skill_tiered",
-    formula: "Suhu + Kentang Lawan Sepasang Hore (Total Level Tim Berimbang)",
+    formula: "Advanced + Beginner Lawan Sepasang Intermediate (Total Level Tim Berimbang)",
     howItWorks: [
-      "Sistem membaca tier keahlian pemain: Kentang (Level 1), Hore (Level 2), dan Suhu (Level 3).",
-      "Sistem melarang pasangan Suhu + Suhu bermain melawan Kentang + Kentang.",
-      "Kombinasi tim wajib memiliki total skor keahlian yang seimbang, contohnya Suhu (3) + Kentang (1) = Total 4 melawan Hore (2) + Hore (2) = Total 4.",
+      "Sistem membaca level keahlian pemain: Beginner (Level 1), Intermediate (Level 2), dan Advanced (Level 3).",
+      "Sistem melarang pasangan Advanced + Advanced bermain melawan Beginner + Beginner.",
+      "Kombinasi tim wajib memiliki total skor keahlian yang seimbang, contohnya Advanced (3) + Beginner (1) = Total 4 melawan Intermediate (2) + Intermediate (2) = Total 4.",
       "Pria (M) dan wanita (W) bebas dipasangkan selama level kekuatannya berimbang."
     ],
     exampleScenario:
-      "Jika mantan atlet (Suhu) bermain, dia akan dipasangkan dengan pemain pemula (Kentang) untuk menghadapi dua pemain menengah (Hore). Pertandingan menjadi sengit karena reli tetap hidup.",
+      "Jika pemain Advanced bermain, dia akan dipasangkan dengan pemain Beginner untuk menghadapi dua pemain Intermediate. Pertandingan menjadi sengit karena reli tetap hidup.",
     advantages: [
       "Mencegah pembantaian skor sepihak (anti-skor 21-2).",
-      "Pemain pemula bisa belajar rotasi dan positioning karena didampingi oleh pemain Suhu.",
+      "Pemain Beginner bisa belajar rotasi dan positioning karena didampingi oleh pemain Advanced.",
       "Semua level pemain pulang dengan rasa puas dan berkeringat."
     ],
   },

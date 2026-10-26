@@ -68,7 +68,7 @@ export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerSha
 
   const defaultBadgeTitle =
     matchesWon >= 3
-      ? "Suhu Lapangan GOR"
+      ? "Bintang Lapangan GOR"
       : winRate >= 60
       ? "Reli Panas Tak Terkalahkan"
       : "Spesialis Penguras Stamina";
@@ -234,7 +234,7 @@ export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerSha
           <div className="flex flex-wrap gap-1.5 mt-1">
             {[
               "👑 Raja Smash Geledek",
-              "🥔 Juara Bertahan Kentang",
+              "🏸 Pemain Paling Gigih",
               "🏸 Spesialis Reli Panjang",
               "⚡ Paling Gacor Malam Ini",
               "🎯 Raja Netting Tipis",
