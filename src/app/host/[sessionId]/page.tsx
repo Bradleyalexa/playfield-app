@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, use } from "react";
+import { Suspense, useEffect, useState, use, useMemo } from "react";
 import Link from "next/link";
 import {
   Trophy,
@@ -38,6 +38,7 @@ import { EquipmentSettingsModal } from "../../../components/common/EquipmentSett
 import { AudioSettingsModal } from "../../../components/common/AudioSettingsModal";
 import { PlayerRoster } from "../../../components/players/PlayerRoster";
 import { WaPasteModal } from "../../../components/players/WaPasteModal";
+import { SubstitutePlayerModal } from "../../../components/players/SubstitutePlayerModal";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
 import { CreateCustomMatchModal } from "../../../components/schedule/CreateCustomMatchModal";
 import { ReshuffleConsentModal } from "../../../components/schedule/ReshuffleConsentModal";
@@ -56,7 +57,7 @@ import {
   SessionBillingConfig,
   calculateEquipmentCost,
 } from "../../../core/entities/session";
-import { generateBalancedMatches } from "../../../core/matchmaking/balanced-queue";
+import { generateBalancedMatches, ProjectedMatch } from "../../../core/matchmaking/balanced-queue";
 import { formatRupiah } from "../../../lib/utils";
 import { AudioAnnouncer } from "../../../services/audio/announcer";
 import { LocalStorageAdapter } from "../../../services/storage/local-storage.adapter";
@@ -86,10 +87,39 @@ function HostDashboardContent({ params }: HostPageProps) {
   // Modal Ganti Suara Announcer / Wasit
   const [isAudioSettingsOpen, setIsAudioSettingsOpen] = useState(false);
 
+  // Modal Quick Substitute Pemain OTW / Cadangan
+  const [isSubstituteModalOpen, setIsSubstituteModalOpen] = useState(false);
+  const [substituteCourtNumber, setSubstituteCourtNumber] = useState<number>(1);
+  const [targetPlayerToSubstitute, setTargetPlayerToSubstitute] = useState<Player | null>(null);
+
   // Modal Selesaikan Mabar
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
   const [isSpectatorQrOpen, setIsSpectatorQrOpen] = useState(false);
+
+  // Daftar pemain yang sedang bertanding di lapangan
+  const activePlayingIds = useMemo(() => {
+    if (!session) return new Set<string>();
+    const ids = new Set<string>();
+    session.courts.forEach((c) => {
+      if (c.currentMatch) {
+        c.currentMatch.teamA.forEach((p) => ids.add(p.id));
+        c.currentMatch.teamB.forEach((p) => ids.add(p.id));
+      }
+    });
+    return ids;
+  }, [session]);
+
+  // Daftar pemain cadangan yang SUDAH HADIR di GOR dan tidak sedang bertanding
+  const availableSubstitutes = useMemo(() => {
+    if (!session) return [];
+    return session.players.filter(
+      (p) =>
+        p.status === "active" &&
+        p.isArrived !== false &&
+        !activePlayingIds.has(p.id)
+    );
+  }, [session, activePlayingIds]);
 
   // Waktu & Countdown Sewa Lapangan
   const [currentTime, setCurrentTime] = useState("");
@@ -874,6 +904,161 @@ function HostDashboardContent({ params }: HostPageProps) {
     AudioAnnouncer.announceGeneral("Kocok ulang berhasil diurungkan.");
   };
 
+  // 6h. Buka Modal Ganti Pemain (Quick Substitution)
+  const handleOpenQuickSubstitute = (courtNumber: number, targetPlayer: Player) => {
+    setSubstituteCourtNumber(courtNumber);
+    setTargetPlayerToSubstitute(targetPlayer);
+    setIsSubstituteModalOpen(true);
+  };
+
+  // 6i. Konfirmasi Penggantian Pemain di Lapangan
+  const handleConfirmSubstitute = (substitutePlayer: Player) => {
+    if (!targetPlayerToSubstitute || !session) return;
+
+    const targetCourt = session.courts.find((c) => c.courtNumber === substituteCourtNumber);
+    if (!targetCourt || !targetCourt.currentMatch) return;
+
+    const curMatch = targetCourt.currentMatch;
+    const newTeamA = curMatch.teamA.map((p) =>
+      p.id === targetPlayerToSubstitute.id ? substitutePlayer : p
+    );
+    const newTeamB = curMatch.teamB.map((p) =>
+      p.id === targetPlayerToSubstitute.id ? substitutePlayer : p
+    );
+
+    const updatedMatch: Match = {
+      ...curMatch,
+      teamA: newTeamA,
+      teamB: newTeamB,
+    };
+
+    const updatedCourts = session.courts.map((c) =>
+      c.courtNumber === substituteCourtNumber ? { ...c, currentMatch: updatedMatch } : c
+    );
+
+    const updatedMatches = session.matches.map((m) =>
+      m.id === curMatch.id ? updatedMatch : m
+    );
+
+    const updated: GameSession = {
+      ...session,
+      courts: updatedCourts,
+      matches: updatedMatches,
+    };
+
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    setIsSubstituteModalOpen(false);
+    setTargetPlayerToSubstitute(null);
+
+    AudioAnnouncer.announceGeneral(
+      `${substitutePlayer.name} masuk menggantikan ${targetPlayerToSubstitute.name} di Lapangan ${substituteCourtNumber}.`
+    );
+  };
+
+  // 6j. Kocok Ulang / Isi 1 Lapangan Tertentu Saja (Hanya Pemain Hadir)
+  const handleReshuffleSingleCourt = (courtNumber: number) => {
+    if (!session) return;
+
+    // Pemain yang sedang bertanding di lapangan LAIN tidak boleh diikutsertakan
+    const otherPlayingIds = new Set<string>();
+    session.courts.forEach((c) => {
+      if (c.courtNumber !== courtNumber && c.currentMatch) {
+        c.currentMatch.teamA.forEach((p) => otherPlayingIds.add(p.id));
+        c.currentMatch.teamB.forEach((p) => otherPlayingIds.add(p.id));
+      }
+    });
+
+    // Filter pemain aktif yang SUDAH TIBA di lokasi
+    const eligiblePool = session.players.filter(
+      (p) => p.status === "active" && p.isArrived !== false && !otherPlayingIds.has(p.id)
+    );
+
+    if (eligiblePool.length < 4) {
+      alert("Pemain yang sudah hadir dan siap bermain kurang dari 4 orang!");
+      return;
+    }
+
+    const fresh = generateBalancedMatches(
+      eligiblePool,
+      1,
+      session.currentRound,
+      session.algorithm || "playfields_mix",
+      session.matches.filter((m) => m.status === "completed")
+    );
+
+    if (fresh.matches.length === 0) {
+      alert("Gagal menyusun match untuk lapangan ini.");
+      return;
+    }
+
+    const newMatch: Match = {
+      ...fresh.matches[0],
+      id: `match-c${courtNumber}-${Date.now()}`,
+      courtNumber,
+      roundNumber: session.currentRound,
+      status: "in_progress",
+      startedAt: new Date().toISOString(),
+      scoreA: 0,
+      scoreB: 0,
+      winner: undefined,
+    };
+
+    const updatedCourts = session.courts.map((c) =>
+      c.courtNumber === courtNumber ? { ...c, currentMatch: newMatch } : c
+    );
+
+    const courtMatchOld = session.courts.find((c) => c.courtNumber === courtNumber)?.currentMatch;
+    let updatedMatches = session.matches.filter((m) => !courtMatchOld || m.id !== courtMatchOld.id);
+    updatedMatches.push(newMatch);
+
+    const updated: GameSession = {
+      ...session,
+      courts: updatedCourts,
+      matches: updatedMatches,
+    };
+
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    AudioAnnouncer.announceMatch(courtNumber, newMatch.teamA, newMatch.teamB);
+  };
+
+  // 6k. Tarik Maju Match dari Proyeksi Jadwal ke Lapangan Tertentu
+  const handleFastTrackMatch = (projectedMatch: ProjectedMatch, targetCourtNumber: number) => {
+    if (!session) return;
+
+    const newMatch: Match = {
+      ...projectedMatch,
+      id: `fasttrack-${Date.now()}`,
+      courtNumber: targetCourtNumber,
+      roundNumber: session.currentRound,
+      status: "in_progress",
+      startedAt: new Date().toISOString(),
+      scoreA: 0,
+      scoreB: 0,
+      winner: undefined,
+    };
+
+    const updatedCourts = session.courts.map((c) =>
+      c.courtNumber === targetCourtNumber ? { ...c, currentMatch: newMatch } : c
+    );
+
+    const courtMatchOld = session.courts.find((c) => c.courtNumber === targetCourtNumber)?.currentMatch;
+    let updatedMatches = session.matches.filter((m) => !courtMatchOld || m.id !== courtMatchOld.id);
+    updatedMatches.push(newMatch);
+
+    const updated: GameSession = {
+      ...session,
+      courts: updatedCourts,
+      matches: updatedMatches,
+    };
+
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    AudioAnnouncer.announceGeneral(`Match berhasil ditarik maju ke Lapangan ${targetCourtNumber}.`);
+    AudioAnnouncer.announceMatch(targetCourtNumber, newMatch.teamA, newMatch.teamB);
+  };
+
   // 7. Tambah Pemain Manual Tunggal
   const handleAddSinglePlayer = (name: string, gender: "M" | "F", skillLevel: 1 | 2 | 3) => {
     const newPlayer: Player = {
@@ -1445,12 +1630,15 @@ function HostDashboardContent({ params }: HostPageProps) {
                 court={court}
                 match={court.currentMatch}
                 sportConfig={session.sportConfig}
+                sessionPlayers={session.players}
                 onUpdateScore={handleUpdateScore}
                 onFinishMatch={handleFinishMatch}
                 onAddCockToMatch={handleAddCockToCourt}
                 onNextRound={handleNextRound}
                 onFinishAndNextRound={handleFinishAndNextRound}
                 onManualMatch={() => setIsCreateMatchModalOpen(true)}
+                onQuickSubstitute={handleOpenQuickSubstitute}
+                onReshuffleCourt={handleReshuffleSingleCourt}
               />
             ))}
           </div>
@@ -1513,6 +1701,20 @@ function HostDashboardContent({ params }: HostPageProps) {
         isOpen={isAllMatchesModalOpen}
         onClose={() => setIsAllMatchesModalOpen(false)}
         session={session}
+        onFastTrackMatch={handleFastTrackMatch}
+      />
+
+      {/* Modal Quick Substitute Pemain OTW / Cadangan */}
+      <SubstitutePlayerModal
+        isOpen={isSubstituteModalOpen}
+        onClose={() => {
+          setIsSubstituteModalOpen(false);
+          setTargetPlayerToSubstitute(null);
+        }}
+        courtNumber={substituteCourtNumber}
+        targetPlayer={targetPlayerToSubstitute}
+        availableSubstitutes={availableSubstitutes}
+        onSelectSubstitute={handleConfirmSubstitute}
       />
 
       {/* Modal Rekap Hasil Pertandingan (Match Log) */}

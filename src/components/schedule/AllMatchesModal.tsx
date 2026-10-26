@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { X, Clock, Calendar, Users, Trophy, ChevronRight, Sparkles, Filter } from "lucide-react";
+import { X, Clock, Calendar, Users, Trophy, ChevronRight, Sparkles, Filter, FastForward } from "lucide-react";
 import { ALGORITHM_REGISTRY, GameSession } from "../../core/entities/session";
-import { generateProjectedSchedule, ProjectedRound } from "../../core/matchmaking/balanced-queue";
+import { generateProjectedSchedule, ProjectedRound, ProjectedMatch } from "../../core/matchmaking/balanced-queue";
 import { getTierLabel } from "../../core/entities/player";
-import { getMatchWinner } from "../../core/entities/match";
+import { getMatchWinner, Match } from "../../core/entities/match";
 
 interface AllMatchesModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: GameSession;
+  onFastTrackMatch?: (match: ProjectedMatch, targetCourtNumber: number) => void;
 }
 
-export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalProps) {
+export function AllMatchesModal({ isOpen, onClose, session, onFastTrackMatch }: AllMatchesModalProps) {
   const [filterMode, setFilterMode] = useState<"all" | "active_past" | "upcoming">("all");
 
   const projectedRounds = useMemo(() => {
@@ -203,15 +204,35 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                       const isWinnerA = winner === "A";
                       const isWinnerB = winner === "B";
 
+                      const matchPlayersLive = [...match.teamA, ...match.teamB].map(
+                        (p) => session.players.find((sp) => sp.id === p.id) || p
+                      );
+                      const unarrivedCount = matchPlayersLive.filter((p) => p.isArrived === false).length;
+                      const isAllArrived = unarrivedCount === 0;
+
                       return (
                       <div
                         key={match.id}
                         className="rounded-xl border-2 border-black bg-white p-3.5 shadow-[2px_2px_0px_#000] flex flex-col justify-between"
                       >
                         <div className="flex items-center justify-between pb-2 border-b border-black/20 mb-2.5">
-                          <span className="font-mono text-xs font-black uppercase px-2 py-0.5 rounded bg-[#faf8f2] border border-black">
-                            Lapangan {match.courtNumber}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono text-xs font-black uppercase px-2 py-0.5 rounded bg-[#faf8f2] border border-black">
+                              Lapangan {match.courtNumber}
+                            </span>
+                            {!isCurrent && !isPast && (
+                              isAllArrived ? (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#ccff00] text-black border border-black flex items-center gap-1 shadow-[1px_1px_0px_#000]">
+                                  <Sparkles className="h-2.5 w-2.5 fill-black" />
+                                  Semua Hadir
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-400 px-2 py-0.5 rounded-full">
+                                  ⏳ {unarrivedCount} OTW
+                                </span>
+                              )
+                            )}
+                          </div>
                           <span className="font-mono text-[11px] font-bold text-black/60">
                             {match.estimatedStartTime} - {match.estimatedEndTime}
                           </span>
@@ -230,18 +251,29 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                               </div>
                               <div className="space-y-1">
                                 {match.teamA.map((p) => {
+                                  const liveP = session.players.find((sp) => sp.id === p.id) || p;
+                                  const isLate = liveP.isArrived === false;
                                   return (
                                     <div key={p.id} className="flex items-center justify-between gap-1">
-                                      <span className="font-bold text-black truncate">{p.name}</span>
-                                      <span
-                                        className={`text-[8px] font-mono font-bold px-1 py-0.2 rounded border ${
-                                          p.gender === "M"
-                                            ? "bg-blue-100 text-blue-900 border-blue-400"
-                                            : "bg-pink-100 text-pink-900 border-pink-400"
-                                        }`}
-                                      >
-                                        {p.gender === "M" ? "M" : "W"}
+                                      <span className={`font-bold truncate ${isLate ? "text-amber-900" : "text-black"}`}>
+                                        {p.name}
                                       </span>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <span
+                                          className={`text-[8px] font-mono font-bold px-1 py-0.2 rounded border ${
+                                            p.gender === "M"
+                                              ? "bg-blue-100 text-blue-900 border-blue-400"
+                                              : "bg-pink-100 text-pink-900 border-pink-400"
+                                          }`}
+                                        >
+                                          {p.gender === "M" ? "M" : "W"}
+                                        </span>
+                                        {isLate && (
+                                          <span className="text-[7px] font-mono font-black px-1 py-0.2 rounded bg-amber-200 text-amber-950 border border-amber-400">
+                                            OTW
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -269,18 +301,29 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                               </div>
                               <div className="space-y-1">
                                 {match.teamB.map((p) => {
+                                  const liveP = session.players.find((sp) => sp.id === p.id) || p;
+                                  const isLate = liveP.isArrived === false;
                                   return (
                                     <div key={p.id} className="flex items-center justify-between gap-1">
-                                      <span className="font-bold text-black truncate">{p.name}</span>
-                                      <span
-                                        className={`text-[8px] font-mono font-bold px-1 py-0.2 rounded border ${
-                                          p.gender === "M"
-                                            ? "bg-blue-100 text-blue-900 border-blue-400"
-                                            : "bg-pink-100 text-pink-900 border-pink-400"
-                                        }`}
-                                      >
-                                        {p.gender === "M" ? "M" : "W"}
+                                      <span className={`font-bold truncate ${isLate ? "text-amber-900" : "text-black"}`}>
+                                        {p.name}
                                       </span>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <span
+                                          className={`text-[8px] font-mono font-bold px-1 py-0.2 rounded border ${
+                                            p.gender === "M"
+                                              ? "bg-blue-100 text-blue-900 border-blue-400"
+                                              : "bg-pink-100 text-pink-900 border-pink-400"
+                                          }`}
+                                        >
+                                          {p.gender === "M" ? "M" : "W"}
+                                        </span>
+                                        {isLate && (
+                                          <span className="text-[7px] font-mono font-black px-1 py-0.2 rounded bg-amber-200 text-amber-950 border border-amber-400">
+                                            OTW
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -297,6 +340,29 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                             ) : null}
                           </div>
                         </div>
+
+                        {/* Tombol Tarik Maju Match jika belum berlangsung */}
+                        {!isCurrent && !isPast && onFastTrackMatch && (
+                          <div className="mt-2.5 pt-2 border-t border-black/15 flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-black uppercase text-slate-600 font-mono">
+                              {isAllArrived ? "⚡ 4 Pemain Siap di GOR" : `⏳ Menunggu ${unarrivedCount} Pemain`}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const emptyCourt = session.courts.find((c) => !c.currentMatch);
+                                const targetCourt = emptyCourt ? emptyCourt.courtNumber : match.courtNumber;
+                                onFastTrackMatch(match, targetCourt);
+                                onClose();
+                              }}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#ccff00] hover:bg-[#b8e600] text-black border-2 border-black font-black text-[10px] uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                              title="Tarik match ini sekarang ke lapangan"
+                            >
+                              <FastForward className="h-3 w-3 stroke-[3]" />
+                              <span>Tarik Maju Match ⏩</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                       );
                     })}

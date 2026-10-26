@@ -1,8 +1,8 @@
 "use client";
 
-import { Volume2, CheckCircle2, Flame, FastForward, Plus } from "lucide-react";
+import { Volume2, CheckCircle2, Flame, FastForward, Plus, RefreshCw, Shuffle, AlertCircle } from "lucide-react";
 import { Court, Match } from "../../core/entities/match";
-import { getTierLabel } from "../../core/entities/player";
+import { Player, getTierLabel } from "../../core/entities/player";
 import { SportConfig } from "../../core/entities/session";
 import { SportRegistry } from "../../core/sports/sport-registry";
 import { AudioAnnouncer } from "../../services/audio/announcer";
@@ -11,24 +11,30 @@ interface CourtCardProps {
   court: Court;
   match?: Match;
   sportConfig: SportConfig;
+  sessionPlayers?: Player[];
   onUpdateScore: (courtNumber: number, scoreA: number, scoreB: number, winner?: "A" | "B") => void;
   onFinishMatch: (courtNumber: number) => void;
   onAddCockToMatch?: (courtNumber: number) => void;
   onNextRound?: () => void;
   onFinishAndNextRound?: (courtNumber: number) => void;
   onManualMatch?: (courtNumber: number) => void;
+  onQuickSubstitute?: (courtNumber: number, targetPlayer: Player) => void;
+  onReshuffleCourt?: (courtNumber: number) => void;
 }
 
 export function CourtCard({
   court,
   match,
   sportConfig,
+  sessionPlayers,
   onUpdateScore,
   onFinishMatch,
   onAddCockToMatch,
   onNextRound,
   onFinishAndNextRound,
   onManualMatch,
+  onQuickSubstitute,
+  onReshuffleCourt,
 }: CourtCardProps) {
   if (!match) {
     return (
@@ -43,12 +49,23 @@ export function CourtCard({
         <p className="text-xs font-bold text-slate-600 mt-2 max-w-xs">
           Match sebelumnya telah selesai. Panggil giliran pemain berikutnya atau susun match manual:
         </p>
-        <div className="flex items-stretch justify-center gap-2.5 mt-4 w-full max-w-sm">
+        <div className="flex flex-wrap items-stretch justify-center gap-2 mt-4 w-full max-w-md">
+          {onReshuffleCourt && (
+            <button
+              type="button"
+              onClick={() => onReshuffleCourt(court.courtNumber)}
+              className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#ccff00] text-black font-black text-xs uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer whitespace-nowrap"
+              title="Kocok 4 pemain yang sudah hadir ke lapangan ini"
+            >
+              <Shuffle className="h-4 w-4 stroke-[3] shrink-0" />
+              <span>Isi Lapangan Ini</span>
+            </button>
+          )}
           {onNextRound && (
             <button
               type="button"
               onClick={onNextRound}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#ccff00] text-black font-black text-xs uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer whitespace-nowrap"
+              className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white text-black font-black text-xs uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer whitespace-nowrap"
             >
               <FastForward className="h-4 w-4 stroke-[3] shrink-0" />
               <span>Ronde Berikutnya</span>
@@ -58,7 +75,7 @@ export function CourtCard({
             <button
               type="button"
               onClick={() => onManualMatch(court.courtNumber)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white text-black font-black text-xs uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer whitespace-nowrap"
+              className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white text-black font-black text-xs uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer whitespace-nowrap"
             >
               <Plus className="h-4 w-4 stroke-[3] shrink-0" />
               <span>Susun Manual</span>
@@ -82,6 +99,15 @@ export function CourtCard({
   const handleAnnounce = () => {
     AudioAnnouncer.announceMatch(court.courtNumber, match.teamA, match.teamB);
   };
+
+  const getPlayerLive = (p: Player) => {
+    const live = sessionPlayers?.find((sp) => sp.id === p.id);
+    return live || p;
+  };
+
+  const teamALive = match.teamA.map(getPlayerLive);
+  const teamBLive = match.teamB.map(getPlayerLive);
+  const unarrivedPlayers = [...teamALive, ...teamBLive].filter((p) => p.isArrived === false);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border-3 border-black bg-white p-5 shadow-[6px_6px_0px_#000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[7px_7px_0px_#000]">
@@ -116,6 +142,49 @@ export function CourtCard({
         </div>
       </div>
 
+      {/* Banner Peringatan Pemain OTW / Belum Hadir di Lapangan Ini */}
+      {unarrivedPlayers.length > 0 && (
+        <div className="flex flex-col gap-2 p-3 rounded-xl bg-amber-50 border-2 border-amber-500 shadow-[2px_2px_0px_#000] my-3 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-amber-950 font-black text-xs">
+              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+              <span>⚠️ {unarrivedPlayers.length} Pemain Belum Tiba / Masih OTW</span>
+            </div>
+            <span className="text-[10px] font-bold text-amber-800">
+              Cegah Lapangan Nganggur
+            </span>
+          </div>
+          <p className="text-[11px] text-amber-900 font-bold leading-tight">
+            Pemain: <span className="underline">{unarrivedPlayers.map((p) => p.name).join(", ")}</span> belum check-in di lokasi. Ganti pemain atau kocok ulang lapangan ini agar match segera main:
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+            {unarrivedPlayers.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onQuickSubstitute?.(court.courtNumber, p)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-black border-2 border-black font-black text-[11px] uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                title={`Ganti ${p.name} dengan pemain hadir`}
+              >
+                <RefreshCw className="h-3 w-3 stroke-[2.5]" />
+                <span>Ganti {p.name}</span>
+              </button>
+            ))}
+            {onReshuffleCourt && (
+              <button
+                type="button"
+                onClick={() => onReshuffleCourt(court.courtNumber)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-black border-2 border-black font-black text-[11px] uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                title="Kocok ulang pemain hadir untuk lapangan ini saja"
+              >
+                <Shuffle className="h-3 w-3 stroke-[2.5]" />
+                <span>Kocok Lapangan Ini</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Grid Tim: Duel Lapangan */}
       <div className="grid grid-cols-2 gap-3.5 my-4">
         {/* Tim A */}
@@ -128,12 +197,15 @@ export function CourtCard({
           </div>
 
           <div className="flex flex-col gap-1.5 mb-3 flex-1">
-            {match.teamA.map((p) => {
+            {teamALive.map((p) => {
               const tier = getTierLabel(p.publicTier);
+              const isLate = p.isArrived === false;
               return (
                 <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
                   <div className="flex items-center gap-1.5 truncate">
-                    <span className="font-extrabold text-black truncate">{p.name}</span>
+                    <span className={`font-extrabold truncate ${isLate ? "text-amber-900" : "text-black"}`}>
+                      {p.name}
+                    </span>
                     <span
                       className={`text-[8px] font-mono font-black px-1.5 py-0.2 rounded border ${
                         p.gender === "M"
@@ -143,10 +215,27 @@ export function CourtCard({
                     >
                       {p.gender === "M" ? "M" : "W"}
                     </span>
+                    {isLate && (
+                      <span className="text-[8px] font-mono font-black px-1 py-0.2 rounded border bg-amber-200 text-amber-950 border-amber-500 animate-pulse">
+                        ⏳ OTW
+                      </span>
+                    )}
                   </div>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded shrink-0 ${tier.badgeColor}`}>
-                    {tier.label.replace("Tier ", "")}
-                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded shrink-0 ${tier.badgeColor}`}>
+                      {tier.label.replace("Tier ", "")}
+                    </span>
+                    {onQuickSubstitute && (
+                      <button
+                        type="button"
+                        onClick={() => onQuickSubstitute(court.courtNumber, p)}
+                        className="p-1 rounded bg-white hover:bg-amber-100 border border-black/40 text-slate-700 hover:text-black cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                        title={`Ganti ${p.name}`}
+                      >
+                        <RefreshCw className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -195,12 +284,15 @@ export function CourtCard({
           </div>
 
           <div className="flex flex-col gap-1.5 mb-3 flex-1">
-            {match.teamB.map((p) => {
+            {teamBLive.map((p) => {
               const tier = getTierLabel(p.publicTier);
+              const isLate = p.isArrived === false;
               return (
                 <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
                   <div className="flex items-center gap-1.5 truncate">
-                    <span className="font-extrabold text-black truncate">{p.name}</span>
+                    <span className={`font-extrabold truncate ${isLate ? "text-amber-900" : "text-black"}`}>
+                      {p.name}
+                    </span>
                     <span
                       className={`text-[8px] font-mono font-black px-1.5 py-0.2 rounded border ${
                         p.gender === "M"
@@ -210,10 +302,27 @@ export function CourtCard({
                     >
                       {p.gender === "M" ? "M" : "W"}
                     </span>
+                    {isLate && (
+                      <span className="text-[8px] font-mono font-black px-1 py-0.2 rounded border bg-amber-200 text-amber-950 border-amber-500 animate-pulse">
+                        ⏳ OTW
+                      </span>
+                    )}
                   </div>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded shrink-0 ${tier.badgeColor}`}>
-                    {tier.label.replace("Tier ", "")}
-                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded shrink-0 ${tier.badgeColor}`}>
+                      {tier.label.replace("Tier ", "")}
+                    </span>
+                    {onQuickSubstitute && (
+                      <button
+                        type="button"
+                        onClick={() => onQuickSubstitute(court.courtNumber, p)}
+                        className="p-1 rounded bg-white hover:bg-amber-100 border border-black/40 text-slate-700 hover:text-black cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                        title={`Ganti ${p.name}`}
+                      >
+                        <RefreshCw className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
