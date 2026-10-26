@@ -44,7 +44,7 @@ export function addMinutesToTimeString(timeStr: string, minutesToAdd: number): s
 }
 
 /**
- * Smart Matchmaking Engine dengan dukungan 6 Algoritma Mabar Lapangan
+ * Smart Matchmaking Engine dengan Multi-Algoritma Mabar Lapangan
  */
 export function generateBalancedMatches(
   allPlayers: Player[],

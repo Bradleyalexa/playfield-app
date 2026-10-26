@@ -1059,7 +1059,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <Shuffle className="h-4 w-4 stroke-[3]" />
                     <label className="text-xs font-black uppercase tracking-wider text-black">
-                      6. Pilih Algoritma Rotasi Lapangan (7 Algoritma)
+                      6. Pilih Algoritma Rotasi Lapangan ({Object.keys(ALGORITHM_REGISTRY).length} Pilihan Mode)
                     </label>
                   </div>
 
@@ -1085,7 +1085,7 @@ export default function HomePage() {
                           ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
                           : "bg-white text-black hover:bg-slate-50"
                       }`}
-                      title="Tampilan Grid (Lihat Semua 7 Sekaligus)"
+                      title="Tampilan Grid (Lihat Semua Pilihan)"
                     >
                       <span>⊞ Grid Semua</span>
                     </button>
@@ -1104,7 +1104,7 @@ export default function HomePage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-black uppercase tracking-tight text-black truncate">
-                          Pelajari Cara Kerja &amp; Perbandingan 7 Algoritma
+                          Pelajari Cara Kerja &amp; Perbandingan {Object.keys(ALGORITHM_REGISTRY).length} Algoritma
                         </span>
                         <span className="text-[9px] font-mono font-black uppercase bg-black text-[#ccff00] px-1.5 py-0.2 rounded hidden sm:inline">
                           PANDUAN

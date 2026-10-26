@@ -203,7 +203,9 @@ export function AlgorithmExplainerModal({
                 <span className="text-[11px] font-mono font-black uppercase px-2 py-0.5 rounded bg-black text-[#ccff00]">
                   PANDUAN LENGKAP
                 </span>
-                <span className="text-xs font-bold text-black/60">7 Algoritma Rotasi Lapangan</span>
+                <span className="text-xs font-bold text-black/60">
+                  {Object.keys(ALGORITHM_REGISTRY).length} Algoritma Rotasi Lapangan
+                </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-black uppercase tracking-tight">
                 Cara Kerja & Perbandingan Algoritma Mabar
