@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   X,
   Clock,
@@ -51,11 +51,24 @@ export function AllMatchesModal({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
   const [touchTargetIndex, setTouchTargetIndex] = useState<number | null>(null);
+  const [touchCoords, setTouchCoords] = useState<{ x: number; y: number } | null>(null);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const autoScrollSpeedRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     setScheduleRounds(initialProjectedRounds);
     setIsCustomOrder(false);
   }, [initialProjectedRounds]);
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -126,54 +139,132 @@ export function AllMatchesModal({
     setIsCustomOrder(false);
   };
 
+  // Auto-scroll loop saat drag mendekati tepi atas/bawah
+  const checkAutoScroll = (clientY: number) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const edgeZone = 80;
+    const topEdge = rect.top + edgeZone;
+    const bottomEdge = rect.bottom - edgeZone;
+
+    if (clientY < topEdge) {
+      const intensity = Math.min(1, Math.max(0.15, (topEdge - clientY) / edgeZone));
+      autoScrollSpeedRef.current = -Math.round(intensity * 16);
+    } else if (clientY > bottomEdge) {
+      const intensity = Math.min(1, Math.max(0.15, (clientY - bottomEdge) / edgeZone));
+      autoScrollSpeedRef.current = Math.round(intensity * 16);
+    } else {
+      autoScrollSpeedRef.current = 0;
+    }
+
+    if (autoScrollSpeedRef.current !== 0 && !animationFrameRef.current) {
+      const loop = () => {
+        if (autoScrollSpeedRef.current !== 0 && scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop += autoScrollSpeedRef.current;
+          animationFrameRef.current = requestAnimationFrame(loop);
+        } else {
+          animationFrameRef.current = null;
+        }
+      };
+      animationFrameRef.current = requestAnimationFrame(loop);
+    }
+  };
+
+  const stopAutoScroll = () => {
+    autoScrollSpeedRef.current = 0;
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+  };
+
   // Drag and Drop Handlers (Desktop Mouse)
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
+    setTouchTargetIndex(index);
     e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, targetIndex?: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    checkAutoScroll(e.clientY);
+    if (typeof targetIndex === "number" && targetIndex !== touchTargetIndex) {
+      setTouchTargetIndex(targetIndex);
+    }
   };
 
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
+    stopAutoScroll();
     if (draggedIndex !== null && draggedIndex !== targetIndex) {
       handleSwapRounds(draggedIndex, targetIndex);
     }
     setDraggedIndex(null);
+    setTouchTargetIndex(null);
   };
 
-  // Touch Handlers (Mobile Smartphone Hold & Drag)
+  const handleDragEnd = () => {
+    stopAutoScroll();
+    setDraggedIndex(null);
+    setTouchTargetIndex(null);
+  };
+
+  // Touch Handlers (Mobile Smartphone Hold & Drag dengan Tracking Posisi & Haptic)
   const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    const round = scheduleRounds[index];
+    if (round.isCompleted || round.isCurrent) return;
+
     setTouchDragIndex(index);
     setTouchTargetIndex(index);
+    setTouchCoords({ x: touch.clientX, y: touch.clientY });
+    if (typeof window !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(30);
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchDragIndex === null) return;
     const touch = e.touches[0];
+    if (!touch) return;
+
+    setTouchCoords({ x: touch.clientX, y: touch.clientY });
+    checkAutoScroll(touch.clientY);
+
     const elem = document.elementFromPoint(touch.clientX, touch.clientY);
     const roundCard = elem?.closest("[data-round-index]");
     if (roundCard) {
       const targetIdx = Number(roundCard.getAttribute("data-round-index"));
       if (!isNaN(targetIdx) && targetIdx !== touchTargetIndex) {
-        setTouchTargetIndex(targetIdx);
+        const targetRound = scheduleRounds[targetIdx];
+        if (targetRound && !targetRound.isCompleted && !targetRound.isCurrent) {
+          setTouchTargetIndex(targetIdx);
+          if (typeof window !== "undefined" && navigator.vibrate) {
+            navigator.vibrate(15);
+          }
+        }
       }
     }
   };
 
   const handleTouchEnd = () => {
+    stopAutoScroll();
     if (
       touchDragIndex !== null &&
       touchTargetIndex !== null &&
       touchDragIndex !== touchTargetIndex
     ) {
       handleSwapRounds(touchDragIndex, touchTargetIndex);
+      if (typeof window !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(40);
+      }
     }
     setTouchDragIndex(null);
     setTouchTargetIndex(null);
+    setTouchCoords(null);
   };
 
   const filteredRounds = scheduleRounds.filter((r) => {
@@ -187,11 +278,11 @@ export function AllMatchesModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5 bg-black/60 backdrop-blur-xs font-sans selection:bg-[#ccff00] selection:text-black">
       <div
-        className="relative flex flex-col w-full max-w-4xl h-[86dvh] max-h-[86dvh] sm:h-auto sm:max-h-[88vh] bg-[#faf8f2] border-[3px] sm:border-[4px] border-black rounded-2xl sm:rounded-3xl shadow-[4px_4px_0px_#000] sm:shadow-[10px_10px_0px_#000] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="relative flex flex-col w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl h-[90dvh] max-h-[92dvh] sm:h-[92vh] sm:max-h-[92vh] bg-[#faf8f2] border-[3px] sm:border-[4px] border-black rounded-2xl sm:rounded-3xl shadow-[4px_4px_0px_#000] sm:shadow-[10px_10px_0px_#000] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Modal - Dibuat Hemat Ruang di Mobile */}
-        <div className="flex items-start justify-between p-3 sm:p-5 bg-white border-b-2 sm:border-b-[3px] border-black shrink-0">
+        {/* Header Modal - Dibuat Hemat Ruang di Mobile & Proporsional Luas di Desktop */}
+        <div className="flex items-start justify-between px-3.5 py-3 sm:px-6 sm:py-3.5 bg-white border-b-2 sm:border-b-[3px] border-black shrink-0">
           <div className="pr-2">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
               <span className="font-mono text-[10px] sm:text-xs uppercase px-2 py-0.5 rounded-full bg-[#ccff00] border border-black font-black">
@@ -207,23 +298,23 @@ export function AllMatchesModal({
               </span>
             </div>
 
-            <h2 className="text-base sm:text-2xl font-black text-black uppercase tracking-tight leading-tight">
-              Jadwal Lengkap & Proyeksi Pertandingan
+            <h2 className="text-base sm:text-xl font-black text-black uppercase tracking-tight leading-tight">
+              Jadwal Lengkap &amp; Proyeksi Pertandingan
             </h2>
-            <p className="text-[11px] sm:text-sm font-bold text-black/70 mt-0.5">
+            <p className="text-[11px] sm:text-xs font-bold text-black/70 mt-0.5">
               {session.title} • {session.courtCount} Lapangan
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl border-[2px] sm:border-[3px] border-black bg-white flex items-center justify-center text-black hover:bg-[#ff5500] hover:text-white shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border-[2px] sm:border-[3px] border-black bg-white flex items-center justify-center text-black hover:bg-[#ff5500] hover:text-white shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
           >
-            <X className="h-5 w-5 sm:h-6 sm:w-6 stroke-[3]" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5 stroke-[3]" />
           </button>
         </div>
 
-        {/* Info Strip - Versi Mobile Compact (Satu Baris Chip) & Versi Desktop (Grid) */}
+        {/* Info Strip - Versi Mobile Compact (Satu Baris Chip) & Versi Desktop (Grid Ringkas) */}
         {/* 1. Mobile Compact Strip (< sm) */}
         <div className="flex sm:hidden items-center gap-1.5 overflow-x-auto px-3 py-2 bg-white/90 border-b-2 border-black shrink-0 text-[10px] font-mono font-bold scrollbar-none">
           <span className="px-2 py-0.5 rounded-md bg-[#faf8f2] border border-black whitespace-nowrap">
@@ -240,39 +331,39 @@ export function AllMatchesModal({
           </span>
         </div>
 
-        {/* 2. Desktop Grid (>= sm) */}
-        <div className="hidden sm:grid sm:grid-cols-4 gap-2.5 p-4 bg-white/70 border-b-2 border-black shrink-0 text-xs">
-          <div className="flex flex-col p-2.5 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000]">
-            <span className="text-[10px] font-black uppercase text-black/50">Jam Mulai / Sewa</span>
-            <span className="font-mono font-black text-black text-sm">
+        {/* 2. Desktop Grid (>= sm) - Ringkas Vertikal agar Section Tengah Match Lega */}
+        <div className="hidden sm:grid sm:grid-cols-4 gap-2.5 px-6 py-2 bg-white/70 border-b-2 border-black shrink-0 text-xs">
+          <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#faf8f2] border-2 border-black shadow-[1.5px_1.5px_0px_#000]">
+            <span className="text-[10px] font-black uppercase text-black/60">Jam Sewa</span>
+            <span className="font-mono font-black text-black text-xs">
               {session.startTime || "19:00"} ({session.durationHours || 2} Jam)
             </span>
           </div>
 
-          <div className="flex flex-col p-2.5 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000]">
-            <span className="text-[10px] font-black uppercase text-black/50">Estimasi 1 Match</span>
-            <span className="font-mono font-black text-black text-sm">
+          <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#faf8f2] border-2 border-black shadow-[1.5px_1.5px_0px_#000]">
+            <span className="text-[10px] font-black uppercase text-black/60">Estimasi Match</span>
+            <span className="font-mono font-black text-black text-xs">
               ~{session.matchDurationMinutes || 15} Menit
             </span>
           </div>
 
-          <div className="flex flex-col p-2.5 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000]">
-            <span className="text-[10px] font-black uppercase text-black/50">Total Match Disiapkan</span>
-            <span className="font-mono font-black text-black text-sm">
+          <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#faf8f2] border-2 border-black shadow-[1.5px_1.5px_0px_#000]">
+            <span className="text-[10px] font-black uppercase text-black/60">Total Match</span>
+            <span className="font-mono font-black text-black text-xs">
               {totalMatchesCount} Match (+10 Extra)
             </span>
           </div>
 
-          <div className="flex flex-col p-2.5 rounded-xl bg-[#ffde00] border-2 border-black shadow-[2px_2px_0px_#000]">
+          <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#ffde00] border-2 border-black shadow-[1.5px_1.5px_0px_#000]">
             <span className="text-[10px] font-black uppercase text-black">Status Saat Ini</span>
-            <span className="font-mono font-black text-black text-sm">
+            <span className="font-mono font-black text-black text-xs">
               Ronde #{session.currentRound} (LIVE)
             </span>
           </div>
         </div>
 
         {/* Filter Bar & Reorder Indicator */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-5 py-2 sm:py-3 bg-[#faf8f2] border-b-2 border-black shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 sm:px-6 py-2 bg-[#faf8f2] border-b-2 border-black shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-black flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" />
@@ -315,7 +406,7 @@ export function AllMatchesModal({
                   : "bg-white text-black hover:bg-slate-100"
               }`}
             >
-              Live & Selesai
+              Live &amp; Selesai
             </button>
             <button
               onClick={() => setFilterMode("upcoming")}
@@ -331,15 +422,18 @@ export function AllMatchesModal({
         </div>
 
         {/* Banner Info Hold & Drag untuk Host */}
-        <div className="flex items-center gap-2 px-3 sm:px-5 py-2 bg-[#ffde00]/30 border-b-2 border-black text-xs font-bold text-black shrink-0">
+        <div className="flex items-center gap-2 px-3.5 sm:px-6 py-1.5 bg-[#ffde00]/30 border-b-2 border-black text-xs font-bold text-black shrink-0">
           <span className="text-base shrink-0">💡</span>
           <span className="text-[10px] sm:text-[11px] leading-tight">
-            <strong>Info Host:</strong> Ronde masa depan (prediksi) bisa ditukar urutannya! Anda bisa <strong>Tahan & Geser (Hold & Drag)</strong> pada pegangan <span className="bg-white px-1.5 py-0.5 rounded border border-black font-mono font-black text-[9px] shadow-[1px_1px_0px_#000]">⋮⋮ Tahan & Geser</span> di HP/Desktop, atau tekan tombol <strong>🔼 Naik / 🔽 Turun</strong>.
+            <strong>Info Host:</strong> Ronde masa depan (prediksi) bisa ditukar urutannya! Anda bisa <strong>Tahan &amp; Geser (Hold &amp; Drag)</strong> pada pegangan <span className="bg-white px-1.5 py-0.5 rounded border border-black font-mono font-black text-[9px] shadow-[1px_1px_0px_#000]">⋮⋮ Tahan &amp; Geser</span> di HP/Desktop (otomatis mengikuti jari/kursor &amp; auto-scroll saat digeser ke tepi atas/bawah), atau tekan tombol <strong>🔼 Naik / 🔽 Turun</strong>.
           </span>
         </div>
 
-        {/* Scrollable Body: Daftar Ronde & Match - DIBERIKAN RUANG MAKSIMAL & PROPORSI CEPAT */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-5 space-y-3 sm:space-y-4">
+        {/* Scrollable Body: Daftar Ronde & Match - DIBERIKAN RUANG MAKSIMAL & PROPORSI LEGA */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-5 space-y-3 sm:space-y-4"
+        >
           {filteredRounds.length === 0 ? (
             <div className="py-12 text-center font-bold text-black/60 italic">
               Tidak ada ronde yang cocok dengan filter yang dipilih.
@@ -352,6 +446,12 @@ export function AllMatchesModal({
               const isCurrent = round.isCurrent;
               const isPast = round.isCompleted;
               const isUpcoming = !isCurrent && !isPast;
+              const isBeingDragged =
+                (draggedIndex !== null && draggedIndex === actualIndex) ||
+                (touchDragIndex !== null && touchDragIndex === actualIndex);
+              const isDropTarget =
+                (touchTargetIndex === actualIndex && touchDragIndex !== null && touchDragIndex !== actualIndex) ||
+                (touchTargetIndex === actualIndex && draggedIndex !== null && draggedIndex !== actualIndex);
 
               const prevRound = actualIndex > 0 ? scheduleRounds[actualIndex - 1] : null;
               const nextRound =
@@ -368,11 +468,14 @@ export function AllMatchesModal({
                   data-round-index={actualIndex}
                   draggable={isUpcoming}
                   onDragStart={(e) => handleDragStart(e, actualIndex)}
-                  onDragOver={handleDragOver}
+                  onDragOver={(e) => handleDragOver(e, actualIndex)}
                   onDrop={(e) => handleDrop(e, actualIndex)}
+                  onDragEnd={handleDragEnd}
                   className={`rounded-xl sm:rounded-2xl border-2 sm:border-[3px] border-black p-2.5 sm:p-4 transition-all ${
-                    touchTargetIndex === actualIndex && touchDragIndex !== actualIndex
-                      ? "ring-4 ring-[#ccff00] scale-[1.01] bg-[#ffde00]/25"
+                    isBeingDragged
+                      ? "opacity-40 scale-[0.98] border-dashed bg-slate-200 ring-2 ring-black/40"
+                      : isDropTarget
+                      ? "ring-4 ring-[#ccff00] scale-[1.01] bg-[#ccff00]/25 shadow-[4px_4px_0px_#000]"
                       : isCurrent
                       ? "bg-white shadow-[4px_4px_0px_#000] ring-2 sm:ring-3 ring-[#ccff00]"
                       : isPast
@@ -388,11 +491,12 @@ export function AllMatchesModal({
                           onTouchStart={(e) => handleTouchStart(e, actualIndex)}
                           onTouchMove={handleTouchMove}
                           onTouchEnd={handleTouchEnd}
-                          className="flex items-center gap-1 cursor-grab active:cursor-grabbing px-2 py-0.5 rounded-lg bg-white hover:bg-slate-100 border border-black text-black shadow-[1px_1px_0px_#000] select-none touch-none"
-                          title="Tahan & Geser untuk menukar urutan ronde"
+                          onTouchCancel={handleTouchEnd}
+                          className="flex items-center gap-1 cursor-grab active:cursor-grabbing px-2 py-0.5 rounded-lg bg-white hover:bg-black hover:text-[#ccff00] border border-black text-black shadow-[1px_1px_0px_#000] select-none touch-none transition-colors"
+                          title="Tahan &amp; Geser untuk menukar urutan ronde"
                         >
                           <GripVertical className="h-3.5 w-3.5 stroke-[2.5]" />
-                          <span className="text-[9px] font-black uppercase font-mono">Tahan & Geser</span>
+                          <span className="text-[9px] font-black uppercase font-mono">Tahan &amp; Geser</span>
                         </div>
                       )}
 
@@ -714,18 +818,35 @@ export function AllMatchesModal({
         </div>
 
         {/* Footer Modal - Compact & Clean */}
-        <div className="p-3 sm:p-4 bg-white border-t-[3px] border-black flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 text-xs shrink-0">
+        <div className="px-3 py-2 sm:px-6 sm:py-2.5 bg-white border-t-[3px] border-black flex flex-col sm:flex-row items-center justify-between gap-2 text-xs shrink-0">
           <p className="hidden sm:block text-black/70 font-semibold text-center sm:text-left text-xs">
-            💡 <span className="font-black text-black">Catatan Algoritma:</span> Prediksi disimulasikan otomatis berdasarkan algoritma <strong>{algoDetails.name}</strong>. Anda dapat menukar urutan ronde prediksi dengan tombol 🔼 / 🔽.
+            💡 <span className="font-black text-black">Catatan Algoritma:</span> Prediksi disimulasikan otomatis berdasarkan algoritma <strong>{algoDetails.name}</strong>. Anda dapat menukar urutan ronde prediksi dengan tombol 🔼 / 🔽 atau Tahan &amp; Geser.
           </p>
 
           <button
             onClick={onClose}
-            className="w-full sm:w-auto px-6 py-2 sm:py-2.5 rounded-xl bg-black text-white font-black uppercase tracking-wider border-2 border-black hover:bg-neutral-800 shadow-[2px_2px_0px_#000] sm:shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer text-xs"
+            className="w-full sm:w-auto px-6 py-2 rounded-xl bg-black text-white font-black uppercase tracking-wider border-2 border-black hover:bg-neutral-800 shadow-[2px_2px_0px_#000] sm:shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer text-xs"
           >
             Tutup Jadwal
           </button>
         </div>
+
+        {/* Floating Ghost Badge yang Mengikuti Jari Touchscreen / Gerakan Tangan */}
+        {touchCoords && touchDragIndex !== null && scheduleRounds[touchDragIndex] && (
+          <div
+            className="fixed z-50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black text-[#ccff00] border-2 border-white shadow-[0_12px_32px_rgba(0,0,0,0.5)] font-mono font-black text-xs uppercase select-none animate-in zoom-in-95 duration-75"
+            style={{
+              left: `${touchCoords.x}px`,
+              top: `${touchCoords.y}px`,
+            }}
+          >
+            <GripVertical className="h-4 w-4 stroke-[3] text-white animate-pulse" />
+            <span>Pindahkan Ronde #{scheduleRounds[touchDragIndex].roundNumber}</span>
+            <span className="text-[10px] text-white/70 font-sans font-bold">
+              ({scheduleRounds[touchDragIndex].timeRange})
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
