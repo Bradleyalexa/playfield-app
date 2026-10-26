@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Pause, Play, Share2, ClipboardPaste, Plus, UserCheck, Shield, Trash2, Clock } from "lucide-react";
-import { getTierLabel, Player } from "../../core/entities/player";
+import { Pause, Play, Share2, ClipboardPaste, Plus, UserCheck, Trash2, Clock, Pencil, X } from "lucide-react";
+import { getTierLabel, getTierFromSkill, Player } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
 import { PlayerShareModal } from "./PlayerShareModal";
 
@@ -15,6 +15,7 @@ interface PlayerRosterProps {
   onTogglePlayerArrival?: (playerId: string) => void;
   onMarkAllArrived?: () => void;
   onMarkAllNotArrived?: () => void;
+  onUpdatePlayer?: (player: Player) => void;
 }
 
 export function PlayerRoster({
@@ -26,6 +27,7 @@ export function PlayerRoster({
   onTogglePlayerArrival,
   onMarkAllArrived,
   onMarkAllNotArrived,
+  onUpdatePlayer,
 }: PlayerRosterProps) {
   const [quickName, setQuickName] = useState("");
   const [selectedGender, setSelectedGender] = useState<"M" | "F">("M");
@@ -69,6 +71,63 @@ export function PlayerRoster({
   };
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // Modal Edit Player State
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editGender, setEditGender] = useState<"M" | "F">("M");
+  const [editSkill, setEditSkill] = useState<1 | 2 | 3>(2);
+  const [editArrived, setEditArrived] = useState(true);
+
+  const openEditModal = (player: Player) => {
+    setEditingPlayer(player);
+    setEditName(player.name);
+    setEditGender(player.gender);
+    setEditSkill(player.skillLevel);
+    setEditArrived(player.isArrived !== false);
+  };
+
+  const handleSaveEditPlayer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPlayer || !editName.trim()) return;
+    const updated: Player = {
+      ...editingPlayer,
+      name: editName.trim(),
+      gender: editGender,
+      skillLevel: editSkill,
+      publicTier: getTierFromSkill(editSkill),
+      eloRating: 1000 + (editSkill - 2) * 100,
+      isArrived: editArrived,
+    };
+    onUpdatePlayer?.(updated);
+    setToastMsg(`✅ Data "${updated.name}" berhasil diperbarui!`);
+    setTimeout(() => setToastMsg(null), 3500);
+    setEditingPlayer(null);
+  };
+
+  // 1-Click Fast Toggle Gender (M <-> W)
+  const handleTogglePlayerGender = (player: Player) => {
+    const nextGender = player.gender === "M" ? "F" : "M";
+    const updated: Player = { ...player, gender: nextGender };
+    onUpdatePlayer?.(updated);
+    setToastMsg(`Gender ${player.name} diubah jadi ${nextGender === "M" ? "👦 Men (M)" : "👧 Women (W)"}`);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // 1-Click Fast Cycle Skill Level (Beginner -> Intermediate -> Advanced)
+  const handleCyclePlayerSkill = (player: Player) => {
+    const nextSkill = (player.skillLevel === 1 ? 2 : player.skillLevel === 2 ? 3 : 1) as 1 | 2 | 3;
+    const updated: Player = {
+      ...player,
+      skillLevel: nextSkill,
+      publicTier: getTierFromSkill(nextSkill),
+      eloRating: 1000 + (nextSkill - 2) * 100,
+    };
+    onUpdatePlayer?.(updated);
+    const tier = getTierLabel(updated.publicTier);
+    setToastMsg(`Level ${player.name} diubah jadi ${tier.label}`);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
 
   const handleTogglePauseWithFeedback = (playerId: string) => {
     const target = session.players.find((p) => p.id === playerId);
@@ -173,17 +232,26 @@ export function PlayerRoster({
         <span className="font-black uppercase bg-[#ccff00] text-black px-2.5 py-0.5 rounded-lg border-2 border-black text-[10px] font-mono tracking-wider shadow-[1.5px_1.5px_0px_#000]">
           PANDUAN IKON
         </span>
+        <span className="inline-flex items-center gap-1 bg-blue-100 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">👦/👧 M/W:</span> Klik ubah Gender
+        </span>
+        <span className="inline-flex items-center gap-1 bg-[#fef08a] border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">🏆 Level ▾:</span> Klik ganti Level
+        </span>
         <span className="inline-flex items-center gap-1 bg-amber-100 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
           <span className="font-black">⏳ OTW:</span> Belum tiba di GOR
         </span>
         <span className="inline-flex items-center gap-1 bg-emerald-100 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
           <span className="font-black">✅ Hadir:</span> Sudah siap main
         </span>
+        <span className="inline-flex items-center gap-1 bg-amber-200 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
+          <span className="font-black">✏️ Edit:</span> Ubah Nama/Data
+        </span>
         <span className="inline-flex items-center gap-1 bg-white border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
           <span className="font-black">⏸️ Pause:</span> Rehatkan
         </span>
         <span className="inline-flex items-center gap-1 bg-[#00e5ff]/40 border border-black px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
-          <span className="font-black">🔄 Share:</span> Rekap WA / Story
+          <span className="font-black">🔄 Share:</span> Story Card
         </span>
         <span className="inline-flex items-center gap-1 bg-rose-50 border border-rose-400 text-rose-800 px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000]">
           <span className="font-black">🗑️ Hapus:</span> Keluar
@@ -342,15 +410,20 @@ export function PlayerRoster({
               <div className="flex flex-col min-w-0 pr-2">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-black text-xs truncate text-black">{player.name}</span>
-                  <span
-                    className={`text-[9px] font-mono font-black px-1.5 py-0.2 rounded border ${
+                  {/* Tombol Toggle Gender (M <-> W) 1-Click */}
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePlayerGender(player)}
+                    title={`Klik untuk ganti Gender ${player.name} (${player.gender === "M" ? "Pria/Men" : "Wanita/Women"})`}
+                    className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded border-2 border-black transition-all cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none hover:scale-105 ${
                       player.gender === "M"
-                        ? "bg-blue-100 text-blue-900 border-blue-400"
-                        : "bg-pink-100 text-pink-900 border-pink-400"
+                        ? "bg-blue-200 text-blue-950 hover:bg-blue-300"
+                        : "bg-pink-200 text-pink-950 hover:bg-pink-300"
                     }`}
                   >
-                    {player.gender === "M" ? "M" : "W"}
-                  </span>
+                    {player.gender === "M" ? "👦 M" : "👧 W"}
+                  </button>
+
                   {/* Selector Kehadiran: Hadir vs OTW (Bisa Diubah Kapan Saja) */}
                   <div className="flex items-center rounded-lg border-2 border-black bg-white overflow-hidden shadow-[1px_1px_0px_#000] shrink-0">
                     <button
@@ -390,18 +463,34 @@ export function PlayerRoster({
                     </span>
                   ) : null}
                 </div>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
-                    {tier.label.replace("Tier ", "")}
-                  </span>
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  {/* Tombol Cycle Level: Beg -> Int -> Adv 1-Click */}
+                  <button
+                    type="button"
+                    onClick={() => handleCyclePlayerSkill(player)}
+                    title={`Klik untuk ubah Level ${player.name}: saat ini ${tier.label} (Beginner → Intermediate → Advanced)`}
+                    className={`text-[9px] px-2 py-0.5 rounded border-2 border-black font-black uppercase shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer hover:brightness-105 ${tier.badgeColor}`}
+                  >
+                    {tier.label.replace("Tier ", "")} ▾
+                  </button>
                   <span className="text-[10px] font-bold text-slate-700 font-mono-sport">
                     {player.gamesPlayed}x Main
                   </span>
                 </div>
               </div>
 
-              {/* Action Buttons: Check-in, Pause, Share Story Card & Remove */}
+              {/* Action Buttons: Edit, Check-in, Pause, Share Story Card & Remove */}
               <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
+                {/* Tombol Edit Player (Modal Lengkap) */}
+                <button
+                  type="button"
+                  onClick={() => openEditModal(player)}
+                  title={`Edit data lengkap ${player.name} (Nama, Gender, Level, Status)`}
+                  className="h-8 w-8 sm:h-7 sm:w-7 rounded-lg border-2 border-black bg-amber-200 flex items-center justify-center text-black hover:bg-amber-300 shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                >
+                  <Pencil className="h-3.5 w-3.5 stroke-[2.5]" />
+                </button>
+
                 {!isArrived ? (
                   /* Tombol Quick Check-in untuk Pemain yang Baru Datang */
                   <button
@@ -458,6 +547,167 @@ export function PlayerRoster({
           );
         }))}
       </div>
+
+      {/* Modal Edit Detail Pemain */}
+      {editingPlayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border-3 border-black bg-white p-5 shadow-[8px_8px_0px_#000] relative">
+            <div className="flex items-center justify-between pb-3 border-b-2 border-black mb-4">
+              <div className="flex items-center gap-2">
+                <span className="h-8 w-8 rounded-lg bg-[#ccff00] border-2 border-black flex items-center justify-center font-black text-black">
+                  ✏️
+                </span>
+                <h3 className="text-base font-black text-black uppercase tracking-wide">
+                  Edit Data Pemain
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingPlayer(null)}
+                className="h-8 w-8 rounded-lg border-2 border-black bg-white hover:bg-slate-100 flex items-center justify-center text-black font-black cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditPlayer} className="space-y-4">
+              <div>
+                <label className="block text-xs font-black uppercase text-black mb-1">
+                  Nama Pemain
+                </label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-xl bg-[#faf8f2] border-2 border-black px-3.5 py-2 text-sm font-bold text-black focus:outline-none focus:ring-2 focus:ring-black"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-black mb-1">
+                  Gender
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditGender("M")}
+                    className={`py-2 px-3 rounded-xl text-xs font-black border-2 border-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      editGender === "M"
+                        ? "bg-blue-200 text-blue-950 shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>👦</span>
+                    <span>Men (Pria)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditGender("F")}
+                    className={`py-2 px-3 rounded-xl text-xs font-black border-2 border-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      editGender === "F"
+                        ? "bg-pink-200 text-pink-950 shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>👧</span>
+                    <span>Women (Wanita)</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-black mb-1">
+                  Level Kemampuan (Skill Tier)
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditSkill(1)}
+                    className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
+                      editSkill === 1
+                        ? "bg-[#fef08a] text-black shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    Beginner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditSkill(2)}
+                    className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
+                      editSkill === 2
+                        ? "bg-[#a7f3d0] text-black shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    Intermediate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditSkill(3)}
+                    className={`py-2 px-2 rounded-xl text-xs font-black border-2 border-black transition-all cursor-pointer text-center ${
+                      editSkill === 3
+                        ? "bg-[#7dd3fc] text-black shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    Advanced
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-black mb-1">
+                  Status Kehadiran di GOR
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditArrived(true)}
+                    className={`py-2 px-3 rounded-xl text-xs font-black border-2 border-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      editArrived
+                        ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>✅</span>
+                    <span>Sudah Hadir</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditArrived(false)}
+                    className={`py-2 px-3 rounded-xl text-xs font-black border-2 border-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      !editArrived
+                        ? "bg-[#ffde00] text-black shadow-[2px_2px_0px_#000]"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>⏳</span>
+                    <span>Belum Tiba (OTW)</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t-2 border-black">
+                <button
+                  type="button"
+                  onClick={() => setEditingPlayer(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-black border-2 border-black bg-white hover:bg-slate-100 transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-black border-2 border-black bg-[#ccff00] text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer hover:bg-[#b8e600]"
+                >
+                  💾 Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal Share Pemain (Neo-Brutalism & WhatsApp Share) */}
       <PlayerShareModal

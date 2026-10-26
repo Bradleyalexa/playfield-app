@@ -754,6 +754,57 @@ function HostDashboardContent({ params }: HostPageProps) {
     AudioAnnouncer.announceGeneral("Semua pemain telah disetel berstatus OTW / belum tiba.");
   };
 
+  // 6h. Update Player (Ubah Nama, Gender, Skill Level, Kehadiran)
+  const handleUpdatePlayer = (updatedPlayer: Player) => {
+    if (!session) return;
+
+    // 1. Update session.players
+    const updatedPlayers = session.players.map((p) =>
+      p.id === updatedPlayer.id ? updatedPlayer : p
+    );
+
+    // 2. Update matches jika pemain ada di teamA atau teamB
+    const updatedMatches = session.matches.map((m) => {
+      const inTeamA = m.teamA.some((p) => p.id === updatedPlayer.id);
+      const inTeamB = m.teamB.some((p) => p.id === updatedPlayer.id);
+      if (!inTeamA && !inTeamB) return m;
+      return {
+        ...m,
+        teamA: m.teamA.map((p) => (p.id === updatedPlayer.id ? updatedPlayer : p)),
+        teamB: m.teamB.map((p) => (p.id === updatedPlayer.id ? updatedPlayer : p)),
+      };
+    });
+
+    // 3. Update courts jika pemain sedang ada di currentMatch
+    const updatedCourts = session.courts.map((c) => {
+      if (c.currentMatch) {
+        const inTeamA = c.currentMatch.teamA.some((p) => p.id === updatedPlayer.id);
+        const inTeamB = c.currentMatch.teamB.some((p) => p.id === updatedPlayer.id);
+        if (inTeamA || inTeamB) {
+          return {
+            ...c,
+            currentMatch: {
+              ...c.currentMatch,
+              teamA: c.currentMatch.teamA.map((p) => (p.id === updatedPlayer.id ? updatedPlayer : p)),
+              teamB: c.currentMatch.teamB.map((p) => (p.id === updatedPlayer.id ? updatedPlayer : p)),
+            },
+          };
+        }
+      }
+      return c;
+    });
+
+    const updated: GameSession = {
+      ...session,
+      players: updatedPlayers,
+      matches: updatedMatches,
+      courts: updatedCourts,
+    };
+
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+  };
+
   // 6b. Hapus Pemain dari Roster
   const handleRemovePlayer = (playerId: string) => {
     const targetPlayer = session.players.find((p) => p.id === playerId);
@@ -1667,6 +1718,7 @@ function HostDashboardContent({ params }: HostPageProps) {
           onTogglePlayerArrival={handleTogglePlayerArrival}
           onMarkAllArrived={handleMarkAllArrived}
           onMarkAllNotArrived={handleMarkAllNotArrived}
+          onUpdatePlayer={handleUpdatePlayer}
         />
 
         {/* Floating Undo Toast saat Selesaikan Match (Safety Net 6 Detik) */}

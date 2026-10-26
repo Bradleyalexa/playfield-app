@@ -235,6 +235,27 @@ export default function HomePage() {
     );
   };
 
+  const handleToggleInitialPlayerGender = (id: string) => {
+    setInitialPlayers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, gender: p.gender === "M" ? "F" : "M" } : p))
+    );
+  };
+
+  const handleCycleInitialPlayerSkill = (id: string) => {
+    setInitialPlayers((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const nextSkill = (p.skillLevel === 1 ? 2 : p.skillLevel === 2 ? 3 : 1) as 1 | 2 | 3;
+        return {
+          ...p,
+          skillLevel: nextSkill,
+          publicTier: getTierFromSkill(nextSkill),
+          eloRating: 1000 + (nextSkill - 2) * 100,
+        };
+      })
+    );
+  };
+
   const handleMarkAllInitialArrived = () => {
     setInitialPlayers((prev) => prev.map((p) => ({ ...p, isArrived: true })));
   };
@@ -966,57 +987,75 @@ export default function HomePage() {
                     Belum ada pemain. Kamu bisa paste dari WhatsApp sekarang atau nanti saat mabar dimulai.
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1">
-                    {initialPlayers.map((player) => {
-                      const tier = getTierLabel(player.publicTier);
-                      return (
-                        <div
-                          key={player.id}
-                          className={`flex items-center gap-1.5 rounded-xl border-2 border-black px-2.5 py-1 text-xs shadow-[2px_2px_0px_#000] transition-all ${
-                            player.isArrived === false
-                              ? "bg-amber-50/80 border-dashed border-amber-500"
-                              : "bg-white"
-                          }`}
-                        >
-                          <span className="font-extrabold text-black">{player.name}</span>
-                          <span
-                            className={`text-[9px] font-mono font-black px-1.5 py-0.2 rounded border ${
-                              player.gender === "M"
-                                ? "bg-blue-100 text-blue-900 border-blue-400"
-                                : "bg-pink-100 text-pink-900 border-pink-400"
-                            }`}
-                          >
-                            {player.gender === "M" ? "M" : "W"}
-                          </span>
-                          <span className={`text-[9px] px-1 py-0.2 rounded ${tier.badgeColor}`}>
-                            {tier.label.replace("Tier ", "")}
-                          </span>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 bg-yellow-50/80 px-2.5 py-1.5 rounded-lg border border-black/20">
+                      <span>💡 <strong>Klik badge Gender (M/W) atau Level</strong> pada kartu pemain untuk mengubahnya.</span>
+                    </div>
 
-                          {/* Tombol Toggle Hadir vs OTW */}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleInitialPlayerArrival(player.id)}
-                            title="Klik untuk ubah status Hadir / OTW"
-                            className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] cursor-pointer transition-all active:scale-95 ${
+                    <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1">
+                      {initialPlayers.map((player) => {
+                        const tier = getTierLabel(player.publicTier);
+                        return (
+                          <div
+                            key={player.id}
+                            className={`flex items-center gap-1.5 rounded-xl border-2 border-black px-2.5 py-1 text-xs shadow-[2px_2px_0px_#000] transition-all ${
                               player.isArrived === false
-                                ? "bg-[#ffde00] text-black"
-                                : "bg-[#ccff00] text-black"
+                                ? "bg-amber-50/80 border-dashed border-amber-500"
+                                : "bg-white"
                             }`}
                           >
-                            {player.isArrived === false ? "⏳ OTW" : "✅ Hadir"}
-                          </button>
+                            <span className="font-extrabold text-black">{player.name}</span>
 
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveInitialPlayer(player.id)}
-                            className="text-slate-400 hover:text-rose-600 transition-colors ml-0.5 cursor-pointer"
-                            title="Hapus"
-                          >
-                            <X className="h-3.5 w-3.5 stroke-[2.5]" />
-                          </button>
-                        </div>
-                      );
-                    })}
+                            {/* Tombol Toggle Gender: M <-> W */}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleInitialPlayerGender(player.id)}
+                              title={`Klik untuk ubah Gender (${player.gender === "M" ? "Pria / Cowok (M)" : "Wanita / Cewek (W)"})`}
+                              className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] cursor-pointer transition-all active:scale-95 hover:brightness-90 ${
+                                player.gender === "M"
+                                  ? "bg-blue-100 text-blue-950 border-blue-400"
+                                  : "bg-pink-100 text-pink-950 border-pink-400"
+                              }`}
+                            >
+                              {player.gender === "M" ? "👦 M" : "👧 W"}
+                            </button>
+
+                            {/* Tombol Cycle Level: Beg -> Int -> Adv */}
+                            <button
+                              type="button"
+                              onClick={() => handleCycleInitialPlayerSkill(player.id)}
+                              title={`Klik untuk ubah Level Skill (Saat ini: ${tier.label})`}
+                              className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] cursor-pointer transition-all active:scale-95 hover:brightness-90 ${tier.badgeColor}`}
+                            >
+                              {tier.label.replace("Tier ", "")} ▾
+                            </button>
+
+                            {/* Tombol Toggle Hadir vs OTW */}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleInitialPlayerArrival(player.id)}
+                              title="Klik untuk ubah status Hadir / OTW"
+                              className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] cursor-pointer transition-all active:scale-95 ${
+                                player.isArrived === false
+                                  ? "bg-[#ffde00] text-black"
+                                  : "bg-[#ccff00] text-black"
+                              }`}
+                            >
+                              {player.isArrived === false ? "⏳ OTW" : "✅ Hadir"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveInitialPlayer(player.id)}
+                              className="text-slate-400 hover:text-rose-600 transition-colors ml-0.5 cursor-pointer"
+                              title="Hapus"
+                            >
+                              <X className="h-3.5 w-3.5 stroke-[2.5]" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
