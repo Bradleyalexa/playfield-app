@@ -11,7 +11,7 @@ interface CourtCardProps {
   court: Court;
   match?: Match;
   sportConfig: SportConfig;
-  onUpdateScore: (courtNumber: number, scoreA: number, scoreB: number) => void;
+  onUpdateScore: (courtNumber: number, scoreA: number, scoreB: number, winner?: "A" | "B") => void;
   onFinishMatch: (courtNumber: number) => void;
   onAddCockToMatch?: (courtNumber: number) => void;
   onNextRound?: () => void;
@@ -257,25 +257,31 @@ export function CourtCard({
       <div className="flex items-center gap-1.5 mb-2.5">
         <button
           type="button"
-          onClick={() => onUpdateScore(court.courtNumber, 21, match.scoreB > 0 ? match.scoreB : 15)}
+          onClick={() => {
+            const nextWinner = match.winner === "A" ? undefined : "A";
+            onUpdateScore(court.courtNumber, match.scoreA, match.scoreB, nextWinner);
+          }}
           className={`flex-1 py-1.5 px-2 rounded-lg border-2 border-black text-[10px] font-black uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer truncate ${
-            match.scoreA > match.scoreB
+            match.winner === "A" || (match.scoreA > match.scoreB && !match.winner)
               ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
               : "bg-white hover:bg-emerald-50 text-slate-800"
           }`}
-          title="Klik cepat: Tim A Menang (Otomatis isi 21)"
+          title="Klik cepat: Tandai Tim A Menang (Bisa tanpa input skor)"
         >
           👑 Tim A Menang
         </button>
         <button
           type="button"
-          onClick={() => onUpdateScore(court.courtNumber, match.scoreA > 0 ? match.scoreA : 15, 21)}
+          onClick={() => {
+            const nextWinner = match.winner === "B" ? undefined : "B";
+            onUpdateScore(court.courtNumber, match.scoreA, match.scoreB, nextWinner);
+          }}
           className={`flex-1 py-1.5 px-2 rounded-lg border-2 border-black text-[10px] font-black uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer truncate ${
-            match.scoreB > match.scoreA
+            match.winner === "B" || (match.scoreB > match.scoreA && !match.winner)
               ? "bg-[#7dd3fc] text-black shadow-[2px_2px_0px_#000]"
               : "bg-white hover:bg-sky-50 text-slate-800"
           }`}
-          title="Klik cepat: Tim B Menang (Otomatis isi 21)"
+          title="Klik cepat: Tandai Tim B Menang (Bisa tanpa input skor)"
         >
           👑 Tim B Menang
         </button>
@@ -284,9 +290,13 @@ export function CourtCard({
       {/* Status Bar */}
       <div className="flex items-center justify-between text-xs py-2 px-3 rounded-lg bg-[#faf8f2] border-2 border-black mb-3">
         <span className="font-bold text-slate-800 text-[11px] truncate uppercase">
-          {match.scoreA === 0 && match.scoreB === 0 ? "⚡ Sedang Bertanding (Skor Opsional)" : validation.statusText}
+          {match.winner
+            ? `👑 Tim ${match.winner} Ditandai Pemenang`
+            : match.scoreA === 0 && match.scoreB === 0
+            ? "⚡ Sedang Bertanding (Skor Opsional)"
+            : validation.statusText}
         </span>
-        {validation.isFinished && (
+        {(validation.isFinished || match.winner) && (
           <span className="flex items-center gap-1 font-black text-black text-[11px] bg-[#ccff00] px-2 py-0.5 rounded border border-black">
             <CheckCircle2 className="h-3 w-3 stroke-[3]" />
             SELESAI

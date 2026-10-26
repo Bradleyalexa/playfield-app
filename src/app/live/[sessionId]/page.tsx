@@ -22,10 +22,12 @@ import {
 } from "lucide-react";
 import { Navbar } from "../../../components/common/Navbar";
 import { AllMatchesModal } from "../../../components/schedule/AllMatchesModal";
+import { MatchRecapModal } from "../../../components/schedule/MatchRecapModal";
 import { CompletedSessionRecap } from "../../../components/schedule/CompletedSessionRecap";
 import { PlayerShareModal } from "../../../components/players/PlayerShareModal";
 import { SpectatorQrModal } from "../../../components/common/SpectatorQrModal";
 import { getTierLabel, Player } from "../../../core/entities/player";
+import { getMatchWinner } from "../../../core/entities/match";
 import { ALGORITHM_REGISTRY, GameSession } from "../../../core/entities/session";
 import { LocalStorageAdapter } from "../../../services/storage/local-storage.adapter";
 import { calculateRentalTimeInfo, RentalTimeInfo } from "../../../lib/time-tracker";
@@ -40,26 +42,29 @@ function LiveSpectatorContent({ params }: LivePageProps) {
 
   const [session, setSession] = useState<GameSession | null>(null);
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
+  const [isMatchRecapModalOpen, setIsMatchRecapModalOpen] = useState(false);
   const [isSpectatorQrOpen, setIsSpectatorQrOpen] = useState(false);
   const [sharingPlayer, setSharingPlayer] = useState<Player | null>(null);
   const [spectatorToast, setSpectatorToast] = useState<string | null>(null);
 
   // Update Skor Pertandingan oleh Penonton / Wasit (Jika Diizinkan Host)
-  const handleSpectatorUpdateScore = (courtNumber: number, scoreA: number, scoreB: number) => {
+  const handleSpectatorUpdateScore = (courtNumber: number, scoreA: number, scoreB: number, winner?: "A" | "B") => {
     if (!session || !session.allowSpectatorScoreUpdate) return;
     const clampedA = Math.max(0, scoreA);
     const clampedB = Math.max(0, scoreB);
 
     const updatedMatches = session.matches.map((m) => {
       if (m.courtNumber === courtNumber && m.status === "in_progress") {
-        return { ...m, scoreA: clampedA, scoreB: clampedB };
+        const calculatedWinner = winner !== undefined ? winner : (clampedA > clampedB ? "A" : clampedB > clampedA ? "B" : m.winner);
+        return { ...m, scoreA: clampedA, scoreB: clampedB, winner: calculatedWinner };
       }
       return m;
     });
 
     const updatedCourts = session.courts.map((c) => {
       if (c.courtNumber === courtNumber && c.currentMatch) {
-        return { ...c, currentMatch: { ...c.currentMatch, scoreA: clampedA, scoreB: clampedB } };
+        const calculatedWinner = winner !== undefined ? winner : (clampedA > clampedB ? "A" : clampedB > clampedA ? "B" : c.currentMatch.winner);
+        return { ...c, currentMatch: { ...c.currentMatch, scoreA: clampedA, scoreB: clampedB, winner: calculatedWinner } };
       }
       return c;
     });
@@ -72,7 +77,7 @@ function LiveSpectatorContent({ params }: LivePageProps) {
 
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
-    setSpectatorToast(`Skor Lapangan #${courtNumber} diperbarui: ${clampedA} - ${clampedB}`);
+    setSpectatorToast(winner ? `Pemenang Lapangan #${courtNumber} ditandai: Tim ${winner}` : `Skor Lapangan #${courtNumber} diperbarui: ${clampedA} - ${clampedB}`);
     setTimeout(() => setSpectatorToast(null), 3000);
   };
 
@@ -355,6 +360,15 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                   >
                     <QrCode className="h-4 w-4 stroke-[2.5]" />
                     <span>Bagikan QR</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsMatchRecapModalOpen(true)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#ccff00] text-black border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    title="Buka Rekap Hasil Seluruh Pertandingan"
+                  >
+                    <Trophy className="h-4 w-4 stroke-[2.5]" />
+                    <span>Rekap Hasil ({session.matches.filter((m) => m.status === "completed").length})</span>
                   </button>
 
                   <button
@@ -800,25 +814,31 @@ function LiveSpectatorContent({ params }: LivePageProps) {
                         <div className="flex items-center gap-1.5 mt-3 pt-2.5 border-t-2 border-black">
                           <button
                             type="button"
-                            onClick={() => handleSpectatorUpdateScore(court.courtNumber, 21, match.scoreB > 0 ? match.scoreB : 15)}
+                            onClick={() => {
+                              const nextWinner = match.winner === "A" ? undefined : "A";
+                              handleSpectatorUpdateScore(court.courtNumber, match.scoreA, match.scoreB, nextWinner);
+                            }}
                             className={`flex-1 py-1.5 px-2 rounded-lg border-2 border-black text-[10px] font-black uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer truncate ${
-                              match.scoreA > match.scoreB
+                              match.winner === "A" || (match.scoreA > match.scoreB && !match.winner)
                                 ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
                                 : "bg-white hover:bg-emerald-50 text-slate-800"
                             }`}
-                            title="Klik cepat: Tim A Menang (Otomatis isi 21)"
+                            title="Klik cepat: Tandai Tim A Menang (Bisa tanpa input skor)"
                           >
                             👑 Tim A Menang
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleSpectatorUpdateScore(court.courtNumber, match.scoreA > 0 ? match.scoreA : 15, 21)}
+                            onClick={() => {
+                              const nextWinner = match.winner === "B" ? undefined : "B";
+                              handleSpectatorUpdateScore(court.courtNumber, match.scoreA, match.scoreB, nextWinner);
+                            }}
                             className={`flex-1 py-1.5 px-2 rounded-lg border-2 border-black text-[10px] font-black uppercase shadow-[1.5px_1.5px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer truncate ${
-                              match.scoreB > match.scoreA
+                              match.winner === "B" || (match.scoreB > match.scoreA && !match.winner)
                                 ? "bg-[#7dd3fc] text-black shadow-[2px_2px_0px_#000]"
                                 : "bg-white hover:bg-sky-50 text-slate-800"
                             }`}
-                            title="Klik cepat: Tim B Menang (Otomatis isi 21)"
+                            title="Klik cepat: Tandai Tim B Menang (Bisa tanpa input skor)"
                           >
                             👑 Tim B Menang
                           </button>
@@ -910,6 +930,13 @@ function LiveSpectatorContent({ params }: LivePageProps) {
       <AllMatchesModal
         isOpen={isAllMatchesModalOpen}
         onClose={() => setIsAllMatchesModalOpen(false)}
+        session={session}
+      />
+
+      {/* Modal Rekap Hasil Pertandingan (Match Log) */}
+      <MatchRecapModal
+        isOpen={isMatchRecapModalOpen}
+        onClose={() => setIsMatchRecapModalOpen(false)}
         session={session}
       />
 

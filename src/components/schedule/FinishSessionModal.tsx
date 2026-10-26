@@ -18,6 +18,7 @@ import {
   calculateEquipmentCost,
 } from "../../core/entities/session";
 import { formatRupiah } from "../../lib/utils";
+import { getMatchWinner } from "../../core/entities/match";
 
 interface FinishSessionModalProps {
   isOpen: boolean;
@@ -68,14 +69,15 @@ export function FinishSessionModal({
     (m) => m.status === "in_progress",
   );
 
-  // Hitung MVP (Paling banyak menang & win rate)
+  // Hitung MVP (Paling banyak menang & win rate - mendukung match ber-skor maupun tanpa skor)
   const playerStats = session.players.map((p) => {
     let won = 0;
     let played = p.gamesPlayed;
     session.matches.forEach((m) => {
       if (m.status === "completed") {
-        if (m.teamA.some((pl) => pl.id === p.id) && m.scoreA > m.scoreB) won++;
-        if (m.teamB.some((pl) => pl.id === p.id) && m.scoreB > m.scoreA) won++;
+        const winner = getMatchWinner(m);
+        if (m.teamA.some((pl) => pl.id === p.id) && winner === "A") won++;
+        if (m.teamB.some((pl) => pl.id === p.id) && winner === "B") won++;
       }
     });
     const wr = played > 0 ? Math.round((won / played) * 100) : 0;

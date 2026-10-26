@@ -15,6 +15,8 @@ import {
   Edit3,
   Coffee,
   Building2,
+  Calendar,
+  Filter,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -27,6 +29,7 @@ import { formatRupiah } from "../../lib/utils";
 import { getTierLabel } from "../../core/entities/player";
 import { DonateCreatorModal } from "../common/DonateCreatorModal";
 import { formatIndonesianDate } from "../../lib/time-tracker";
+import { getMatchWinner, Match } from "../../core/entities/match";
 
 interface CompletedSessionRecapProps {
   session: GameSession;
@@ -45,6 +48,9 @@ export function CompletedSessionRecap({
   const [copiedBank, setCopiedBank] = useState(false);
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
   const [isEditingBilling, setIsEditingBilling] = useState(false);
+  const [includeMatchLogInWa, setIncludeMatchLogInWa] = useState(true);
+  const [selectedRoundFilter, setSelectedRoundFilter] = useState<number | "all">("all");
+
 
   // State untuk form edit billing host
   const currentBilling = session.billing || {
@@ -58,19 +64,20 @@ export function CompletedSessionRecap({
   const [editAccountNumber, setEditAccountNumber] = useState<string>(currentBilling.accountNumber ?? "");
   const [editAccountHolder, setEditAccountHolder] = useState<string>(currentBilling.accountHolder ?? "");
 
-  // Hitung statistik seluruh pemain
+  // Hitung statistik seluruh pemain (mendukung match ber-skor maupun tanpa skor numerik)
   const playerStats = session.players.map((p) => {
     let won = 0;
     let totalPoints = 0;
     session.matches.forEach((m) => {
       if (m.status === "completed") {
+        const winner = getMatchWinner(m);
         if (m.teamA.some((pl) => pl.id === p.id)) {
           totalPoints += m.scoreA;
-          if (m.scoreA > m.scoreB) won++;
+          if (winner === "A") won++;
         }
         if (m.teamB.some((pl) => pl.id === p.id)) {
           totalPoints += m.scoreB;
-          if (m.scoreB > m.scoreA) won++;
+          if (winner === "B") won++;
         }
       }
     });
@@ -84,7 +91,15 @@ export function CompletedSessionRecap({
   const secondPlace = playerStats[1];
   const thirdPlace = playerStats[2];
 
-  const completedMatches = session.matches.filter((m) => m.status === "completed");
+  const completedMatches = (session.matches || [])
+    .filter((m) => m.status === "completed")
+    .sort((a, b) => a.roundNumber - b.roundNumber || a.courtNumber - b.courtNumber);
+
+  const availableRounds = Array.from(new Set(completedMatches.map((m) => m.roundNumber))).sort((a, b) => a - b);
+  const filteredMatches = selectedRoundFilter === "all"
+    ? completedMatches
+    : completedMatches.filter((m) => m.roundNumber === selectedRoundFilter);
+
   const billingSummary = calculateSessionBilling(session);
 
   // Simpan perubahan billing
@@ -130,6 +145,35 @@ export function CompletedSessionRecap({
     }
     if (thirdPlace) {
       text += `🥉 *Juara 3:* ${thirdPlace.player.name} (${thirdPlace.won}W / ${thirdPlace.played}M • WR ${thirdPlace.wr}%)\n`;
+    }
+
+    // Rekap Hasil Match per Ronde (opsional via toggle)
+    if (includeMatchLogInWa && completedMatches.length > 0) {
+      text += `\n📋 *REKAP HASIL PERTANDINGAN:*\n`;
+      const roundGroups: Record<number, Match[]> = {};
+      completedMatches.forEach((m) => {
+        if (!roundGroups[m.roundNumber]) roundGroups[m.roundNumber] = [];
+        roundGroups[m.roundNumber].push(m);
+      });
+
+      Object.entries(roundGroups).forEach(([roundStr, matches]) => {
+        text += `*Ronde #${roundStr}:*\n`;
+        matches.forEach((m) => {
+          const teamANames = m.teamA.map((p) => p.name).join("/");
+          const teamBNames = m.teamB.map((p) => p.name).join("/");
+          const winner = getMatchWinner(m);
+
+          if (m.scoreA > 0 || m.scoreB > 0) {
+            const winnerText = winner === "A" ? `➜ *Menang: ${teamANames}*` : winner === "B" ? `➜ *Menang: ${teamBNames}*` : "➜ *Seri*";
+            text += `• Lap ${m.courtNumber}: ${teamANames} [${m.scoreA}] vs [${m.scoreB}] ${teamBNames} ${winnerText}\n`;
+          } else if (winner) {
+            const winnerNames = winner === "A" ? teamANames : teamBNames;
+            text += `• Lap ${m.courtNumber}: ${teamANames} vs ${teamBNames} ➜ *👑 Menang: ${winnerNames}*\n`;
+          } else {
+            text += `• Lap ${m.courtNumber}: ${teamANames} vs ${teamBNames} ➜ *(Selesai)*\n`;
+          }
+        });
+      });
     }
 
     // Rincian Patungan & Biaya
@@ -315,6 +359,144 @@ export function CompletedSessionRecap({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Rekap Seluruh Hasil Pertandingan (Match Log) */}
+      <div className="rounded-2xl border-3 border-black bg-white p-4 sm:p-5 shadow-[5px_5px_0px_#000] flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b-2 border-black">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📋</span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-black uppercase text-black tracking-wide">
+                Rekap Hasil Pertandingan ({completedMatches.length} Match Selesai)
+              </h3>
+              <p className="text-[11px] font-bold text-slate-500">
+                Riwayat duel per ronde &amp; lapangan (lengkap dengan penanda pemenang)
+              </p>
+            </div>
+          </div>
+
+          {availableRounds.length > 1 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
+              <button
+                type="button"
+                onClick={() => setSelectedRoundFilter("all")}
+                className={`px-2 py-0.5 rounded text-[11px] border border-black font-bold transition-all cursor-pointer ${
+                  selectedRoundFilter === "all" ? "bg-[#ccff00] font-black shadow-[1px_1px_0px_#000]" : "bg-white hover:bg-slate-100"
+                }`}
+              >
+                Semua
+              </button>
+              {availableRounds.map((rnd) => (
+                <button
+                  key={rnd}
+                  type="button"
+                  onClick={() => setSelectedRoundFilter(rnd)}
+                  className={`px-2 py-0.5 rounded text-[11px] border border-black font-bold transition-all cursor-pointer ${
+                    selectedRoundFilter === rnd ? "bg-[#ccff00] font-black shadow-[1px_1px_0px_#000]" : "bg-white hover:bg-slate-100"
+                  }`}
+                >
+                  Ronde #{rnd}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* List Pertandingan Selesai */}
+        {completedMatches.length === 0 ? (
+          <div className="p-4 rounded-xl border border-dashed border-black/30 bg-[#faf8f2] text-center text-xs font-bold text-slate-500">
+            Belum ada match yang diselesaikan pada sesi ini.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {filteredMatches.map((m, idx) => {
+              const winner = getMatchWinner(m);
+              const isWinnerA = winner === "A";
+              const isWinnerB = winner === "B";
+              const hasScore = m.scoreA > 0 || m.scoreB > 0;
+
+              return (
+                <div
+                  key={m.id || idx}
+                  className="rounded-xl border-2 border-black bg-[#faf8f2] p-3 shadow-[2px_2px_0px_#000] flex flex-col justify-between text-xs"
+                >
+                  <div className="flex items-center justify-between pb-1.5 border-b border-black/15 mb-2 font-mono text-[10px]">
+                    <span className="font-black bg-black text-white px-1.5 py-0.5 rounded">
+                      Ronde #{m.roundNumber} • Lapangan {m.courtNumber}
+                    </span>
+                    {hasScore ? (
+                      <span className="font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-black/30 font-mono">
+                        Skor: {m.scoreA} - {m.scoreB}
+                      </span>
+                    ) : winner ? (
+                      <span className="font-bold text-amber-950 bg-[#ffde00] px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000]">
+                        👑 Menang Tim {winner}
+                      </span>
+                    ) : (
+                      <span className="text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">Selesai (Tanpa Skor)</span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Tim A */}
+                    <div
+                      className={`p-2 rounded-lg border border-black flex flex-col justify-between ${
+                        isWinnerA ? "bg-[#ccff00]/35 font-black shadow-[1.5px_1.5px_0px_#000]" : "bg-white"
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] font-black uppercase text-slate-600">Tim A</span>
+                          {isWinnerA && <span className="text-[9px] font-black text-black">👑 MENANG</span>}
+                        </div>
+                        <div className="space-y-0.5">
+                          {m.teamA.map((p) => (
+                            <div key={p.id} className="truncate font-extrabold text-[11px] text-black">
+                              {p.name}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {hasScore && (
+                        <div className="mt-1.5 pt-1 border-t border-black/15 text-center font-mono font-black text-lg text-black">
+                          {m.scoreA}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tim B */}
+                    <div
+                      className={`p-2 rounded-lg border border-black flex flex-col justify-between ${
+                        isWinnerB ? "bg-[#7dd3fc]/35 font-black shadow-[1.5px_1.5px_0px_#000]" : "bg-white"
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] font-black uppercase text-slate-600">Tim B</span>
+                          {isWinnerB && <span className="text-[9px] font-black text-black">👑 MENANG</span>}
+                        </div>
+                        <div className="space-y-0.5">
+                          {m.teamB.map((p) => (
+                            <div key={p.id} className="truncate font-extrabold text-[11px] text-black">
+                              {p.name}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {hasScore && (
+                        <div className="mt-1.5 pt-1 border-t border-black/15 text-center font-mono font-black text-lg text-black">
+                          {m.scoreB}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Rangkuman Finansial & Split Bill Patungan */}
@@ -532,6 +714,26 @@ export function CompletedSessionRecap({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Toggle Sertakan Rekap Match ke WhatsApp */}
+      {completedMatches.length > 0 && (
+        <div className="flex items-center justify-between p-3 rounded-xl bg-[#faf8f2] border-2 border-black text-xs font-bold shadow-[2px_2px_0px_#000]">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={includeMatchLogInWa}
+              onChange={(e) => setIncludeMatchLogInWa(e.target.checked)}
+              className="h-4 w-4 rounded border-2 border-black accent-black cursor-pointer"
+            />
+            <span className="text-black font-black uppercase text-[11px] sm:text-xs">
+              Sertakan Rincian Hasil Pertandingan di Pesan WhatsApp ({completedMatches.length} Match)
+            </span>
+          </label>
+          <span className="text-[10px] text-slate-500 hidden sm:inline font-mono">
+            {includeMatchLogInWa ? "Status: Rincian Lengkap" : "Status: Hanya Podium & Biaya"}
+          </span>
         </div>
       )}
 

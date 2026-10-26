@@ -18,6 +18,7 @@ export interface ProjectedMatch {
   status: "completed" | "in_progress" | "scheduled";
   scoreA?: number;
   scoreB?: number;
+  winner?: "A" | "B" | "draw";
 }
 
 export interface ProjectedRound {
@@ -294,6 +295,7 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
           status: "completed",
           scoreA: m.scoreA,
           scoreB: m.scoreB,
+          winner: m.winner,
         })),
         restingPlayers: resting,
       });
@@ -313,6 +315,7 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
             status: "in_progress" as const,
             scoreA: c.currentMatch.scoreA,
             scoreB: c.currentMatch.scoreB,
+            winner: c.currentMatch.winner,
           };
         })
         .filter(Boolean) as ProjectedMatch[];

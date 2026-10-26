@@ -45,8 +45,9 @@ import { FinishSessionModal } from "../../../components/schedule/FinishSessionMo
 import { CompletedSessionRecap } from "../../../components/schedule/CompletedSessionRecap";
 import { DonateCreatorModal } from "../../../components/common/DonateCreatorModal";
 import { SpectatorQrModal } from "../../../components/common/SpectatorQrModal";
+import { MatchRecapModal } from "../../../components/schedule/MatchRecapModal";
 import { calculateRentalTimeInfo, RentalTimeInfo } from "../../../lib/time-tracker";
-import { Match } from "../../../core/entities/match";
+import { Match, getMatchWinner } from "../../../core/entities/match";
 import { getTierFromSkill, Player } from "../../../core/entities/player";
 import {
   ALGORITHM_REGISTRY,
@@ -71,6 +72,7 @@ function HostDashboardContent({ params }: HostPageProps) {
   const [session, setSession] = useState<GameSession | null>(null);
   const [isWaModalOpen, setIsWaModalOpen] = useState(false);
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
+  const [isMatchRecapModalOpen, setIsMatchRecapModalOpen] = useState(false);
   const [isCreateMatchModalOpen, setIsCreateMatchModalOpen] = useState(false);
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -386,18 +388,20 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
   };
 
-  // 2. Update Skor Lapangan
-  const handleUpdateScore = (courtNumber: number, scoreA: number, scoreB: number) => {
+  // 2. Update Skor Lapangan (Mendukung input angka maupun penanda pemenang tanpa skor)
+  const handleUpdateScore = (courtNumber: number, scoreA: number, scoreB: number, winner?: "A" | "B") => {
     const updatedMatches = session.matches.map((m) => {
       if (m.courtNumber === courtNumber && m.status === "in_progress") {
-        return { ...m, scoreA, scoreB };
+        const calculatedWinner = winner !== undefined ? winner : (scoreA > scoreB ? "A" : scoreB > scoreA ? "B" : m.winner);
+        return { ...m, scoreA, scoreB, winner: calculatedWinner };
       }
       return m;
     });
 
     const updatedCourts = session.courts.map((c) => {
       if (c.courtNumber === courtNumber && c.currentMatch) {
-        return { ...c, currentMatch: { ...c.currentMatch, scoreA, scoreB } };
+        const calculatedWinner = winner !== undefined ? winner : (scoreA > scoreB ? "A" : scoreB > scoreA ? "B" : c.currentMatch.winner);
+        return { ...c, currentMatch: { ...c.currentMatch, scoreA, scoreB, winner: calculatedWinner } };
       }
       return c;
     });
@@ -439,9 +443,11 @@ function HostDashboardContent({ params }: HostPageProps) {
       confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
     } catch {}
 
-    const winnerTeam = currentMatch.scoreA > currentMatch.scoreB ? "A" : "B";
-    const winners = winnerTeam === "A" ? currentMatch.teamA : currentMatch.teamB;
-    AudioAnnouncer.announceWinner(courtNumber, winnerTeam, winners, currentMatch.scoreA, currentMatch.scoreB);
+    const winnerTeam = currentMatch.winner || getMatchWinner(currentMatch);
+    const winners = winnerTeam === "A" ? currentMatch.teamA : winnerTeam === "B" ? currentMatch.teamB : [];
+    if (winnerTeam === "A" || winnerTeam === "B") {
+      AudioAnnouncer.announceWinner(courtNumber, winnerTeam, winners, currentMatch.scoreA, currentMatch.scoreB);
+    }
 
     // Update match status & gamesPlayed pemain
     const updatedPlayers = session.players.map((p) => {
@@ -459,7 +465,12 @@ function HostDashboardContent({ params }: HostPageProps) {
 
     const updatedMatches = session.matches.map((m) => {
       if (m.id === currentMatch.id) {
-        return { ...m, status: "completed" as const, endedAt: new Date().toISOString() };
+        return {
+          ...m,
+          status: "completed" as const,
+          endedAt: new Date().toISOString(),
+          winner: currentMatch.winner || getMatchWinner(currentMatch) || undefined,
+        };
       }
       return m;
     });
@@ -1075,6 +1086,16 @@ function HostDashboardContent({ params }: HostPageProps) {
             </p>
 
             <div className="flex flex-wrap items-center gap-2">
+            {/* Tombol Rekap Hasil Pertandingan */}
+            <button
+              onClick={() => setIsMatchRecapModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-[#ccff00] border-2 border-black px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+              title="Buka rekap seluruh hasil pertandingan yang telah selesai"
+            >
+              <Trophy className="h-4 w-4 stroke-[2.5]" />
+              <span>Rekap Hasil ({session.matches.filter((m) => m.status === "completed").length})</span>
+            </button>
+
             {/* Tombol Lihat Jadwal & Proyeksi Match */}
             <button
               onClick={() => setIsAllMatchesModalOpen(true)}
@@ -1444,6 +1465,13 @@ function HostDashboardContent({ params }: HostPageProps) {
       <AllMatchesModal
         isOpen={isAllMatchesModalOpen}
         onClose={() => setIsAllMatchesModalOpen(false)}
+        session={session}
+      />
+
+      {/* Modal Rekap Hasil Pertandingan (Match Log) */}
+      <MatchRecapModal
+        isOpen={isMatchRecapModalOpen}
+        onClose={() => setIsMatchRecapModalOpen(false)}
         session={session}
       />
 

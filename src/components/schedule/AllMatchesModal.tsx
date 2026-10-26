@@ -5,6 +5,7 @@ import { X, Clock, Calendar, Users, Trophy, ChevronRight, Sparkles, Filter } fro
 import { ALGORITHM_REGISTRY, GameSession } from "../../core/entities/session";
 import { generateProjectedSchedule, ProjectedRound } from "../../core/matchmaking/balanced-queue";
 import { getTierLabel } from "../../core/entities/player";
+import { getMatchWinner } from "../../core/entities/match";
 
 interface AllMatchesModalProps {
   isOpen: boolean;
@@ -196,7 +197,13 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
 
                   {/* Matches Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                    {round.matches.map((match) => (
+                    {round.matches.map((match) => {
+                      const hasScore = typeof match.scoreA === "number" && ((match.scoreA > 0) || ((match.scoreB || 0) > 0));
+                      const winner = getMatchWinner({ scoreA: match.scoreA ?? 0, scoreB: match.scoreB ?? 0, winner: match.winner });
+                      const isWinnerA = winner === "A";
+                      const isWinnerB = winner === "B";
+
+                      return (
                       <div
                         key={match.id}
                         className="rounded-xl border-2 border-black bg-white p-3.5 shadow-[2px_2px_0px_#000] flex flex-col justify-between"
@@ -213,14 +220,16 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                         {/* Teams 2v2 */}
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           {/* Tim A */}
-                          <div className="rounded-lg bg-emerald-50/80 border border-black p-2.5 flex flex-col justify-between">
+                          <div className={`rounded-lg border border-black p-2.5 flex flex-col justify-between ${isWinnerA ? "bg-[#ccff00]/30 shadow-[1px_1px_0px_#000]" : "bg-emerald-50/80"}`}>
                             <div>
-                              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block mb-1">
-                                Tim A
-                              </span>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">
+                                  Tim A
+                                </span>
+                                {isWinnerA && <span className="text-[9px] font-black uppercase text-black font-mono">👑 MENANG</span>}
+                              </div>
                               <div className="space-y-1">
                                 {match.teamA.map((p) => {
-                                  const tier = getTierLabel(p.publicTier);
                                   return (
                                     <div key={p.id} className="flex items-center justify-between gap-1">
                                       <span className="font-bold text-black truncate">{p.name}</span>
@@ -238,19 +247,26 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                                 })}
                               </div>
                             </div>
-                            {typeof match.scoreA === "number" && (
+                            {hasScore ? (
                               <div className="mt-2 pt-1 border-t border-emerald-300 text-center font-mono font-black text-xl text-emerald-900">
                                 {match.scoreA}
                               </div>
-                            )}
+                            ) : isWinnerA ? (
+                              <div className="mt-2 pt-1 border-t border-emerald-300 text-center font-mono font-black text-xs text-emerald-900 uppercase">
+                                👑 Menang
+                              </div>
+                            ) : null}
                           </div>
 
                           {/* Tim B */}
-                          <div className="rounded-lg bg-sky-50/80 border border-black p-2.5 flex flex-col justify-between">
+                          <div className={`rounded-lg border border-black p-2.5 flex flex-col justify-between ${isWinnerB ? "bg-[#7dd3fc]/30 shadow-[1px_1px_0px_#000]" : "bg-sky-50/80"}`}>
                             <div>
-                              <span className="text-[10px] font-black uppercase text-sky-800 tracking-wider block mb-1">
-                                Tim B
-                              </span>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-black uppercase text-sky-800 tracking-wider">
+                                  Tim B
+                                </span>
+                                {isWinnerB && <span className="text-[9px] font-black uppercase text-black font-mono">👑 MENANG</span>}
+                              </div>
                               <div className="space-y-1">
                                 {match.teamB.map((p) => {
                                   return (
@@ -270,15 +286,20 @@ export function AllMatchesModal({ isOpen, onClose, session }: AllMatchesModalPro
                                 })}
                               </div>
                             </div>
-                            {typeof match.scoreB === "number" && (
+                            {hasScore ? (
                               <div className="mt-2 pt-1 border-t border-sky-300 text-center font-mono font-black text-xl text-sky-900">
                                 {match.scoreB}
                               </div>
-                            )}
+                            ) : isWinnerB ? (
+                              <div className="mt-2 pt-1 border-t border-sky-300 text-center font-mono font-black text-xs text-sky-900 uppercase">
+                                👑 Menang
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Resting Players On-Deck */}

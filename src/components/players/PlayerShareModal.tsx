@@ -6,6 +6,7 @@ import { Player } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
 import { StoryCardGenerator } from "../../services/share/story-card";
 import { getTierLabel } from "../../core/entities/player";
+import { getMatchWinner } from "../../core/entities/match";
 
 interface PlayerShareModalProps {
   isOpen: boolean;
@@ -30,10 +31,11 @@ export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerSha
   session.matches.forEach((m) => {
     const inTeamA = m.teamA.some((p) => p.id === player.id);
     const inTeamB = m.teamB.some((p) => p.id === player.id);
+    const winner = getMatchWinner(m);
 
     if (inTeamA) {
       totalPoints += m.scoreA;
-      if (m.scoreA > m.scoreB && m.status === "completed") matchesWon++;
+      if (winner === "A" && m.status === "completed") matchesWon++;
       m.teamA.forEach((partner) => {
         if (partner.id !== player.id) {
           partnerCounts[partner.name] = (partnerCounts[partner.name] || 0) + 1;
@@ -41,7 +43,7 @@ export function PlayerShareModal({ isOpen, onClose, player, session }: PlayerSha
       });
     } else if (inTeamB) {
       totalPoints += m.scoreB;
-      if (m.scoreB > m.scoreA && m.status === "completed") matchesWon++;
+      if (winner === "B" && m.status === "completed") matchesWon++;
       m.teamB.forEach((partner) => {
         if (partner.id !== player.id) {
           partnerCounts[partner.name] = (partnerCounts[partner.name] || 0) + 1;
