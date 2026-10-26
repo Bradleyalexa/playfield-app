@@ -35,6 +35,7 @@ import { Navbar } from "../components/common/Navbar";
 import { AlgorithmExplainerModal } from "../components/schedule/AlgorithmExplainerModal";
 import { WaPasteModal } from "../components/players/WaPasteModal";
 import { DonateCreatorModal } from "../components/common/DonateCreatorModal";
+import { HelpGuideModal } from "../components/common/HelpGuideModal";
 import { Player, getTierFromSkill, getTierLabel } from "../core/entities/player";
 import { generateBalancedMatches, addMinutesToTimeString } from "../core/matchmaking/balanced-queue";
 import {
@@ -104,6 +105,18 @@ export default function HomePage() {
   // Modal Penjelasan Algoritma
   const [isAlgoExplainerOpen, setIsAlgoExplainerOpen] = useState(false);
   const [isDonateCreatorOpen, setIsDonateCreatorOpen] = useState(false);
+  const [isHelpGuideOpen, setIsHelpGuideOpen] = useState(false);
+  const [helpGuideDefaultTab, setHelpGuideDefaultTab] = useState<"cara-pakai" | "faq">("cara-pakai");
+
+  const handleOpenCaraPakai = () => {
+    setHelpGuideDefaultTab("cara-pakai");
+    setIsHelpGuideOpen(true);
+  };
+
+  const handleOpenFaq = () => {
+    setHelpGuideDefaultTab("faq");
+    setIsHelpGuideOpen(true);
+  };
 
   // Daftar Pemain Awal (Bisa Diisi Sebelum Sesi Dimulai / Paste WA)
   const [initialPlayers, setInitialPlayers] = useState<Player[]>([
@@ -430,20 +443,39 @@ export default function HomePage() {
             counter shuttlecock/bola, dan display TV GOR secara instan tanpa perlu akun pemain.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto mt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 w-full sm:w-auto mt-2">
             <button
               onClick={handleLaunchDemo}
-              className="flex items-center justify-center gap-2 rounded-xl bg-[#ccff00] px-6 py-3.5 text-sm font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer min-h-[48px]"
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#ccff00] px-5 sm:px-6 py-3.5 text-xs sm:text-sm font-black text-black uppercase tracking-wider border-3 border-black shadow-[4px_4px_0px_#000] hover:bg-[#b8e600] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer min-h-[48px]"
             >
-              <Play className="h-5 w-5 fill-black stroke-[2.5]" />
-              <span>Coba Demo Langsung (1-Klik)</span>
+              <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-black stroke-[2.5]" />
+              <span>Coba Demo (1-Klik)</span>
             </button>
+
+            <button
+              type="button"
+              onClick={handleOpenCaraPakai}
+              className="flex items-center justify-center gap-2 rounded-xl border-3 border-black bg-white px-5 sm:px-6 py-3.5 text-xs sm:text-sm font-black text-black uppercase tracking-wider shadow-[4px_4px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all min-h-[48px] cursor-pointer"
+            >
+              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 stroke-[2.5]" />
+              <span>📖 Cara Pakai App</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenFaq}
+              className="flex items-center justify-center gap-2 rounded-xl border-3 border-black bg-[#00e5ff] px-5 sm:px-6 py-3.5 text-xs sm:text-sm font-black text-black uppercase tracking-wider shadow-[4px_4px_0px_#000] hover:bg-[#00cce6] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all min-h-[48px] cursor-pointer"
+            >
+              <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 stroke-[2.5]" />
+              <span>❓ FAQ Mabar</span>
+            </button>
+
             <Link
               href="/education"
-              className="flex items-center justify-center gap-2 rounded-xl border-3 border-black bg-white px-6 py-3.5 text-sm font-black text-black uppercase tracking-wider shadow-[4px_4px_0px_#000] hover:bg-slate-100 active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all min-h-[48px]"
+              className="flex items-center justify-center gap-2 rounded-xl border-3 border-black bg-[#faf8f2] px-4 py-3.5 text-xs sm:text-sm font-black text-black uppercase tracking-wider shadow-[4px_4px_0px_#000] hover:bg-white active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all min-h-[48px]"
             >
-              <BookOpen className="h-5 w-5 stroke-[2.5]" />
-              <span>Panduan & Edukasi Sport</span>
+              <Sparkles className="h-4 w-4 stroke-[2.5]" />
+              <span>Aturan Sport</span>
             </Link>
           </div>
         </div>
@@ -1911,16 +1943,41 @@ export default function HomePage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsDonateCreatorOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ffde00] hover:bg-[#ebd000] border-2 sm:border-3 border-black text-xs font-black uppercase tracking-wider text-black shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
-          >
-            <Coffee className="h-4 w-4 stroke-[2.5]" />
-            <span>☕ Dukung Creator (QRIS)</span>
-          </button>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={handleOpenCaraPakai}
+              className="text-xs font-black uppercase text-black hover:text-[#ff5500] hover:underline cursor-pointer px-2 py-1"
+            >
+              📖 Cara Pakai
+            </button>
+            <span className="text-black/30 hidden sm:inline">•</span>
+            <button
+              type="button"
+              onClick={handleOpenFaq}
+              className="text-xs font-black uppercase text-black hover:text-[#ff5500] hover:underline cursor-pointer px-2 py-1"
+            >
+              ❓ FAQ Mabar
+            </button>
+            <span className="text-black/30 hidden sm:inline">•</span>
+            <button
+              type="button"
+              onClick={() => setIsDonateCreatorOpen(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#ffde00] hover:bg-[#ebd000] border-2 sm:border-3 border-black text-xs font-black uppercase tracking-wider text-black shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
+            >
+              <Coffee className="h-4 w-4 stroke-[2.5]" />
+              <span>☕ Dukung Creator</span>
+            </button>
+          </div>
         </div>
       </footer>
+
+      {/* Modal Popup Cara Pakai & FAQ App */}
+      <HelpGuideModal
+        isOpen={isHelpGuideOpen}
+        onClose={() => setIsHelpGuideOpen(false)}
+        defaultTab={helpGuideDefaultTab}
+      />
 
       {/* Modal Popup Penjelasan Algoritma Lengkap */}
       <AlgorithmExplainerModal
