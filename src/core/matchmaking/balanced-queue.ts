@@ -28,6 +28,7 @@ export interface ProjectedRound {
   restingPlayers: Player[];
   isCompleted: boolean;
   isCurrent: boolean;
+  isSameTierRound?: boolean;
 }
 
 /**
@@ -118,6 +119,9 @@ export function generateBalancedMatches(
   // 3. Pengelompokan Pemain per Lapangan
   let courtPlayerGroups: Player[][] = [];
 
+  const isPlayfieldsSameTierRound =
+    algorithm === "playfields_mix" && actualCourtsToMake >= 2 && roundNumber % 3 === 0;
+
   if (algorithm === "hybrid_2plus2") {
     // HYBRID 2+2:
     // Game 1 & 2 (atau ronde ganjil-block): FASE MIX LEVEL (Pemanasan & Baurkan)
@@ -126,17 +130,12 @@ export function generateBalancedMatches(
 
     if (!isMixPhase) {
       // FASE 2: LEVEL SAMA (Sesama Level Skill)
-      // Urutkan semua pemain terpilih dari skill tertinggi ke terendah
-      // Lapangan 1 = 4 pemain skill tertinggi (Advanced vs Advanced)
-      // Lapangan 2 = 4 pemain berikutnya (Intermediate vs Intermediate)
-      // Lapangan 3 = 4 pemain berikutnya (Beginner vs Beginner)
       const sortedBySkill = [...selectedPlayers].sort((a, b) => b.skillLevel - a.skillLevel);
       for (let c = 0; c < actualCourtsToMake; c++) {
         courtPlayerGroups.push(sortedBySkill.slice(c * 4, (c + 1) * 4));
       }
     } else {
       // FASE 1: MIX LEVEL (Silang Tier)
-      // Distribusikan pemain lintas tier secara merata ke tiap lapangan (Cross-Tier Snake Distribution)
       const sortedBySkill = [...selectedPlayers].sort((a, b) => b.skillLevel - a.skillLevel);
       const groups: Player[][] = Array.from({ length: actualCourtsToMake }, () => []);
 
@@ -152,6 +151,15 @@ export function generateBalancedMatches(
         }
       }
       courtPlayerGroups = groups;
+    }
+  } else if (isPlayfieldsSameTierRound) {
+    // PLAYFIELD'S MIX - PUTARAN LEVEL IMBANG (TIER DUEL SETIAP RONDE KE-3):
+    // Mengelompokkan lapangan berdasarkan kesetaraan level:
+    // Lapangan 1 = 4 pemain tier teratas (misal sesama Advanced/Pro)
+    // Lapangan 2 = 4 pemain tier menengah/berikutnya (misal sesama Intermediate/Beginner)
+    const sortedBySkill = [...selectedPlayers].sort((a, b) => b.skillLevel - a.skillLevel);
+    for (let c = 0; c < actualCourtsToMake; c++) {
+      courtPlayerGroups.push(sortedBySkill.slice(c * 4, (c + 1) * 4));
     }
   } else {
     for (let c = 0; c < actualCourtsToMake; c++) {
@@ -350,6 +358,13 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
     const isPast = r < session.currentRound;
     const isCurrent = r === session.currentRound;
 
+    const isSameTierRound =
+      session.algorithm === "hybrid_2plus2"
+        ? Math.floor((r - 1) / 2) % 2 !== 0
+        : session.algorithm === "playfields_mix"
+        ? courtCount >= 2 && r % 3 === 0
+        : false;
+
     if (isPast) {
       // Ronde masa lalu: Ambil dari riwayat match aktual
       const pastMatches = session.matches.filter((m) => m.roundNumber === r);
@@ -361,6 +376,7 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
         timeRange,
         isCompleted: true,
         isCurrent: false,
+        isSameTierRound,
         matches: pastMatches.map((m) => ({
           id: m.id,
           roundNumber: r,
@@ -407,6 +423,7 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
         timeRange,
         isCompleted: false,
         isCurrent: true,
+        isSameTierRound,
         matches: currentCourtMatches,
         restingPlayers: resting,
       });
@@ -447,6 +464,7 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
         timeRange,
         isCompleted: false,
         isCurrent: false,
+        isSameTierRound,
         matches: projectedMatches,
         restingPlayers: simResult.restingPlayers,
       });

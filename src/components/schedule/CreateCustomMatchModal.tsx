@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Plus, Users, Shield, CheckCircle2, Trophy, Flame } from "lucide-react";
+import { X, Plus, Users, Shield, CheckCircle2, Trophy, Flame, Shuffle, RotateCcw, Sparkles, HeartHandshake } from "lucide-react";
 import { getTierLabel, Player } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
 import { Match } from "../../core/entities/match";
@@ -26,6 +26,7 @@ export function CreateCustomMatchModal({
   const [teamBPlayer1Id, setTeamBPlayer1Id] = useState<string>("");
   const [teamBPlayer2Id, setTeamBPlayer2Id] = useState<string>("");
   const [assignNow, setAssignNow] = useState<boolean>(true);
+  const [shuffleNotice, setShuffleNotice] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -35,6 +36,106 @@ export function CreateCustomMatchModal({
     if (arrivedA !== arrivedB) return arrivedB - arrivedA;
     return a.name.localeCompare(b.name);
   });
+
+  const currentlyPlayingIds = new Set(
+    session.courts.flatMap((c) =>
+      c.currentMatch ? [...c.currentMatch.teamA, ...c.currentMatch.teamB].map((p) => p.id) : []
+    )
+  );
+
+  // Pool pemain siap main (aktif & tiba), diutamakan yang sedang istirahat
+  const readyPlayers = session.players.filter((p) => p.status === "active" && p.isArrived !== false);
+  const restingPlayers = readyPlayers.filter((p) => !currentlyPlayingIds.has(p.id));
+  const candidatePool = restingPlayers.length >= 4 ? restingPlayers : readyPlayers;
+
+  // 1. Acak Seimbang Level (Mix Tier Terkuat + Terendah vs Dua Menengah)
+  const handleShuffleByLevel = () => {
+    if (candidatePool.length < 4) {
+      alert("Pemain aktif yang tiba kurang dari 4 orang.");
+      return;
+    }
+    // Urutkan kandidat berdasarkan jatah main paling sedikit & istirahat terlama
+    const sortedCandidates = [...candidatePool].sort((a, b) => {
+      if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;
+      const restA = roundNumber - a.lastPlayedRound;
+      const restB = roundNumber - b.lastPlayedRound;
+      return restB - restA;
+    });
+
+    const four = sortedCandidates.slice(0, 4);
+    const males = four.filter((p) => p.gender === "M").sort((a, b) => b.skillLevel - a.skillLevel);
+    const females = four.filter((p) => p.gender === "F").sort((a, b) => b.skillLevel - a.skillLevel);
+
+    if (males.length >= 2 && females.length >= 2) {
+      // Ganda Campuran Seimbang
+      setTeamAPlayer1Id(males[0].id);
+      setTeamAPlayer2Id(females[females.length - 1].id);
+      setTeamBPlayer1Id(males[1].id);
+      setTeamBPlayer2Id(females[0].id);
+      setShuffleNotice("🎲 Berhasil di-shuffle: Ganda Campuran Seimbang Level!");
+    } else {
+      four.sort((a, b) => b.skillLevel - a.skillLevel);
+      setTeamAPlayer1Id(four[0].id);
+      setTeamAPlayer2Id(four[3].id);
+      setTeamBPlayer1Id(four[1].id);
+      setTeamBPlayer2Id(four[2].id);
+      setShuffleNotice("⚡ Berhasil di-shuffle: Tim A & Tim B Berimbang Level!");
+    }
+    setTimeout(() => setShuffleNotice(null), 3000);
+  };
+
+  // 2. Acak Ganda Campuran (2 Pria + 2 Wanita)
+  const handleShuffleMixedDoubles = () => {
+    const males = candidatePool.filter((p) => p.gender === "M").sort((a, b) => a.gamesPlayed - b.gamesPlayed);
+    const females = candidatePool.filter((p) => p.gender === "F").sort((a, b) => a.gamesPlayed - b.gamesPlayed);
+
+    if (males.length < 2 || females.length < 2) {
+      alert("Dibutuhkan minimal 2 Pemain Pria dan 2 Pemain Wanita yang aktif & sudah tiba.");
+      return;
+    }
+
+    const chosenMales = males.slice(0, 2).sort((a, b) => b.skillLevel - a.skillLevel);
+    const chosenFemales = females.slice(0, 2).sort((a, b) => b.skillLevel - a.skillLevel);
+
+    setTeamAPlayer1Id(chosenMales[0].id);
+    setTeamAPlayer2Id(chosenFemales[1].id);
+    setTeamBPlayer1Id(chosenMales[1].id);
+    setTeamBPlayer2Id(chosenFemales[0].id);
+    setShuffleNotice("👫 Berhasil di-shuffle: Ganda Campuran (XD vs XD)!");
+    setTimeout(() => setShuffleNotice(null), 3000);
+  };
+
+  // 3. Acak Fair Rest (4 Pemain Paling Lama Istirahat)
+  const handleShuffleFairRest = () => {
+    if (candidatePool.length < 4) {
+      alert("Pemain aktif yang tiba kurang dari 4 orang.");
+      return;
+    }
+    const sorted = [...candidatePool].sort((a, b) => {
+      const restA = roundNumber - a.lastPlayedRound;
+      const restB = roundNumber - b.lastPlayedRound;
+      if (restA !== restB) return restB - restA;
+      return a.gamesPlayed - b.gamesPlayed;
+    });
+
+    const four = sorted.slice(0, 4).sort((a, b) => b.skillLevel - a.skillLevel);
+    setTeamAPlayer1Id(four[0].id);
+    setTeamAPlayer2Id(four[3].id);
+    setTeamBPlayer1Id(four[1].id);
+    setTeamBPlayer2Id(four[2].id);
+    setShuffleNotice("⏱️ Berhasil di-shuffle: 4 Pemain Paling Lama Istirahat!");
+    setTimeout(() => setShuffleNotice(null), 3000);
+  };
+
+  // 4. Reset Semua Slot
+  const handleResetSelection = () => {
+    setTeamAPlayer1Id("");
+    setTeamAPlayer2Id("");
+    setTeamBPlayer1Id("");
+    setTeamBPlayer2Id("");
+    setShuffleNotice("🔄 Form slot pemain telah dikosongkan.");
+    setTimeout(() => setShuffleNotice(null), 2000);
+  };
 
   const playerA1 = session.players.find((p) => p.id === teamAPlayer1Id);
   const playerA2 = session.players.find((p) => p.id === teamAPlayer2Id);
@@ -140,6 +241,64 @@ export function CreateCustomMatchModal({
                 className="w-full rounded-xl bg-[#faf8f2] border-2 border-black px-3 py-2 text-xs font-mono font-black text-black shadow-[2px_2px_0px_#000]"
               />
             </div>
+          </div>
+
+          {/* Quick Shuffle Bar by Sistem */}
+          <div className="p-3.5 rounded-2xl bg-[#ffde00]/25 border-2 border-black shadow-[3px_3px_0px_#000] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-black flex items-center gap-1.5">
+                <Shuffle className="h-3.5 w-3.5 stroke-[3]" />
+                Opsi Kocok Cepat (Quick Shuffle by Sistem)
+              </span>
+              <span className="text-[10px] font-mono font-bold text-black/60">
+                Tersedia {candidatePool.length} pemain siap
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleShuffleByLevel}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#ccff00] hover:bg-[#b8e600] text-black border-2 border-black font-black text-[11px] shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              >
+                <Sparkles className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>🎲 Acak Seimbang Level</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShuffleMixedDoubles}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-black border-2 border-black font-black text-[11px] shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              >
+                <HeartHandshake className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>👫 Acak Ganda Campuran (XD)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShuffleFairRest}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-black border-2 border-black font-black text-[11px] shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              >
+                <Flame className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>⏱️ Acak Fair Rest</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetSelection}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-950 border-2 border-black font-black text-[11px] shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ml-auto"
+                title="Kosongkan form agar bisa isi manual"
+              >
+                <RotateCcw className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>Reset / Manual</span>
+              </button>
+            </div>
+
+            {shuffleNotice && (
+              <div className="text-[11px] font-black text-black bg-[#ccff00] border border-black rounded-lg px-2.5 py-1 animate-in fade-in duration-150">
+                {shuffleNotice}
+              </div>
+            )}
           </div>
 
           {/* Grid Pemilihan Tim A & Tim B */}
