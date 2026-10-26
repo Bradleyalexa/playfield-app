@@ -712,6 +712,18 @@ function HostDashboardContent({ params }: HostPageProps) {
     AudioAnnouncer.announceGeneral("Semua pemain telah ditandai hadir di lokasi.");
   };
 
+  // 6g. Tandai Semua Pemain Belum Tiba (OTW)
+  const handleMarkAllNotArrived = () => {
+    const updatedPlayers = session.players.map((p) => ({
+      ...p,
+      isArrived: false,
+    }));
+    const updated: GameSession = { ...session, players: updatedPlayers };
+    setSession(updated);
+    LocalStorageAdapter.saveSession(updated);
+    AudioAnnouncer.announceGeneral("Semua pemain telah disetel berstatus OTW / belum tiba.");
+  };
+
   // 6b. Hapus Pemain dari Roster
   const handleRemovePlayer = (playerId: string) => {
     const targetPlayer = session.players.find((p) => p.id === playerId);
@@ -1453,6 +1465,7 @@ function HostDashboardContent({ params }: HostPageProps) {
           onRemovePlayer={handleRemovePlayer}
           onTogglePlayerArrival={handleTogglePlayerArrival}
           onMarkAllArrived={handleMarkAllArrived}
+          onMarkAllNotArrived={handleMarkAllNotArrived}
         />
 
         {/* Floating Undo Toast saat Selesaikan Match (Safety Net 6 Detik) */}

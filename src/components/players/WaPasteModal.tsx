@@ -14,6 +14,7 @@ interface WaPasteModalProps {
 export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalProps) {
   const [rawText, setRawText] = useState("");
   const [overrideGenders, setOverrideGenders] = useState<Record<number, "M" | "F">>({});
+  const [markAsArrived, setMarkAsArrived] = useState(true);
 
   const baseParsed = parseWhatsAppList(rawText);
   const parsed = baseParsed.map((p, idx) => ({
@@ -22,8 +23,6 @@ export function WaPasteModal({ isOpen, onClose, onImportPlayers }: WaPasteModalP
   }));
 
   if (!isOpen) return null;
-
-  const [markAsArrived, setMarkAsArrived] = useState(true);
 
   const toggleGender = (idx: number) => {
     const current = parsed[idx].gender;

@@ -188,6 +188,20 @@ export default function HomePage() {
     setInitialPlayers((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const handleToggleInitialPlayerArrival = (id: string) => {
+    setInitialPlayers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, isArrived: p.isArrived === false ? true : false } : p))
+    );
+  };
+
+  const handleMarkAllInitialArrived = () => {
+    setInitialPlayers((prev) => prev.map((p) => ({ ...p, isArrived: true })));
+  };
+
+  const handleMarkAllInitialNotArrived = () => {
+    setInitialPlayers((prev) => prev.map((p) => ({ ...p, isArrived: false })));
+  };
+
   const handleLoadDemo4Players = () => {
     setInitialPlayers([
       { id: `p-${Date.now()}-1`, name: "Hendra Setiawan", gender: "M", skillLevel: 3, publicTier: "suhu", gamesPlayed: 0, lastPlayedRound: 0, status: "active", eloRating: 1300, createdAt: new Date().toISOString() },
@@ -848,9 +862,10 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-[#ccff00] text-black border border-black shadow-[1px_1px_0px_#000]">
-                      {initialPlayers.length} Pemain (
-                      {initialPlayers.filter((p) => p.gender === "M").length} M •{" "}
-                      {initialPlayers.filter((p) => p.gender === "F").length} W)
+                      {initialPlayers.length} Pemain ({initialPlayers.filter((p) => p.isArrived !== false).length} Hadir • {initialPlayers.filter((p) => p.isArrived === false).length} OTW)
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-black">
+                      {initialPlayers.filter((p) => p.gender === "M").length} M • {initialPlayers.filter((p) => p.gender === "F").length} W
                     </span>
                   </div>
                 </div>
@@ -879,14 +894,38 @@ export default function HomePage() {
                   </button>
 
                   {initialPlayers.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setInitialPlayers([])}
-                      className="flex items-center gap-1 rounded-xl bg-white border-2 border-black px-3 py-2 text-xs font-black text-rose-600 hover:bg-rose-50 shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      <span>Kosongkan</span>
-                    </button>
+                    <>
+                      {initialPlayers.some((p) => p.isArrived === false) && (
+                        <button
+                          type="button"
+                          onClick={handleMarkAllInitialArrived}
+                          className="flex items-center gap-1 rounded-xl bg-emerald-300 border-2 border-black px-3 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-emerald-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                          title="Tandai semua pemain awal sudah hadir di GOR"
+                        >
+                          <span>✅ Semua Hadir</span>
+                        </button>
+                      )}
+
+                      {initialPlayers.some((p) => p.isArrived !== false) && (
+                        <button
+                          type="button"
+                          onClick={handleMarkAllInitialNotArrived}
+                          className="flex items-center gap-1 rounded-xl bg-[#ffde00] border-2 border-black px-3 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:bg-amber-300 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                          title="Tandai semua pemain awal berstatus belum tiba (OTW)"
+                        >
+                          <span>⏳ Semua OTW</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setInitialPlayers([])}
+                        className="flex items-center gap-1 rounded-xl bg-white border-2 border-black px-3 py-2 text-xs font-black text-rose-600 hover:bg-rose-50 shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Kosongkan</span>
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -965,7 +1004,11 @@ export default function HomePage() {
                       return (
                         <div
                           key={player.id}
-                          className="flex items-center gap-1.5 rounded-xl bg-white border-2 border-black px-2.5 py-1 text-xs shadow-[2px_2px_0px_#000]"
+                          className={`flex items-center gap-1.5 rounded-xl border-2 border-black px-2.5 py-1 text-xs shadow-[2px_2px_0px_#000] transition-all ${
+                            player.isArrived === false
+                              ? "bg-amber-50/80 border-dashed border-amber-500"
+                              : "bg-white"
+                          }`}
                         >
                           <span className="font-extrabold text-black">{player.name}</span>
                           <span
@@ -980,6 +1023,21 @@ export default function HomePage() {
                           <span className={`text-[9px] px-1 py-0.2 rounded ${tier.badgeColor}`}>
                             {tier.label.replace("Tier ", "")}
                           </span>
+
+                          {/* Tombol Toggle Hadir vs OTW */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleInitialPlayerArrival(player.id)}
+                            title="Klik untuk ubah status Hadir / OTW"
+                            className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] cursor-pointer transition-all active:scale-95 ${
+                              player.isArrived === false
+                                ? "bg-[#ffde00] text-black"
+                                : "bg-[#ccff00] text-black"
+                            }`}
+                          >
+                            {player.isArrived === false ? "⏳ OTW" : "✅ Hadir"}
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => handleRemoveInitialPlayer(player.id)}

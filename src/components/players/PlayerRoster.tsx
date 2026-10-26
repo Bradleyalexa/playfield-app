@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pause, Play, Share2, ClipboardPaste, Plus, UserCheck, Shield, Trash2 } from "lucide-react";
+import { Pause, Play, Share2, ClipboardPaste, Plus, UserCheck, Shield, Trash2, Clock } from "lucide-react";
 import { getTierLabel, Player } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
 import { PlayerShareModal } from "./PlayerShareModal";
@@ -14,6 +14,7 @@ interface PlayerRosterProps {
   onRemovePlayer?: (playerId: string) => void;
   onTogglePlayerArrival?: (playerId: string) => void;
   onMarkAllArrived?: () => void;
+  onMarkAllNotArrived?: () => void;
 }
 
 export function PlayerRoster({
@@ -24,6 +25,7 @@ export function PlayerRoster({
   onRemovePlayer,
   onTogglePlayerArrival,
   onMarkAllArrived,
+  onMarkAllNotArrived,
 }: PlayerRosterProps) {
   const [quickName, setQuickName] = useState("");
   const [selectedGender, setSelectedGender] = useState<"M" | "F">("M");
@@ -141,6 +143,18 @@ export function PlayerRoster({
             >
               <UserCheck className="h-4 w-4 stroke-[2.5]" />
               <span>Hadir Semua ({notArrivedCount})</span>
+            </button>
+          )}
+
+          {arrivedCount > 0 && onMarkAllNotArrived && (
+            <button
+              type="button"
+              onClick={onMarkAllNotArrived}
+              className="flex items-center gap-1.5 rounded-lg bg-[#ffde00] border-2 border-black px-3 py-1.5 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer shrink-0 hover:bg-amber-300"
+              title="Setel semua pemain berstatus belum tiba (OTW)"
+            >
+              <Clock className="h-4 w-4 stroke-[2.5]" />
+              <span>Semua OTW ({arrivedCount})</span>
             </button>
           )}
 
@@ -337,17 +351,36 @@ export function PlayerRoster({
                   >
                     {player.gender === "M" ? "M" : "W"}
                   </span>
-                  {/* Status Badge Langsung Terlihat di HP */}
-                  {!isArrived ? (
+                  {/* Selector Kehadiran: Hadir vs OTW (Bisa Diubah Kapan Saja) */}
+                  <div className="flex items-center rounded-lg border-2 border-black bg-white overflow-hidden shadow-[1px_1px_0px_#000] shrink-0">
                     <button
                       type="button"
-                      onClick={() => handleToggleArrivalWithFeedback(player.id)}
-                      title="Klik untuk check-in hadir di lokasi"
-                      className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-200 hover:bg-amber-300 border border-black text-amber-950 cursor-pointer shadow-[1px_1px_0px_#000]"
+                      onClick={() => !isArrived && handleToggleArrivalWithFeedback(player.id)}
+                      className={`px-2 py-0.5 text-[9px] font-black uppercase transition-all cursor-pointer ${
+                        isArrived
+                          ? "bg-[#ccff00] text-black"
+                          : "bg-white text-slate-400 hover:text-black hover:bg-slate-50"
+                      }`}
+                      title={`Tandai ${player.name} Hadir di GOR`}
                     >
-                      ⏳ OTW / Belum Tiba
+                      ✅ Hadir
                     </button>
-                  ) : isPaused ? (
+                    <button
+                      type="button"
+                      onClick={() => isArrived && handleToggleArrivalWithFeedback(player.id)}
+                      className={`px-2 py-0.5 text-[9px] font-black uppercase transition-all border-l border-black cursor-pointer ${
+                        !isArrived
+                          ? "bg-[#ffde00] text-black"
+                          : "bg-white text-slate-400 hover:text-black hover:bg-slate-50"
+                      }`}
+                      title={`Tandai ${player.name} Belum Tiba (OTW)`}
+                    >
+                      ⏳ OTW
+                    </button>
+                  </div>
+
+                  {/* Status Lapangan / Rehat */}
+                  {isPaused ? (
                     <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-[#ffde00] border border-black text-black">
                       ⏸️ Rehat
                     </span>
@@ -355,16 +388,7 @@ export function PlayerRoster({
                     <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-[#ccff00] border border-black text-black">
                       🔥 Di Lapangan
                     </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleToggleArrivalWithFeedback(player.id)}
-                      title="Pemain sudah hadir. Klik jika ingin ubah ke Belum Tiba (OTW)"
-                      className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 text-emerald-800 cursor-pointer"
-                    >
-                      ✅ Hadir
-                    </button>
-                  )}
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className={`text-[9px] px-1.5 py-0.2 rounded ${tier.badgeColor}`}>
