@@ -855,11 +855,6 @@ export default function HomePage() {
                             >
                               {meta.equipmentBadge}
                             </span>
-                            {isSelected && (
-                              <span className="text-[10px] font-black uppercase bg-black text-[#ccff00] px-1.5 py-0.5 rounded border border-black">
-                                ✓ AKTIF
-                              </span>
-                            )}
                           </div>
 
                           <div className="flex flex-col items-center text-center my-2">

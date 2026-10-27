@@ -4,6 +4,8 @@ import React, { useState, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ExternalLink,
   Plus,
   Users,
   Clock,
@@ -153,12 +155,21 @@ const STEP_LABELS = [
 
 export function SessionWizardForm(props: SessionWizardFormProps) {
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [algoViewMode, setAlgoViewMode] = useState<"carousel" | "grid">("carousel");
   const sportCarouselRef = useRef<HTMLDivElement>(null);
+  const algoCarouselRef = useRef<HTMLDivElement>(null);
 
   const scrollSportCarousel = (direction: "left" | "right") => {
     if (sportCarouselRef.current) {
       const scrollAmount = direction === "left" ? -240 : 240;
       sportCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  const scrollAlgoCarousel = (direction: "left" | "right") => {
+    if (algoCarouselRef.current) {
+      const scrollAmount = direction === "left" ? -280 : 280;
+      algoCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
   };
 
@@ -321,11 +332,6 @@ export function SessionWizardForm(props: SessionWizardFormProps) {
                           >
                             {meta.equipmentBadge}
                           </span>
-                          {isSelected && (
-                            <span className="text-[10px] font-black uppercase bg-black text-[#ccff00] px-1.5 py-0.5 rounded border border-black">
-                              ✓ AKTIF
-                            </span>
-                          )}
                         </div>
 
                         <div className="flex flex-col items-center text-center my-2">
@@ -569,7 +575,7 @@ export function SessionWizardForm(props: SessionWizardFormProps) {
         {/* ============================================================== */}
         {currentStep === 3 && (
           <div className="flex flex-col gap-4 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-black">
                   Pilih Algoritma Rotasi Lapangan
@@ -579,54 +585,228 @@ export function SessionWizardForm(props: SessionWizardFormProps) {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={props.onOpenAlgoExplainer}
-                className="text-xs font-black uppercase flex items-center gap-1 text-black bg-[#faf8f2] border-2 border-black px-2.5 py-1 rounded-lg shadow-[2px_2px_0px_#000] hover:bg-[#ccff00] cursor-pointer"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                <span>Pelajari Formula</span>
-              </button>
+              {/* Switch Mode Tampilan: Carousel vs Grid */}
+              <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setAlgoViewMode("carousel")}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-black border-2 border-black transition-all cursor-pointer flex items-center gap-1 ${
+                    algoViewMode === "carousel"
+                      ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                      : "bg-white text-black hover:bg-slate-50"
+                  }`}
+                  title="Tampilan Carousel Geser (Lebih Hemat Ruang)"
+                >
+                  <span>🎠 Geser / Slider</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAlgoViewMode("grid")}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-black border-2 border-black transition-all cursor-pointer flex items-center gap-1 ${
+                    algoViewMode === "grid"
+                      ? "bg-[#ccff00] text-black shadow-[2px_2px_0px_#000]"
+                      : "bg-white text-black hover:bg-slate-50"
+                  }`}
+                  title="Tampilan Grid (Lihat Semua Pilihan)"
+                >
+                  <span>⊞ Grid Semua</span>
+                </button>
+              </div>
             </div>
 
-            {/* Grid Kartu Algoritma */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
-              {Object.values(ALGORITHM_REGISTRY).map((algo) => {
-                const isSelected = props.selectedAlgorithm === algo.id;
-                return (
-                  <div
-                    key={algo.id}
-                    onClick={() => props.setSelectedAlgorithm(algo.id)}
-                    className={`p-3.5 rounded-2xl border-3 border-black transition-all cursor-pointer flex flex-col justify-between ${
-                      isSelected
-                        ? "bg-[#ccff00]/30 shadow-[4px_4px_0px_#000] ring-2 ring-black -translate-y-0.5"
-                        : "bg-white hover:bg-[#faf8f2] shadow-[2px_2px_0px_#000]"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                        <span className="font-black text-sm text-black flex items-center gap-1.5 truncate">
-                          <span>{algo.icon}</span>
-                          <span className="truncate">{algo.shortName}</span>
-                        </span>
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-black shrink-0 ${algo.badgeColor}`}>
-                          {algo.badge}
-                        </span>
-                      </div>
-                      <p className="text-xs font-medium text-black/80 leading-relaxed line-clamp-3">
-                        {algo.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-3 pt-2 border-t border-black/15 flex items-center justify-between text-[10px] font-mono">
-                      <span className="font-bold text-slate-600 truncate">{algo.bestFor}</span>
-                      <span className={`font-black px-1.5 py-0.5 rounded ${isSelected ? "bg-black text-[#ccff00]" : "text-black/50"}`}>
-                        {isSelected ? "✓ AKTIF" : "Pilih"}
-                      </span>
-                    </div>
+            {/* Banner Trigger Modal Penjelasan Algoritma Lengkap */}
+            <div
+              onClick={props.onOpenAlgoExplainer}
+              className="p-2.5 sm:p-3 rounded-2xl bg-white border-2 border-black shadow-[3px_3px_0px_#000] hover:bg-[#ccff00]/20 hover:shadow-[4px_4px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer flex items-center justify-between gap-3 group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-[#ccff00] text-black border-2 border-black shadow-[1px_1px_0px_#000] flex items-center justify-center font-black shrink-0 group-hover:scale-105 transition-transform text-sm">
+                  <BookOpen className="h-4 w-4 stroke-[2.5]" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-tight text-black truncate">
+                      Pelajari Cara Kerja &amp; Perbandingan {Object.keys(ALGORITHM_REGISTRY).length} Algoritma
+                    </span>
+                    <span className="text-[9px] font-mono font-black uppercase bg-black text-[#ccff00] px-1.5 py-0.2 rounded hidden sm:inline">
+                      PANDUAN
+                    </span>
                   </div>
-                );
-              })}
+                  <p className="text-[10px] font-semibold text-black/70 truncate">
+                    Lihat formula antrean, penyeimbang skill ganda, dan rekomendasi kasus GOR
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-[11px] font-mono font-black text-black bg-[#faf8f2] border-2 border-black px-2.5 py-1 rounded-lg shadow-[1px_1px_0px_#000] shrink-0 group-hover:bg-[#ccff00] transition-colors">
+                Detail →
+              </span>
+            </div>
+
+            {/* TAMPILAN 1: MODE CAROUSEL / SLIDER */}
+            {algoViewMode === "carousel" ? (
+              <div className="relative flex flex-col gap-2">
+                <div
+                  ref={algoCarouselRef}
+                  className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 px-1 -mx-1 no-scrollbar select-none"
+                >
+                  {Object.values(ALGORITHM_REGISTRY).map((algo, idx) => {
+                    const isSelected = props.selectedAlgorithm === algo.id;
+                    return (
+                      <div
+                        key={algo.id}
+                        onClick={() => props.setSelectedAlgorithm(algo.id)}
+                        className={`w-[260px] sm:w-[290px] shrink-0 snap-start p-3.5 rounded-2xl border-3 border-black transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? "bg-[#ccff00]/25 shadow-[4px_4px_0px_#000] ring-2 ring-black -translate-y-0.5"
+                            : "bg-white hover:bg-[#faf8f2] shadow-[2px_2px_0px_#000]"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1.5 mb-2">
+                            <span className="font-black text-sm text-black flex items-center gap-1.5 truncate">
+                              <span>{algo.icon}</span>
+                              <span className="truncate">{algo.shortName}</span>
+                            </span>
+                            <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-black shrink-0 ${algo.badgeColor}`}>
+                              {algo.badge}
+                            </span>
+                          </div>
+                          <p className="text-xs font-medium text-black/80 leading-relaxed mb-2 line-clamp-3">
+                            {algo.description}
+                          </p>
+                        </div>
+                        <div className="pt-2 border-t border-black/15 flex items-center justify-between">
+                          <span className="text-[9px] font-mono font-bold text-black/60 truncate mr-2">
+                            🎯 {algo.bestFor.replace("Mabar ", "")}
+                          </span>
+                          {isSelected ? (
+                            <span className="text-[9px] font-mono font-black text-black bg-[#ccff00] px-1.5 py-0.5 rounded border border-black shrink-0 shadow-[1px_1px_0px_#000]">
+                              ✓ DIPILIH
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-mono font-bold text-slate-500 hover:text-black shrink-0">
+                              Pilih →
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Dots & Nav Buttons */}
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-1.5">
+                    {Object.values(ALGORITHM_REGISTRY).map((algo, idx) => (
+                      <button
+                        key={algo.id}
+                        type="button"
+                        onClick={() => {
+                          props.setSelectedAlgorithm(algo.id);
+                          if (algoCarouselRef.current) {
+                            const card = algoCarouselRef.current.children[idx] as HTMLElement;
+                            card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+                          }
+                        }}
+                        className={`h-2.5 rounded-full transition-all cursor-pointer ${
+                          props.selectedAlgorithm === algo.id
+                            ? "w-6 bg-black"
+                            : "w-2 bg-black/25 hover:bg-black/60"
+                        }`}
+                        title={algo.shortName}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono font-bold text-slate-500 mr-1 hidden sm:inline">
+                      Geser kartu
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => scrollAlgoCarousel("left")}
+                      className="h-8 w-8 rounded-lg bg-white border-2 border-black flex items-center justify-center font-black hover:bg-slate-100 shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer text-sm"
+                      title="Geser ke Kiri"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollAlgoCarousel("right")}
+                      className="h-8 w-8 rounded-lg bg-[#ccff00] border-2 border-black flex items-center justify-center font-black hover:bg-[#b8e600] shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer text-sm"
+                      title="Geser ke Kanan"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* TAMPILAN 2: MODE GRID SEMUA (NO MAX-HEIGHT RESTRICTION) */
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {Object.values(ALGORITHM_REGISTRY).map((algo) => {
+                  const isSelected = props.selectedAlgorithm === algo.id;
+                  return (
+                    <div
+                      key={algo.id}
+                      onClick={() => props.setSelectedAlgorithm(algo.id)}
+                      className={`p-3.5 rounded-2xl border-3 border-black transition-all cursor-pointer flex flex-col justify-between ${
+                        isSelected
+                          ? "bg-[#ccff00]/25 shadow-[4px_4px_0px_#000] ring-2 ring-black -translate-y-0.5"
+                          : "bg-white hover:bg-[#faf8f2] shadow-[2px_2px_0px_#000]"
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="font-black text-sm text-black flex items-center gap-1.5">
+                            <span>{algo.icon}</span>
+                            <span>{algo.shortName}</span>
+                          </span>
+                          <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-black shrink-0 ${algo.badgeColor}`}>
+                            {algo.badge}
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium text-black/80 leading-relaxed mb-2">
+                          {algo.description}
+                        </p>
+                      </div>
+                      <div className="pt-2 border-t border-black/15 flex items-center justify-between">
+                        <span className="text-[9px] font-mono font-bold text-slate-600 truncate mr-2">
+                          🎯 {algo.bestFor.replace("Mabar ", "")}
+                        </span>
+                        {isSelected ? (
+                          <span className="text-[9px] font-mono font-black text-black bg-[#ccff00] px-1.5 py-0.5 rounded border border-black shrink-0 shadow-[1px_1px_0px_#000]">
+                            ✓ DIPILIH
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-mono font-bold text-slate-500 hover:text-black shrink-0">
+                            Pilih →
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Callout Ringkas Algoritma yang Sedang Dipilih */}
+            <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xl shrink-0">{activeAlgo.icon}</span>
+                <div className="min-w-0">
+                  <span className="font-black text-black block truncate">
+                    {activeAlgo.name} ({activeAlgo.badge})
+                  </span>
+                  <span className="text-[10px] text-slate-600 block truncate">
+                    {activeAlgo.bestFor}
+                  </span>
+                </div>
+              </div>
+              <span className="font-mono text-[10px] font-black uppercase px-2 py-0.5 rounded bg-[#ccff00] text-black border border-black shrink-0">
+                Formula Aktif
+              </span>
             </div>
           </div>
         )}
@@ -867,35 +1047,646 @@ export function SessionWizardForm(props: SessionWizardFormProps) {
               </div>
             </div>
 
-            {/* Dropdown Opsional Ringkas: Lokasi, Patungan & Izin Wasit */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Lokasi GOR */}
-              <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2">
-                <label className="text-[11px] font-black uppercase text-black flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-rose-600" />
-                  <span>Lokasi GOR (Opsional)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Nama GOR / Club..."
-                  value={props.courtLocation}
-                  onChange={(e) => props.setCourtLocation(e.target.value)}
-                  className="rounded-lg bg-[#faf8f2] border-2 border-black px-2.5 py-1.5 text-xs font-bold text-black focus:outline-none"
-                />
+            {/* 3 Accordion Opsional: Lokasi GOR, Patungan Biaya, dan Izin Skor Penonton */}
+            <div className="flex flex-col gap-3">
+              {/* DROPDOWN 1: Hari, Tanggal & Lokasi GOR (Opsional) */}
+              <div className="rounded-2xl border-2 sm:border-3 border-black bg-[#faf8f2] shadow-[3px_3px_0px_#000] overflow-hidden transition-all">
+                <button
+                  type="button"
+                  onClick={() => props.setIsLocationDropdownOpen(!props.isLocationDropdownOpen)}
+                  className="w-full p-3.5 sm:p-4 flex items-center justify-between gap-3 text-left hover:bg-yellow-50/70 transition-colors cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-8 w-8 rounded-xl bg-white border-2 border-black flex items-center justify-center shrink-0 shadow-[1px_1px_0px_#000]">
+                      <Calendar className="h-4 w-4 text-emerald-600 stroke-[2.5]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black uppercase tracking-wide text-black truncate">
+                          Hari, Tanggal &amp; Lokasi GOR
+                        </span>
+                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-white text-slate-700 border border-black/40 shrink-0">
+                          Opsional
+                        </span>
+                      </div>
+                      <p className="text-[10px] sm:text-[11px] font-bold text-slate-600 truncate mt-0.5">
+                        {props.courtLocation || props.sessionDate
+                          ? `📍 ${props.courtLocation || "GOR"} • 📅 ${props.sessionDate ? formatIndonesianDate(props.sessionDate) : "Hari Ini"}`
+                          : "Atur jadwal kalender & alamat venue mabar"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] font-mono font-black text-black hidden sm:inline">
+                      {props.isLocationDropdownOpen ? "Tutup" : "Buka"}
+                    </span>
+                    <div className="h-7 w-7 rounded-lg bg-white border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000]">
+                      <ChevronDown
+                        className={`h-4 w-4 text-black transition-transform duration-200 ${
+                          props.isLocationDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </button>
+
+                {props.isLocationDropdownOpen && (
+                  <div className="p-4 pt-3 border-t-2 border-black bg-white flex flex-col gap-3.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                    {/* Input Tanggal */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] font-black uppercase text-black/70 flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-emerald-600" />
+                          <span>Tanggal Sesi Mabar:</span>
+                        </label>
+                        {props.sessionDate && (
+                          <span className="text-xs font-mono font-black text-black bg-[#ccff00] px-2.5 py-0.5 rounded-lg border border-black shadow-[1px_1px_0px_#000]">
+                            📅 {formatIndonesianDate(props.sessionDate)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="date"
+                          value={props.sessionDate}
+                          onChange={(e) => props.setSessionDate(e.target.value)}
+                          className="flex-1 min-w-[180px] rounded-xl bg-[#faf8f2] border-2 border-black px-3.5 py-2 text-xs font-bold text-black focus:outline-none shadow-[2px_2px_0px_#000] font-mono cursor-pointer"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const now = new Date();
+                              const yyyy = now.getFullYear();
+                              const mm = String(now.getMonth() + 1).padStart(2, "0");
+                              const dd = String(now.getDate()).padStart(2, "0");
+                              props.setSessionDate(`${yyyy}-${mm}-${dd}`);
+                            }}
+                            className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border-2 border-black text-xs font-black text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                          >
+                            Hari Ini
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const tmr = new Date(Date.now() + 86400000);
+                              const yyyy = tmr.getFullYear();
+                              const mm = String(tmr.getMonth() + 1).padStart(2, "0");
+                              const dd = String(tmr.getDate()).padStart(2, "0");
+                              props.setSessionDate(`${yyyy}-${mm}-${dd}`);
+                            }}
+                            className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border-2 border-black text-xs font-black text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                          >
+                            Besok
+                          </button>
+                          {props.sessionDate && (
+                            <button
+                              type="button"
+                              onClick={() => props.setSessionDate("")}
+                              className="px-3 py-2 rounded-xl bg-rose-200 hover:bg-rose-300 border-2 border-black text-xs font-black text-rose-900 shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                              title="Hapus tanggal"
+                            >
+                              Reset
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Alamat Lapangan & Link Maps */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-black/10">
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5 flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-rose-600" />
+                          <span>Nama / Alamat GOR Lapangan</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={props.courtLocation}
+                          onChange={(e) => props.setCourtLocation(e.target.value)}
+                          placeholder="Contoh: GOR Tomang Barat, Lapangan 1-2..."
+                          className="w-full rounded-xl bg-[#faf8f2] border-2 border-black px-3.5 py-2 text-xs font-bold text-black placeholder-slate-400 focus:outline-none shadow-[2px_2px_0px_#000]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5 flex items-center gap-1.5">
+                          <ExternalLink className="h-3.5 w-3.5 text-blue-600" />
+                          <span>Link Google Maps Lapangan</span>
+                        </label>
+                        <input
+                          type="url"
+                          value={props.googleMapsUrl}
+                          onChange={(e) => props.setGoogleMapsUrl(e.target.value)}
+                          placeholder="Contoh: https://maps.app.goo.gl/..."
+                          className="w-full rounded-xl bg-[#faf8f2] border-2 border-black px-3.5 py-2 text-xs font-bold text-black placeholder-slate-400 focus:outline-none shadow-[2px_2px_0px_#000]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Tanggal Mabar */}
-              <div className="p-3 rounded-xl bg-white border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2">
-                <label className="text-[11px] font-black uppercase text-black flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Tanggal Mabar</span>
-                </label>
-                <input
-                  type="date"
-                  value={props.sessionDate}
-                  onChange={(e) => props.setSessionDate(e.target.value)}
-                  className="rounded-lg bg-[#faf8f2] border-2 border-black px-2.5 py-1.5 text-xs font-mono font-bold text-black focus:outline-none cursor-pointer"
-                />
+              {/* DROPDOWN 2: Patungan Biaya & Split Bill Shuttlecock/Bola (Opsional) */}
+              <div className="rounded-2xl border-2 sm:border-3 border-black bg-[#faf8f2] shadow-[3px_3px_0px_#000] overflow-hidden transition-all">
+                <button
+                  type="button"
+                  onClick={() => props.setIsBillingDropdownOpen(!props.isBillingDropdownOpen)}
+                  className="w-full p-3.5 sm:p-4 flex items-center justify-between gap-3 text-left hover:bg-yellow-50/70 transition-colors cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-8 w-8 rounded-xl bg-[#ccff00] border-2 border-black flex items-center justify-center shrink-0 shadow-[1px_1px_0px_#000]">
+                      <Flame className="h-4 w-4 text-black stroke-[2.5]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black uppercase tracking-wide text-black truncate">
+                          Patungan Biaya &amp; Hitung Cock/Bola
+                        </span>
+                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-white text-slate-700 border border-black/40 shrink-0">
+                          Opsional
+                        </span>
+                      </div>
+                      <p className="text-[10px] sm:text-[11px] font-bold text-slate-600 truncate mt-0.5">
+                        {props.billingModelChoice === "track_equipment"
+                          ? `🏸 Hitung Cock (Rp ${parseInt(props.costPerUnitInput || "12000").toLocaleString("id-ID")}/butir) + Sewa Lapangan`
+                          : props.billingModelChoice === "fixed_per_person"
+                          ? `🎯 Fixed Price (Rp ${parseInt(props.fixedPriceInput || "40000").toLocaleString("id-ID")}/orang)`
+                          : "✨ Tanpa Biaya (Sesi Gratis / Santai)"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] font-mono font-black text-black hidden sm:inline">
+                      {props.isBillingDropdownOpen ? "Tutup" : "Buka"}
+                    </span>
+                    <div className="h-7 w-7 rounded-lg bg-white border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000]">
+                      <ChevronDown
+                        className={`h-4 w-4 text-black transition-transform duration-200 ${
+                          props.isBillingDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </button>
+
+                {props.isBillingDropdownOpen && (
+                  <div className="p-4 pt-3 border-t-2 border-black bg-white flex flex-col gap-4 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div>
+                      <label className="block text-[11px] font-black uppercase text-black/70 mb-2">
+                        Pilih Skema Patungan / Biaya Mabar:
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {/* Opsi 1: Fixed Price */}
+                        <button
+                          type="button"
+                          onClick={() => props.setBillingModelChoice("fixed_per_person")}
+                          className={`flex flex-col p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                            props.billingModelChoice === "fixed_per_person"
+                              ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                              : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl">🎯</span>
+                            <span className="text-xs font-black uppercase tracking-wide">
+                              Fixed Price
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-black/70 leading-tight">
+                            Tarif tetap per orang all-in (misal Rp 40rb). Tanpa hitung cock.
+                          </span>
+                        </button>
+
+                        {/* Opsi 2: Itung Cock + Split Bill */}
+                        <button
+                          type="button"
+                          onClick={() => props.setBillingModelChoice("track_equipment")}
+                          className={`flex flex-col p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                            props.billingModelChoice === "track_equipment"
+                              ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                              : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl">🏸</span>
+                            <span className="text-xs font-black uppercase tracking-wide">
+                              Itung Cock &amp; Sewa
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-black/70 leading-tight">
+                            Catat cock &amp; sewa lapangan. Split bill otomatis di akhir.
+                          </span>
+                        </button>
+
+                        {/* Opsi 3: Tanpa Biaya / Bebas */}
+                        <button
+                          type="button"
+                          onClick={() => props.setBillingModelChoice("none")}
+                          className={`flex flex-col p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                            props.billingModelChoice === "none"
+                              ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                              : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl">✨</span>
+                            <span className="text-xs font-black uppercase tracking-wide">
+                              Tanpa Biaya
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-black/70 leading-tight">
+                            Sesi santai / gratis. Tidak ada counter bola atau tagihan.
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sub-form Opsi 1: Fixed Price */}
+                    {props.billingModelChoice === "fixed_per_person" && (
+                      <div className="p-3.5 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-3 animate-in fade-in">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <label className="text-[11px] font-black uppercase text-black block">
+                              Harga Mabar Tetap Per Orang (All-In):
+                            </label>
+                            <span className="text-[10px] text-slate-600 font-bold">
+                              Tagihan per peserta yang akan ditampilkan di rekap akhir
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-mono font-black">Rp</span>
+                            <input
+                              type="number"
+                              step="5000"
+                              min="0"
+                              value={props.fixedPriceInput}
+                              onChange={(e) => props.setFixedPriceInput(e.target.value)}
+                              className="w-32 rounded-lg bg-white border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none"
+                              placeholder="40000"
+                            />
+                            <span className="text-xs font-bold text-slate-600">/org</span>
+                          </div>
+                        </div>
+
+                        {/* Quick Preset Chips */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
+                          <span className="text-[10px] font-mono font-bold text-black/50">Preset Cepat:</span>
+                          {[25000, 30000, 35000, 40000, 50000].map((val) => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => props.setFixedPriceInput(val.toString())}
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
+                                props.fixedPriceInput === val.toString()
+                                  ? "bg-black text-[#ccff00] border-black"
+                                  : "bg-white text-black border-black/40 hover:border-black"
+                              }`}
+                            >
+                              Rp {val.toLocaleString("id-ID")}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Form Rekening Pembayaran */}
+                        <div className="pt-2 border-t border-black/10 flex flex-col gap-2">
+                          <label className="text-[11px] font-black uppercase text-black block">
+                            💳 Info Rekening Transfer Host (Opsional - Muncul di Pesan WhatsApp):
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input
+                              type="text"
+                              placeholder="Bank / E-Wallet (misal: BCA)"
+                              value={props.bankNameInput}
+                              onChange={(e) => props.setBankNameInput(e.target.value)}
+                              className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-bold bg-white"
+                            />
+                            <input
+                              type="text"
+                              placeholder="No. Rekening / No. HP"
+                              value={props.accountNumberInput}
+                              onChange={(e) => props.setAccountNumberInput(e.target.value)}
+                              className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-mono font-bold bg-white"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Atas Nama Rekening"
+                              value={props.accountHolderInput}
+                              onChange={(e) => props.setAccountHolderInput(e.target.value)}
+                              className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-bold bg-white"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sub-form Opsi 2: Itung Cock + Split Bill */}
+                    {props.billingModelChoice === "track_equipment" && (
+                      <div className="flex flex-col gap-3 animate-in fade-in">
+                        {/* Pilihan Model: Hitung Per Butir vs Per Slop */}
+                        <div>
+                          <label className="block text-[11px] font-black uppercase text-black/70 mb-2">
+                            Pilih Cara Hitung Biaya Shuttlecock/Bola:
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <button
+                              type="button"
+                              onClick={() => props.setEquipmentPricingModel("per_unit")}
+                              className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                                props.equipmentPricingModel === "per_unit"
+                                  ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                                  : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                              }`}
+                            >
+                              <span className="text-2xl">🏸</span>
+                              <div>
+                                <span className="text-xs font-black uppercase tracking-wide block">
+                                  Hitung Per Butir (Cock / Bola)
+                                </span>
+                                <span className="text-[10px] font-bold text-black/70">
+                                  Catat pemakaian per butir per match
+                                </span>
+                              </div>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => props.setEquipmentPricingModel("per_slop")}
+                              className={`flex items-center gap-3 p-3 rounded-xl border-2 border-black transition-all cursor-pointer text-left ${
+                                props.equipmentPricingModel === "per_slop"
+                                  ? "bg-[#ccff00] text-black shadow-[3px_3px_0px_#000] -translate-y-0.5"
+                                  : "bg-white text-black hover:bg-slate-50 shadow-[1px_1px_0px_#000]"
+                              }`}
+                            >
+                              <span className="text-2xl">📦</span>
+                              <div>
+                                <span className="text-xs font-black uppercase tracking-wide block">
+                                  Hitung Per Slop (Tabung / Can)
+                                </span>
+                                <span className="text-[10px] font-bold text-black/70">
+                                  Patungan per slop yang dibuka
+                                </span>
+                              </div>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Form Input Custom Harga Cock */}
+                        {props.equipmentPricingModel === "per_unit" ? (
+                          <div className="p-3.5 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div>
+                                <label className="text-[11px] font-black uppercase text-black block">
+                                  Harga Custom Per Butir Cock/Bola (Rp):
+                                </label>
+                                <span className="text-[10px] text-slate-600 font-bold">
+                                  Contoh: Rp 12.000 / kok (Setara Rp{" "}
+                                  {(
+                                    (parseInt(props.costPerUnitInput, 10) || 12000) * 12
+                                  ).toLocaleString("id-ID")}{" "}
+                                  / slop)
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-mono font-black">Rp</span>
+                                <input
+                                  type="number"
+                                  step="1000"
+                                  min="0"
+                                  value={props.costPerUnitInput}
+                                  onChange={(e) => props.setCostPerUnitInput(e.target.value)}
+                                  className="w-32 rounded-lg bg-white border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Quick Preset Buttons */}
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
+                              <span className="text-[10px] font-mono font-bold text-black/50">Preset Cepat:</span>
+                              {[10000, 12000, 15000, 20000].map((val) => (
+                                <button
+                                  key={val}
+                                  type="button"
+                                  onClick={() => props.setCostPerUnitInput(val.toString())}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
+                                    props.costPerUnitInput === val.toString()
+                                      ? "bg-black text-[#ccff00] border-black"
+                                      : "bg-white text-black border-black/40 hover:border-black"
+                                  }`}
+                                >
+                                  Rp {val.toLocaleString("id-ID")}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3.5 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-[11px] font-black uppercase text-black block mb-1">
+                                  Harga Custom Per Slop / Tabung (Rp):
+                                </label>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-mono font-black">Rp</span>
+                                  <input
+                                    type="number"
+                                    step="5000"
+                                    min="0"
+                                    value={props.costPerSlopInput}
+                                    onChange={(e) => props.setCostPerSlopInput(e.target.value)}
+                                    className="w-full rounded-lg bg-white border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="text-[11px] font-black uppercase text-black block mb-1">
+                                  Isi Cock / Bola Per Slop:
+                                </label>
+                                <div className="flex items-center gap-1.5">
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="24"
+                                    value={props.unitsPerSlopInput}
+                                    onChange={(e) => props.setUnitsPerSlopInput(e.target.value)}
+                                    className="w-20 text-center rounded-lg bg-white border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none"
+                                  />
+                                  <span className="text-xs font-mono font-bold text-slate-700">
+                                    Butir (~Rp{" "}
+                                    {Math.round(
+                                      (parseInt(props.costPerSlopInput, 10) || 140000) /
+                                        (parseInt(props.unitsPerSlopInput, 10) || 12)
+                                    ).toLocaleString("id-ID")}{" "}
+                                    /butir)
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Quick Preset Buttons Slop */}
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-black/10">
+                              <span className="text-[10px] font-mono font-bold text-black/50">Preset Slop Populer:</span>
+                              {[
+                                { label: "Standard (Rp 120rb)", val: 120000 },
+                                { label: "Samurai/JP (Rp 140rb)", val: 140000 },
+                                { label: "Aeroplane (Rp 180rb)", val: 180000 },
+                                { label: "Yonex AS (Rp 290rb)", val: 290000 },
+                              ].map((item) => (
+                                <button
+                                  key={item.val}
+                                  type="button"
+                                  onClick={() => props.setCostPerSlopInput(item.val.toString())}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-black border transition-all cursor-pointer ${
+                                    props.costPerSlopInput === item.val.toString()
+                                      ? "bg-black text-[#ccff00] border-black"
+                                      : "bg-white text-black border-black/40 hover:border-black"
+                                  }`}
+                                >
+                                  {item.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Estimasi Sewa Lapangan & Info Rekening Transfer */}
+                        <div className="p-3.5 rounded-xl bg-[#faf8f2] border-2 border-black shadow-[2px_2px_0px_#000] flex flex-col gap-2.5">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                              <label className="text-[11px] font-black uppercase text-black block">
+                                Estimasi Total Sewa Lapangan (Rp):
+                              </label>
+                              <span className="text-[10px] text-slate-600 font-bold">
+                                Bisa diubah kembali saat selesai mabar untuk split bill
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-mono font-black">Rp</span>
+                              <input
+                                type="number"
+                                step="10000"
+                                min="0"
+                                value={props.courtRentalFeeInput}
+                                onChange={(e) => props.setCourtRentalFeeInput(e.target.value)}
+                                className="w-36 rounded-lg bg-white border-2 border-black px-3 py-1.5 font-mono font-black text-sm text-black focus:outline-none"
+                                placeholder="160000"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Info Rekening */}
+                          <div className="pt-2 border-t border-black/10 flex flex-col gap-2">
+                            <label className="text-[11px] font-black uppercase text-black block">
+                              💳 Info Rekening Transfer Host (Untuk Pesan WhatsApp):
+                            </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              <input
+                                type="text"
+                                placeholder="Bank / E-Wallet (misal: BCA)"
+                                value={props.bankNameInput}
+                                onChange={(e) => props.setBankNameInput(e.target.value)}
+                                className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-bold bg-white"
+                              />
+                              <input
+                                type="text"
+                                placeholder="No. Rekening / No. HP"
+                                value={props.accountNumberInput}
+                                onChange={(e) => props.setAccountNumberInput(e.target.value)}
+                                className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-mono font-bold bg-white"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Atas Nama Rekening"
+                                value={props.accountHolderInput}
+                                onChange={(e) => props.setAccountHolderInput(e.target.value)}
+                                className="px-2.5 py-1.5 rounded-lg border-2 border-black text-xs font-bold bg-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sub-form Opsi 3: Tanpa Biaya */}
+                    {props.billingModelChoice === "none" && (
+                      <div className="p-3.5 rounded-xl bg-[#faf8f2] border-2 border-dashed border-black/50 text-xs font-bold text-slate-700 flex items-center gap-2.5 animate-in fade-in">
+                        <span className="text-base">✨</span>
+                        <span>
+                          Mode santai: Dashboard Host dan Papan Penonton akan tampil bersih tanpa tombol hitung bola maupun tagihan biaya.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* DROPDOWN 3: Izin Skor Penonton & Akses Tambahan (Opsional) */}
+              <div className="rounded-2xl border-2 sm:border-3 border-black bg-[#faf8f2] shadow-[3px_3px_0px_#000] overflow-hidden transition-all">
+                <button
+                  type="button"
+                  onClick={() => props.setIsAdvancedDropdownOpen(!props.isAdvancedDropdownOpen)}
+                  className="w-full p-3.5 sm:p-4 flex items-center justify-between gap-3 text-left hover:bg-yellow-50/70 transition-colors cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-8 w-8 rounded-xl bg-white border-2 border-black flex items-center justify-center shrink-0 shadow-[1px_1px_0px_#000]">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600 stroke-[2.5]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black uppercase tracking-wide text-black truncate">
+                          Izin Skor Penonton &amp; Akses Tambahan
+                        </span>
+                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-white text-slate-700 border border-black/40 shrink-0">
+                          Opsional
+                        </span>
+                      </div>
+                      <p className="text-[10px] sm:text-[11px] font-bold text-slate-600 truncate mt-0.5">
+                        {props.allowSpectatorScoreUpdate
+                          ? "✅ Penonton diizinkan bantu input skor dari HP"
+                          : "🔒 Mode Baca Saja (Hanya Host yang bisa update skor)"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] font-mono font-black text-black hidden sm:inline">
+                      {props.isAdvancedDropdownOpen ? "Tutup" : "Buka"}
+                    </span>
+                    <div className="h-7 w-7 rounded-lg bg-white border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_#000]">
+                      <ChevronDown
+                        className={`h-4 w-4 text-black transition-transform duration-200 ${
+                          props.isAdvancedDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </button>
+
+                {props.isAdvancedDropdownOpen && (
+                  <div className="p-4 pt-3 border-t-2 border-black bg-white flex flex-col gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="flex items-center justify-between p-3 rounded-xl border-2 border-black bg-[#faf8f2]">
+                      <div className="pr-3">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="font-black text-xs uppercase text-black">
+                            📱 Izinkan Penonton/Wasit Bantu Input Skor (Scan QR)
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-bold text-slate-600 leading-tight">
+                          Bila dicentang, penonton yang scan QR code bisa bantu ketik skor &amp; klik tim pemenang dari HP mereka. Jika tidak, hanya bisa melihat jadwal (read-only).
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={props.allowSpectatorScoreUpdate}
+                          onChange={(e) => props.setAllowSpectatorScoreUpdate(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-black after:border-2 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#ccff00] border-2 border-black shadow-[1px_1px_0px_#000]"></div>
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
