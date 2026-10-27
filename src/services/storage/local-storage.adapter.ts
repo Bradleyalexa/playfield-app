@@ -1,4 +1,5 @@
 import { GameSession, SportType } from "../../core/entities/session";
+import { Player } from "../../core/entities/player";
 import { generateBalancedMatches } from "../../core/matchmaking/balanced-queue";
 import { SportRegistry } from "../../core/sports/sport-registry";
 import { generateSecretKey, generateSlug } from "../../lib/utils";
@@ -116,28 +117,21 @@ export class LocalStorageAdapter {
     const presets = strategy.getPresets();
     const defaultPreset = presets[0];
 
-    const demoPlayers = [
-      { id: "p1", name: "Hendra Setiawan", gender: "M" as const, skillLevel: 5 as const, publicTier: "pro" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1250, createdAt: new Date().toISOString() },
-      { id: "p2", name: "Kevin Sanjaya", gender: "M" as const, skillLevel: 5 as const, publicTier: "pro" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1300, createdAt: new Date().toISOString() },
-      { id: "p3", name: "Greysia Polii", gender: "F" as const, skillLevel: 5 as const, publicTier: "pro" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1290, createdAt: new Date().toISOString() },
-      { id: "p4", name: "Apriyani Rahayu", gender: "F" as const, skillLevel: 5 as const, publicTier: "pro" as const, gamesPlayed: 0, lastPlayedRound: 0, status: "active" as const, eloRating: 1280, createdAt: new Date().toISOString() },
-    ];
-
+    const demoPlayers: Player[] = [];
     const courtCount = 2;
-    const initialMatches = generateBalancedMatches(demoPlayers, courtCount, 1);
 
     const defaultTitle =
       sport === "table_tennis"
-        ? "Mabar Tenis Meja Pingpong Arena"
+        ? "Mabar Tenis Meja"
         : sport === "pickleball"
-        ? "Mabar Pickleball Community Jakarta"
+        ? "Mabar Pickleball"
         : sport === "squash"
-        ? "Mabar Squash Club Wall Session"
+        ? "Mabar Squash"
         : sport === "tennis"
-        ? "Mabar Tennis Court Session"
+        ? "Mabar Tennis"
         : sport === "padel"
-        ? "Mabar Padel Cage Session"
-        : "Mabar Ceria Badminton GOR Tomang";
+        ? "Mabar Padel"
+        : "Mabar Badminton";
 
     const courtPrefix = sport === "table_tennis" ? "Meja" : sport === "squash" ? "Court" : "Lapangan";
     const courts = [
@@ -145,13 +139,13 @@ export class LocalStorageAdapter {
         id: "c1",
         courtNumber: 1,
         courtName: `${courtPrefix} 1 (${sport === "table_tennis" ? "Area A" : sport === "squash" ? "Glass Back" : "Karpet Hijau"})`,
-        currentMatch: initialMatches.matches[0] || undefined,
+        currentMatch: undefined,
       },
       {
         id: "c2",
         courtNumber: 2,
         courtName: `${courtPrefix} 2 (${sport === "table_tennis" ? "Area B" : sport === "squash" ? "Glass Back" : "Karpet Biru"})`,
-        currentMatch: initialMatches.matches[1] || undefined,
+        currentMatch: undefined,
       },
     ];
 
@@ -172,7 +166,7 @@ export class LocalStorageAdapter {
       },
       players: demoPlayers,
       courts,
-      matches: initialMatches.matches,
+      matches: [],
       currentRound: 1,
       sessionDate: new Date().toISOString().split("T")[0],
       startTime: "19:00",

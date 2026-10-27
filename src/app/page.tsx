@@ -215,56 +215,7 @@ export default function HomePage() {
   };
 
   // Daftar Pemain Awal (Bisa Diisi Sebelum Sesi Dimulai / Paste WA)
-  const [initialPlayers, setInitialPlayers] = useState<Player[]>([
-    {
-      id: "p1",
-      name: "Hendra Setiawan",
-      gender: "M",
-      skillLevel: 5,
-      publicTier: "pro",
-      gamesPlayed: 0,
-      lastPlayedRound: 0,
-      status: "active",
-      eloRating: 1250,
-      createdAt: "2026-01-01T00:00:00.000Z",
-    },
-    {
-      id: "p2",
-      name: "Kevin Sanjaya",
-      gender: "M",
-      skillLevel: 5,
-      publicTier: "pro",
-      gamesPlayed: 0,
-      lastPlayedRound: 0,
-      status: "active",
-      eloRating: 1300,
-      createdAt: "2026-01-01T00:00:00.000Z",
-    },
-    {
-      id: "p3",
-      name: "Greysia Polii",
-      gender: "F",
-      skillLevel: 5,
-      publicTier: "pro",
-      gamesPlayed: 0,
-      lastPlayedRound: 0,
-      status: "active",
-      eloRating: 1290,
-      createdAt: "2026-01-01T00:00:00.000Z",
-    },
-    {
-      id: "p4",
-      name: "Apriyani Rahayu",
-      gender: "F",
-      skillLevel: 5,
-      publicTier: "pro",
-      gamesPlayed: 0,
-      lastPlayedRound: 0,
-      status: "active",
-      eloRating: 1280,
-      createdAt: "2026-01-01T00:00:00.000Z",
-    },
-  ]);
+  const [initialPlayers, setInitialPlayers] = useState<Player[]>([]);
   const [isWaModalOpen, setIsWaModalOpen] = useState(false);
   const [quickPlayerName, setQuickPlayerName] = useState("");
   const [quickGender, setQuickGender] = useState<"M" | "F">("M");
