@@ -43,9 +43,6 @@ function KioskContent({ params }: KioskPageProps) {
 
   useEffect(() => {
     let current = LocalStorageAdapter.getSession(sessionId);
-    if (!current) {
-      current = LocalStorageAdapter.createDemoSession("badminton");
-    }
 
     // Auto-heal courts jika jumlah array court kurang dari courtCount
     if (current && current.courts.length < current.courtCount) {
@@ -70,11 +67,21 @@ function KioskContent({ params }: KioskPageProps) {
       current = { ...current, courts: healedCourts };
     }
 
-    setSession(current);
+    if (current) {
+      setSession(current);
+    }
 
     // Ambil data terbaru dari cloud (R2/D1/API)
     LocalStorageAdapter.fetchRemoteSession(sessionId).then((remote) => {
-      if (remote) setSession(remote);
+      if (remote) {
+        setSession(remote);
+      } else if (!current) {
+        if (sessionId === "demo" || sessionId.startsWith("demo-")) {
+          setSession(LocalStorageAdapter.createDemoSession("badminton"));
+        } else {
+          setSession(LocalStorageAdapter.createDemoSession("badminton"));
+        }
+      }
     });
 
     // Polling berkala tiap 7 detik agar TV Kiosk GOR terupdate otomatis saat host ganti giliran

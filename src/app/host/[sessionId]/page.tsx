@@ -155,59 +155,81 @@ function HostDashboardContent({ params }: HostPageProps) {
     return () => clearTimeout(timer);
   }, [undoFinishData]);
 
-  // Load session dari local storage atau fallback create demo jika tidak ditemukan
+  // Load session dari local storage atau fetch dari cloud (R2)
   useEffect(() => {
-    let current = LocalStorageAdapter.getSession(sessionId);
-    if (!current) {
-      current = LocalStorageAdapter.createDemoSession("badminton");
-    }
+    let isCancelled = false;
 
-    // Auto-heal courts jika jumlah array court kurang dari courtCount (misal session lama terbuat hanya 2 lapangan)
-    if (current && current.courts.length < current.courtCount) {
-      const existingNumbers = new Set(current.courts.map((c) => c.courtNumber));
-      const courtColors = ["Hijau", "Biru", "Merah", "Ungu", "Abu-abu", "Kuning", "Tosca", "Oranye"];
-      const healedCourts = [...current.courts];
-      for (let i = 1; i <= current.courtCount; i++) {
-        if (!existingNumbers.has(i)) {
-          const colorName = courtColors[(i - 1) % courtColors.length];
-          const activeMatch = current.matches.find(
-            (m) => m.courtNumber === i && m.status === "in_progress"
-          );
-          healedCourts.push({
-            id: `c${i}-${Date.now()}`,
-            courtNumber: i,
-            courtName: `Lapangan ${i} (Karpet ${colorName})`,
-            currentMatch: activeMatch,
-          });
+    const checkAuthAndApply = (curr: GameSession) => {
+      // Auto-heal courts jika jumlah array court kurang dari courtCount
+      if (curr && curr.courts.length < curr.courtCount) {
+        const existingNumbers = new Set(curr.courts.map((c) => c.courtNumber));
+        const courtColors = ["Hijau", "Biru", "Merah", "Ungu", "Abu-abu", "Kuning", "Tosca", "Oranye"];
+        const healedCourts = [...curr.courts];
+        for (let i = 1; i <= curr.courtCount; i++) {
+          if (!existingNumbers.has(i)) {
+            const colorName = courtColors[(i - 1) % courtColors.length];
+            const activeMatch = curr.matches.find(
+              (m) => m.courtNumber === i && m.status === "in_progress"
+            );
+            healedCourts.push({
+              id: `c${i}-${Date.now()}`,
+              courtNumber: i,
+              courtName: `Lapangan ${i} (Karpet ${colorName})`,
+              currentMatch: activeMatch,
+            });
+          }
         }
+        healedCourts.sort((a, b) => a.courtNumber - b.courtNumber);
+        curr = { ...curr, courts: healedCourts };
       }
-      healedCourts.sort((a, b) => a.courtNumber - b.courtNumber);
-      current = { ...current, courts: healedCourts };
-      LocalStorageAdapter.saveSession(current);
-    }
 
-    // Cek Otorisasi Host
-    const urlParams = new URLSearchParams(window.location.search);
-    const keyParam = urlParams.get("key");
-    const storedAuth = typeof window !== "undefined" ? localStorage.getItem(`playfield_host_auth_${current.id}`) : null;
+      // Cek Otorisasi Host
+      const urlParams = new URLSearchParams(window.location.search);
+      const keyParam = urlParams.get("key");
+      const storedAuth = typeof window !== "undefined" ? localStorage.getItem(`playfield_host_auth_${curr.id}`) : null;
 
-    if (keyParam && current.adminKey && keyParam === current.adminKey) {
-      localStorage.setItem(`playfield_host_auth_${current.id}`, keyParam);
-      setIsHostAuthorized(true);
-    } else if (storedAuth && current.adminKey && storedAuth === current.adminKey) {
-      setIsHostAuthorized(true);
-    } else if (current.id.startsWith("session-demo")) {
-      setIsHostAuthorized(true);
-    } else {
-      const recent = LocalStorageAdapter.listRecentSessions();
-      if (recent.some((r) => r.id === current.id || r.publicSlug === current.publicSlug)) {
+      if (keyParam && curr.adminKey && keyParam === curr.adminKey) {
+        localStorage.setItem(`playfield_host_auth_${curr.id}`, keyParam);
+        setIsHostAuthorized(true);
+      } else if (storedAuth && curr.adminKey && storedAuth === curr.adminKey) {
+        setIsHostAuthorized(true);
+      } else if (curr.id.startsWith("session-demo")) {
         setIsHostAuthorized(true);
       } else {
-        setIsHostAuthorized(false);
+        const recent = LocalStorageAdapter.listRecentSessions();
+        if (recent.some((r) => r.id === curr.id || r.publicSlug === curr.publicSlug)) {
+          setIsHostAuthorized(true);
+        } else {
+          setIsHostAuthorized(false);
+        }
       }
+
+      setSession(curr);
+    };
+
+    // 1. Cek LocalStorage terlebih dahulu (instant)
+    let current = LocalStorageAdapter.getSession(sessionId);
+    if (current) {
+      checkAuthAndApply(current);
     }
 
-    setSession(current);
+    // 2. Selalu tarik data cloud terbaru (R2 / API) untuk sinkronisasi antar device / laptop
+    LocalStorageAdapter.fetchRemoteSession(sessionId).then((remote) => {
+      if (isCancelled) return;
+      if (remote) {
+        checkAuthAndApply(remote);
+      } else if (!current) {
+        // Jika tidak ada di local dan tidak ada di cloud
+        if (sessionId === "demo" || sessionId.startsWith("demo-")) {
+          const demo = LocalStorageAdapter.createDemoSession("badminton");
+          checkAuthAndApply(demo);
+        } else {
+          // Tampilkan demo tanpa menimpa cloud R2
+          const fallback = LocalStorageAdapter.createDemoSession("badminton");
+          checkAuthAndApply(fallback);
+        }
+      }
+    });
 
     const handleSync = (e: any) => {
       if (e.detail && (e.detail.id === sessionId || e.detail.publicSlug === sessionId)) {
@@ -215,7 +237,10 @@ function HostDashboardContent({ params }: HostPageProps) {
       }
     };
     window.addEventListener("clubcourt:session_updated", handleSync);
-    return () => window.removeEventListener("clubcourt:session_updated", handleSync);
+    return () => {
+      isCancelled = true;
+      window.removeEventListener("clubcourt:session_updated", handleSync);
+    };
   }, [sessionId]);
 
   // Hitung Waktu Sewa Lapangan Realtime untuk Host
