@@ -9,6 +9,8 @@ export type SportType =
   | "pickleball"
   | "squash";
 
+export type MatchType = "doubles" | "singles"; // Ganda (2v2) atau Tunggal (1v1)
+
 export type SessionStatus = "active" | "completed" | "archived";
 
 export type MatchmakingAlgorithm =
@@ -259,6 +261,7 @@ export interface SportConfig {
   deuceType: "advantage" | "sudden_death_golden_point";
   maxDeucePoints?: number;
   equipment: EquipmentConfig;
+  matchType?: MatchType; // default 'doubles' (2v2) atau 'singles' (1v1)
 }
 
 export interface GameSession {
@@ -267,6 +270,7 @@ export interface GameSession {
   adminKey: string;
   title: string;
   sport: SportType;
+  matchType?: MatchType; // default 'doubles' (2v2) atau 'singles' (1v1)
   courtCount: number;
   status: SessionStatus;
   sportConfig: SportConfig;

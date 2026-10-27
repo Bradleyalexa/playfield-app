@@ -43,15 +43,18 @@ export function CreateCustomMatchModal({
     )
   );
 
+  const isSingles = session.matchType === "singles";
+
   // Pool pemain siap main (aktif & tiba), diutamakan yang sedang istirahat
   const readyPlayers = session.players.filter((p) => p.status === "active" && p.isArrived !== false);
   const restingPlayers = readyPlayers.filter((p) => !currentlyPlayingIds.has(p.id));
-  const candidatePool = restingPlayers.length >= 4 ? restingPlayers : readyPlayers;
+  const minRequired = isSingles ? 2 : 4;
+  const candidatePool = restingPlayers.length >= minRequired ? restingPlayers : readyPlayers;
 
-  // 1. Acak Seimbang Level (Mix Tier Terkuat + Terendah vs Dua Menengah)
+  // 1. Acak Seimbang Level
   const handleShuffleByLevel = () => {
-    if (candidatePool.length < 4) {
-      alert("Pemain aktif yang tiba kurang dari 4 orang.");
+    if (candidatePool.length < minRequired) {
+      alert(`Pemain aktif yang tiba kurang dari ${minRequired} orang.`);
       return;
     }
     // Urutkan kandidat berdasarkan jatah main paling sedikit & istirahat terlama
@@ -62,30 +65,41 @@ export function CreateCustomMatchModal({
       return restB - restA;
     });
 
-    const four = sortedCandidates.slice(0, 4);
-    const males = four.filter((p) => p.gender === "M").sort((a, b) => b.skillLevel - a.skillLevel);
-    const females = four.filter((p) => p.gender === "F").sort((a, b) => b.skillLevel - a.skillLevel);
-
-    if (males.length >= 2 && females.length >= 2) {
-      // Ganda Campuran Seimbang
-      setTeamAPlayer1Id(males[0].id);
-      setTeamAPlayer2Id(females[females.length - 1].id);
-      setTeamBPlayer1Id(males[1].id);
-      setTeamBPlayer2Id(females[0].id);
-      setShuffleNotice("🎲 Berhasil di-shuffle: Ganda Campuran Seimbang Level!");
+    if (isSingles) {
+      const two = sortedCandidates.slice(0, 2);
+      setTeamAPlayer1Id(two[0].id);
+      setTeamBPlayer1Id(two[1].id);
+      setShuffleNotice("🎲 Berhasil di-shuffle: Duel Tunggal 1 vs 1 Seimbang Level!");
     } else {
-      four.sort((a, b) => b.skillLevel - a.skillLevel);
-      setTeamAPlayer1Id(four[0].id);
-      setTeamAPlayer2Id(four[3].id);
-      setTeamBPlayer1Id(four[1].id);
-      setTeamBPlayer2Id(four[2].id);
-      setShuffleNotice("⚡ Berhasil di-shuffle: Tim A & Tim B Berimbang Level!");
+      const four = sortedCandidates.slice(0, 4);
+      const males = four.filter((p) => p.gender === "M").sort((a, b) => b.skillLevel - a.skillLevel);
+      const females = four.filter((p) => p.gender === "F").sort((a, b) => b.skillLevel - a.skillLevel);
+
+      if (males.length >= 2 && females.length >= 2) {
+        // Ganda Campuran Seimbang
+        setTeamAPlayer1Id(males[0].id);
+        setTeamAPlayer2Id(females[females.length - 1].id);
+        setTeamBPlayer1Id(males[1].id);
+        setTeamBPlayer2Id(females[0].id);
+        setShuffleNotice("🎲 Berhasil di-shuffle: Ganda Campuran Seimbang Level!");
+      } else {
+        four.sort((a, b) => b.skillLevel - a.skillLevel);
+        setTeamAPlayer1Id(four[0].id);
+        setTeamAPlayer2Id(four[3].id);
+        setTeamBPlayer1Id(four[1].id);
+        setTeamBPlayer2Id(four[2].id);
+        setShuffleNotice("⚡ Berhasil di-shuffle: Tim A & Tim B Berimbang Level!");
+      }
     }
     setTimeout(() => setShuffleNotice(null), 3000);
   };
 
   // 2. Acak Ganda Campuran (2 Pria + 2 Wanita)
   const handleShuffleMixedDoubles = () => {
+    if (isSingles) {
+      alert("Mode ganda campuran hanya untuk format Ganda (2v2).");
+      return;
+    }
     const males = candidatePool.filter((p) => p.gender === "M").sort((a, b) => a.gamesPlayed - b.gamesPlayed);
     const females = candidatePool.filter((p) => p.gender === "F").sort((a, b) => a.gamesPlayed - b.gamesPlayed);
 
@@ -105,10 +119,10 @@ export function CreateCustomMatchModal({
     setTimeout(() => setShuffleNotice(null), 3000);
   };
 
-  // 3. Acak Fair Rest (4 Pemain Paling Lama Istirahat)
+  // 3. Acak Fair Rest (Paling Lama Istirahat)
   const handleShuffleFairRest = () => {
-    if (candidatePool.length < 4) {
-      alert("Pemain aktif yang tiba kurang dari 4 orang.");
+    if (candidatePool.length < minRequired) {
+      alert(`Pemain aktif yang tiba kurang dari ${minRequired} orang.`);
       return;
     }
     const sorted = [...candidatePool].sort((a, b) => {
@@ -118,12 +132,19 @@ export function CreateCustomMatchModal({
       return a.gamesPlayed - b.gamesPlayed;
     });
 
-    const four = sorted.slice(0, 4).sort((a, b) => b.skillLevel - a.skillLevel);
-    setTeamAPlayer1Id(four[0].id);
-    setTeamAPlayer2Id(four[3].id);
-    setTeamBPlayer1Id(four[1].id);
-    setTeamBPlayer2Id(four[2].id);
-    setShuffleNotice("⏱️ Berhasil di-shuffle: 4 Pemain Paling Lama Istirahat!");
+    if (isSingles) {
+      const two = sorted.slice(0, 2);
+      setTeamAPlayer1Id(two[0].id);
+      setTeamBPlayer1Id(two[1].id);
+      setShuffleNotice("⏱️ Berhasil di-shuffle: 2 Pemain Paling Lama Istirahat!");
+    } else {
+      const four = sorted.slice(0, 4).sort((a, b) => b.skillLevel - a.skillLevel);
+      setTeamAPlayer1Id(four[0].id);
+      setTeamAPlayer2Id(four[3].id);
+      setTeamBPlayer1Id(four[1].id);
+      setTeamBPlayer2Id(four[2].id);
+      setShuffleNotice("⏱️ Berhasil di-shuffle: 4 Pemain Paling Lama Istirahat!");
+    }
     setTimeout(() => setShuffleNotice(null), 3000);
   };
 
@@ -143,29 +164,42 @@ export function CreateCustomMatchModal({
   const playerB2 = session.players.find((p) => p.id === teamBPlayer2Id);
 
   const selectedIds = new Set(
-    [teamAPlayer1Id, teamAPlayer2Id, teamBPlayer1Id, teamBPlayer2Id].filter(Boolean)
+    (isSingles
+      ? [teamAPlayer1Id, teamBPlayer1Id]
+      : [teamAPlayer1Id, teamAPlayer2Id, teamBPlayer1Id, teamBPlayer2Id]
+    ).filter(Boolean)
   );
 
-  const isFormValid =
-    teamAPlayer1Id &&
-    teamAPlayer2Id &&
-    teamBPlayer1Id &&
-    teamBPlayer2Id &&
-    selectedIds.size === 4;
+  const isFormValid = isSingles
+    ? Boolean(teamAPlayer1Id && teamBPlayer1Id && selectedIds.size === 2)
+    : Boolean(
+        teamAPlayer1Id &&
+          teamAPlayer2Id &&
+          teamBPlayer1Id &&
+          teamBPlayer2Id &&
+          selectedIds.size === 4
+      );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid || !playerA1 || !playerA2 || !playerB1 || !playerB2) {
-      alert("Harap pilih 4 pemain yang berbeda untuk Tim A (2 orang) dan Tim B (2 orang)!");
-      return;
+    if (isSingles) {
+      if (!isFormValid || !playerA1 || !playerB1) {
+        alert("Harap pilih 2 pemain yang berbeda untuk Tim A dan Tim B!");
+        return;
+      }
+    } else {
+      if (!isFormValid || !playerA1 || !playerA2 || !playerB1 || !playerB2) {
+        alert("Harap pilih 4 pemain yang berbeda untuk Tim A (2 orang) dan Tim B (2 orang)!");
+        return;
+      }
     }
 
     const newMatch: Match = {
       id: `custom-match-r${roundNumber}-c${courtNumber}-${Date.now()}`,
       courtNumber,
       roundNumber,
-      teamA: [playerA1, playerA2],
-      teamB: [playerB1, playerB2],
+      teamA: isSingles ? [playerA1!] : [playerA1!, playerA2!],
+      teamB: isSingles ? [playerB1!] : [playerB1!, playerB2!],
       scoreA: 0,
       scoreB: 0,
       status: "in_progress",
@@ -265,14 +299,16 @@ export function CreateCustomMatchModal({
                 <span>🎲 Acak Seimbang Level</span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleShuffleMixedDoubles}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-black border-2 border-black font-black text-[11px] shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-              >
-                <HeartHandshake className="h-3.5 w-3.5 stroke-[2.5]" />
-                <span>👫 Acak Ganda Campuran (XD)</span>
-              </button>
+              {!isSingles && (
+                <button
+                  type="button"
+                  onClick={handleShuffleMixedDoubles}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-black border-2 border-black font-black text-[11px] shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                >
+                  <HeartHandshake className="h-3.5 w-3.5 stroke-[2.5]" />
+                  <span>👫 Acak Ganda Campuran (XD)</span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -306,7 +342,7 @@ export function CreateCustomMatchModal({
             {/* Tim A Box */}
             <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#f0fdf4] border-2 border-black shadow-[3px_3px_0px_#000]">
               <span className="font-mono text-xs font-black uppercase px-2 py-0.5 rounded bg-emerald-300 border border-black self-start">
-                TIM A (2 PEMAIN)
+                TIM A ({isSingles ? "1 PEMAIN" : "2 PEMAIN"})
               </span>
 
               <div>
@@ -335,37 +371,39 @@ export function CreateCustomMatchModal({
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
-                  Pemain 2 (Tim A)
-                </label>
-                <select
-                  value={teamAPlayer2Id}
-                  onChange={(e) => setTeamAPlayer2Id(e.target.value)}
-                  className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
-                >
-                  <option value="">-- Pilih Pemain 2 --</option>
-                  {activePlayers.map((p) => {
-                    const tier = getTierLabel(p.publicTier);
-                    const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
-                    return (
-                      <option
-                        key={p.id}
-                        value={p.id}
-                        disabled={selectedIds.has(p.id) && teamAPlayer2Id !== p.id}
-                      >
-                        {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
+              {!isSingles && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
+                    Pemain 2 (Tim A)
+                  </label>
+                  <select
+                    value={teamAPlayer2Id}
+                    onChange={(e) => setTeamAPlayer2Id(e.target.value)}
+                    className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
+                  >
+                    <option value="">-- Pilih Pemain 2 --</option>
+                    {activePlayers.map((p) => {
+                      const tier = getTierLabel(p.publicTier);
+                      const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
+                      return (
+                        <option
+                          key={p.id}
+                          value={p.id}
+                          disabled={selectedIds.has(p.id) && teamAPlayer2Id !== p.id}
+                        >
+                          {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Tim B Box */}
             <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#f0f9ff] border-2 border-black shadow-[3px_3px_0px_#000]">
               <span className="font-mono text-xs font-black uppercase px-2 py-0.5 rounded bg-sky-300 border border-black self-start">
-                TIM B (2 PEMAIN)
+                TIM B ({isSingles ? "1 PEMAIN" : "2 PEMAIN"})
               </span>
 
               <div>
@@ -394,31 +432,33 @@ export function CreateCustomMatchModal({
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
-                  Pemain 2 (Tim B)
-                </label>
-                <select
-                  value={teamBPlayer2Id}
-                  onChange={(e) => setTeamBPlayer2Id(e.target.value)}
-                  className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
-                >
-                  <option value="">-- Pilih Pemain 2 --</option>
-                  {activePlayers.map((p) => {
-                    const tier = getTierLabel(p.publicTier);
-                    const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
-                    return (
-                      <option
-                        key={p.id}
-                        value={p.id}
-                        disabled={selectedIds.has(p.id) && teamBPlayer2Id !== p.id}
-                      >
-                        {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
+              {!isSingles && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
+                    Pemain 2 (Tim B)
+                  </label>
+                  <select
+                    value={teamBPlayer2Id}
+                    onChange={(e) => setTeamBPlayer2Id(e.target.value)}
+                    className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
+                  >
+                    <option value="">-- Pilih Pemain 2 --</option>
+                    {activePlayers.map((p) => {
+                      const tier = getTierLabel(p.publicTier);
+                      const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
+                      return (
+                        <option
+                          key={p.id}
+                          value={p.id}
+                          disabled={selectedIds.has(p.id) && teamBPlayer2Id !== p.id}
+                        >
+                          {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

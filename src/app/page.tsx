@@ -36,6 +36,7 @@ import {
   Receipt,
   ShieldCheck,
   Sliders,
+  User,
 } from "lucide-react";
 import { Navbar } from "../components/common/Navbar";
 import { AlgorithmExplainerModal } from "../components/schedule/AlgorithmExplainerModal";
@@ -50,6 +51,7 @@ import {
   BillingModel,
   EquipmentPricingModel,
   MatchmakingAlgorithm,
+  MatchType,
   SportType,
 } from "../core/entities/session";
 import { SportRegistry } from "../core/sports/sport-registry";
@@ -60,6 +62,7 @@ import { formatIndonesianDate } from "../lib/time-tracker";
 export default function HomePage() {
   const router = useRouter();
   const [selectedSport, setSelectedSport] = useState<SportType>("badminton");
+  const [matchType, setMatchType] = useState<MatchType>("doubles");
   const [sessionTitle, setSessionTitle] = useState("");
   const [sessionDate, setSessionDate] = useState("");
   const [courtLocation, setCourtLocation] = useState("");
@@ -354,6 +357,8 @@ export default function HomePage() {
 
     const demo = LocalStorageAdapter.createDemoSession(selectedSport);
     demo.title = title;
+    demo.sport = selectedSport;
+    demo.matchType = matchType;
     demo.sessionDate = sessionDate.trim() || undefined;
     demo.courtCount = courtCount;
     demo.startTime = startTime;
@@ -365,6 +370,7 @@ export default function HomePage() {
     demo.googleMapsUrl = googleMapsUrl.trim() || undefined;
     demo.players = initialPlayers;
     demo.allowSpectatorScoreUpdate = allowSpectatorScoreUpdate;
+    demo.sportConfig.matchType = matchType;
 
     // Konfigurasi Equipment (Cock / Bola & Slop/Box/Tube)
     const isTrackingEquipment = billingModelChoice === "track_equipment";
@@ -472,8 +478,15 @@ export default function HomePage() {
         demo.matches = [];
         demo.courts = generatedCourts;
       }
-    } else if (initialPlayers.length >= 4) {
-      const initialMatches = generateBalancedMatches(initialPlayers, courtCount, 1, selectedAlgorithm);
+    } else if (initialPlayers.length >= (matchType === "singles" ? 2 : 4)) {
+      const initialMatches = generateBalancedMatches(
+        initialPlayers,
+        courtCount,
+        1,
+        selectedAlgorithm,
+        [],
+        matchType
+      );
       demo.matches = initialMatches.matches;
       demo.courts = generatedCourts.map((c) => ({
         ...c,
@@ -620,6 +633,45 @@ export default function HomePage() {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* 1b. Format Permainan: Ganda (2v2) vs Tunggal (1v1) */}
+              <div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <label className="block text-xs font-black uppercase tracking-wider text-black">
+                    Format Pertandingan
+                  </label>
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border-2 border-black bg-[#ffde00] text-black shadow-[1px_1px_0px_#000]">
+                    {matchType === "doubles" ? "👥 4 Pemain / Lapangan" : "👤 2 Pemain / Lapangan (1v1)"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setMatchType("doubles")}
+                    className={`flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border-3 border-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                      matchType === "doubles"
+                        ? "bg-[#ccff00] text-black shadow-[4px_4px_0px_#000] translate-x-[-1px] translate-y-[-1px]"
+                        : "bg-[#faf8f2] text-black hover:bg-white hover:shadow-[3px_3px_0px_#000]"
+                    }`}
+                  >
+                    <Users className="h-4 w-4 stroke-[2.5]" />
+                    <span>Ganda (2 vs 2)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setMatchType("singles")}
+                    className={`flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border-3 border-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                      matchType === "singles"
+                        ? "bg-[#ccff00] text-black shadow-[4px_4px_0px_#000] translate-x-[-1px] translate-y-[-1px]"
+                        : "bg-[#faf8f2] text-black hover:bg-white hover:shadow-[3px_3px_0px_#000]"
+                    }`}
+                  >
+                    <User className="h-4 w-4 stroke-[2.5]" />
+                    <span>Tunggal (1 vs 1)</span>
+                  </button>
                 </div>
               </div>
 

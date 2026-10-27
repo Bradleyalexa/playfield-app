@@ -574,17 +574,23 @@ function HostDashboardContent({ params }: HostPageProps) {
       return m;
     });
 
+    const isSingles = session.matchType === "singles";
     const nextRoundNumber = session.currentRound + 1;
     const result = generateBalancedMatches(
       updatedPlayers,
       session.courtCount,
       nextRoundNumber,
       session.algorithm || "playfields_mix",
-      updatedMatches
+      updatedMatches,
+      session.matchType || "doubles"
     );
 
     if (result.matches.length === 0) {
-      alert("Pemain aktif kurang dari 4 orang untuk membentuk match ganda!");
+      alert(
+        isSingles
+          ? "Pemain aktif kurang dari 2 orang untuk membentuk match tunggal!"
+          : "Pemain aktif kurang dari 4 orang untuk membentuk match ganda!"
+      );
       return;
     }
 
@@ -635,17 +641,23 @@ function HostDashboardContent({ params }: HostPageProps) {
       currentCourts.sort((a, b) => a.courtNumber - b.courtNumber);
     }
 
+    const isSingles = session.matchType === "singles";
     const nextRoundNumber = session.currentRound + 1;
     const result = generateBalancedMatches(
       session.players,
       session.courtCount,
       nextRoundNumber,
       session.algorithm || "playfields_mix",
-      session.matches
+      session.matches,
+      session.matchType || "doubles"
     );
 
     if (result.matches.length === 0) {
-      alert("Pemain aktif kurang dari 4 orang untuk membentuk match ganda!");
+      alert(
+        isSingles
+          ? "Pemain aktif kurang dari 2 orang untuk membentuk match tunggal!"
+          : "Pemain aktif kurang dari 4 orang untuk membentuk match ganda!"
+      );
       return;
     }
 
@@ -875,9 +887,15 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   // Eksekusi Kocok Ulang / Reshuffle Rotasi Pertandingan (Setelah Host Setuju di Modal)
   const executeReshuffle = () => {
+    const isSingles = session.matchType === "singles";
+    const minPlayers = isSingles ? 2 : 4;
     const activePlayers = session.players.filter((p) => p.status === "active" && p.isArrived !== false);
-    if (activePlayers.length < 4) {
-      alert("Pemain aktif yang sudah hadir saat ini kurang dari 4 orang untuk membentuk pertandingan ganda!");
+    if (activePlayers.length < minPlayers) {
+      alert(
+        isSingles
+          ? "Pemain aktif yang sudah hadir saat ini kurang dari 2 orang untuk duel tunggal!"
+          : "Pemain aktif yang sudah hadir saat ini kurang dari 4 orang untuk membentuk pertandingan ganda!"
+      );
       return;
     }
 
@@ -895,8 +913,12 @@ function HostDashboardContent({ params }: HostPageProps) {
       (c) => !c.currentMatch || (c.currentMatch.scoreA === 0 && c.currentMatch.scoreB === 0)
     );
 
-    if (eligiblePool.length < 4 && emptyOrResetCourts.length > 0) {
-      alert("Pemain yang siap dirotasi kurang dari 4 orang!");
+    if (eligiblePool.length < minPlayers && emptyOrResetCourts.length > 0) {
+      alert(
+        isSingles
+          ? "Pemain yang siap dirotasi kurang dari 2 orang!"
+          : "Pemain yang siap dirotasi kurang dari 4 orang!"
+      );
       return;
     }
 
@@ -905,7 +927,8 @@ function HostDashboardContent({ params }: HostPageProps) {
       emptyOrResetCourts.length,
       session.currentRound,
       session.algorithm || "playfields_mix",
-      session.matches.filter((m) => m.status === "completed")
+      session.matches.filter((m) => m.status === "completed"),
+      session.matchType || "doubles"
     );
 
     let updatedCourts = [...session.courts];

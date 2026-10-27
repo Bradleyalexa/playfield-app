@@ -1,6 +1,6 @@
 import { Match } from "../entities/match";
 import { Player } from "../entities/player";
-import { GameSession, MatchmakingAlgorithm } from "../entities/session";
+import { GameSession, MatchmakingAlgorithm, MatchType } from "../entities/session";
 
 export interface MatchmakingResult {
   matches: Match[];
@@ -52,16 +52,19 @@ export function generateBalancedMatches(
   courtCount: number,
   roundNumber: number,
   algorithm: MatchmakingAlgorithm = "playfields_mix",
-  previousMatches: Match[] = []
+  previousMatches: Match[] = [],
+  matchType: MatchType = "doubles"
 ): MatchmakingResult {
+  const isSingles = matchType === "singles";
+  const playersPerCourt = isSingles ? 2 : 4;
+  const minPlayersNeeded = playersPerCourt;
+  const totalSlotsNeeded = courtCount * playersPerCourt;
+
   // 1. Filter hanya pemain aktif yang SUDAH TIBA di lokasi (GOR)
   // Pemain yang belum datang (isArrived === false) otomatis ditahan dari rotasi lapangan
   const activePool = allPlayers.filter((p) => p.status === "active" && p.isArrived !== false);
 
-  const playersPerCourt = 4; // Format ganda (2 vs 2)
-  const totalSlotsNeeded = courtCount * playersPerCourt;
-
-  if (activePool.length < 4) {
+  if (activePool.length < minPlayersNeeded) {
     return { matches: [], restingPlayers: activePool };
   }
 
@@ -72,16 +75,17 @@ export function generateBalancedMatches(
   if (algorithm === "random_fun") {
     // Acak murni tanpa melihat statistik
     const shuffled = [...activePool].sort(() => Math.random() - 0.5);
-    const slots = Math.min(totalSlotsNeeded, Math.floor(shuffled.length / 4) * 4);
+    const slots = Math.min(totalSlotsNeeded, Math.floor(shuffled.length / playersPerCourt) * playersPerCourt);
     selectedPlayers = shuffled.slice(0, slots);
     restingPlayers = shuffled.slice(slots);
   } else if (algorithm === "king_of_court" && roundNumber > 1 && previousMatches.length > 0) {
     // Raja Lapangan: Pemenang Lapangan 1 tetap bertahan
     const prevC1 = previousMatches.find((m) => m.courtNumber === 1 && m.roundNumber === roundNumber - 1);
-    const kingPair =
+    const kingSide =
       prevC1 && prevC1.scoreA >= prevC1.scoreB ? prevC1.teamA : prevC1 ? prevC1.teamB : [];
+    const kingPlayers = isSingles ? kingSide.slice(0, 1) : kingSide.slice(0, 2);
 
-    const kingIds = new Set(kingPair.map((p) => p.id));
+    const kingIds = new Set(kingPlayers.map((p) => p.id));
     const nonKings = activePool.filter((p) => !kingIds.has(p.id));
 
     // Sort penantang berdasarkan jatah main & istirahat
@@ -90,9 +94,12 @@ export function generateBalancedMatches(
       return (roundNumber - b.lastPlayedRound) - (roundNumber - a.lastPlayedRound);
     });
 
-    const neededMore = totalSlotsNeeded - kingPair.length;
-    const chosenNonKings = nonKings.slice(0, Math.min(neededMore, Math.floor(nonKings.length / 2) * 2));
-    selectedPlayers = [...kingPair, ...chosenNonKings];
+    const neededMore = totalSlotsNeeded - kingPlayers.length;
+    const chosenNonKings = nonKings.slice(
+      0,
+      Math.min(neededMore, Math.floor(nonKings.length / (isSingles ? 1 : 2)) * (isSingles ? 1 : 2))
+    );
+    selectedPlayers = [...kingPlayers, ...chosenNonKings];
     restingPlayers = nonKings.slice(chosenNonKings.length);
   } else {
     // Prioritas umum (playfields_mix, fair_playtime, dll): Main paling sedikit, lalu istirahat paling lama
@@ -108,15 +115,58 @@ export function generateBalancedMatches(
       return Math.random() - 0.5;
     });
 
-    const slots = Math.min(totalSlotsNeeded, Math.floor(sorted.length / 4) * 4);
+    const slots = Math.min(totalSlotsNeeded, Math.floor(sorted.length / playersPerCourt) * playersPerCourt);
     selectedPlayers = sorted.slice(0, slots);
     restingPlayers = sorted.slice(slots);
   }
 
   const matches: Match[] = [];
-  const actualCourtsToMake = Math.floor(selectedPlayers.length / 4);
+  const actualCourtsToMake = Math.floor(selectedPlayers.length / playersPerCourt);
 
-  // 3. Pengelompokan Pemain per Lapangan
+  // 2b. Khusus Format Tunggal (Singles 1 vs 1)
+  if (isSingles) {
+    let courtTwoPairs: Player[][] = [];
+
+    if (algorithm === "random_fun") {
+      const shuffled = [...selectedPlayers].sort(() => Math.random() - 0.5);
+      for (let c = 0; c < actualCourtsToMake; c++) {
+        courtTwoPairs.push(shuffled.slice(c * 2, (c + 1) * 2));
+      }
+    } else if (algorithm === "king_of_court" && roundNumber > 1 && previousMatches.length > 0) {
+      // Court 1 adalah King vs Penantang pertama
+      for (let c = 0; c < actualCourtsToMake; c++) {
+        courtTwoPairs.push(selectedPlayers.slice(c * 2, (c + 1) * 2));
+      }
+    } else {
+      // Penyeimbangan level: kelompokkan pemain dengan tier terdekat agar duel 1v1 seru dan sengit
+      const sortedBySkill = [...selectedPlayers].sort((a, b) => b.skillLevel - a.skillLevel);
+      for (let c = 0; c < actualCourtsToMake; c++) {
+        courtTwoPairs.push(sortedBySkill.slice(c * 2, (c + 1) * 2));
+      }
+    }
+
+    for (let c = 0; c < actualCourtsToMake; c++) {
+      const pair = courtTwoPairs[c] || selectedPlayers.slice(c * 2, (c + 1) * 2);
+      if (pair.length >= 2) {
+        matches.push({
+          id: `match-r${roundNumber}-c${c + 1}-${Date.now()}-${c}`,
+          courtNumber: c + 1,
+          roundNumber,
+          teamA: [pair[0]],
+          teamB: [pair[1]],
+          scoreA: 0,
+          scoreB: 0,
+          status: "in_progress",
+          startedAt: new Date().toISOString(),
+          equipmentUsedCount: 1,
+        });
+      }
+    }
+
+    return { matches, restingPlayers };
+  }
+
+  // 3. Pengelompokan Pemain per Lapangan (Format Ganda 2 vs 2)
   let courtPlayerGroups: Player[][] = [];
 
   const isPlayfieldsSameTierRound =
@@ -445,7 +495,8 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
         courtCount,
         r,
         session.algorithm || "playfields_mix",
-        session.matches
+        session.matches,
+        session.matchType || "doubles"
       );
 
       const projectedMatches: ProjectedMatch[] = simResult.matches.map((m) => ({
