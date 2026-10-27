@@ -16,6 +16,7 @@ import {
   Flame,
   Edit3,
   HelpCircle,
+  ChevronLeft,
   ChevronRight,
   Minus,
   ChevronDown,
@@ -59,10 +60,72 @@ import { LocalStorageAdapter } from "../services/storage/local-storage.adapter";
 import { Court, Match } from "../core/entities/match";
 import { formatIndonesianDate } from "../lib/time-tracker";
 
+const SPORT_META: Record<
+  SportType,
+  {
+    tagline: string;
+    equipmentBadge: string;
+    bgSelected: string;
+    colorAccent: string;
+    courtName: string;
+  }
+> = {
+  badminton: {
+    tagline: "Reli Cepat • 21 Poin",
+    equipmentBadge: "🏸 Shuttlecock",
+    bgSelected: "bg-[#ccff00] text-black",
+    colorAccent: "#ccff00",
+    courtName: "Lapangan Bulutangkis",
+  },
+  tennis: {
+    tagline: "Court Klasik • Deuce 40-40",
+    equipmentBadge: "🎾 Bola Kaleng",
+    bgSelected: "bg-[#ff5500] text-white",
+    colorAccent: "#ff5500",
+    courtName: "Lapangan Tenis",
+  },
+  padel: {
+    tagline: "Kaca Wall • Golden Point",
+    equipmentBadge: "🎾 Bola Padel",
+    bgSelected: "bg-[#00e5ff] text-black",
+    colorAccent: "#00e5ff",
+    courtName: "Court Padel Kaca",
+  },
+  table_tennis: {
+    tagline: "Meja Rebound • 11 Poin",
+    equipmentBadge: "🏓 Bola 40mm",
+    bgSelected: "bg-[#ff2a5f] text-white",
+    colorAccent: "#ff2a5f",
+    courtName: "Meja Pingpong",
+  },
+  pickleball: {
+    tagline: "Kitchen Zone • Non-Volley",
+    equipmentBadge: "🏓 Bola Plastik",
+    bgSelected: "bg-[#a3e635] text-black",
+    colorAccent: "#a3e635",
+    courtName: "Court Pickleball",
+  },
+  squash: {
+    tagline: "Dinding Pantul • Fisik Ekstra",
+    equipmentBadge: "⚫ Double Dot Ball",
+    bgSelected: "bg-[#f59e0b] text-black",
+    colorAccent: "#f59e0b",
+    courtName: "Squash Court",
+  },
+};
+
 export default function HomePage() {
   const router = useRouter();
   const [selectedSport, setSelectedSport] = useState<SportType>("badminton");
   const [matchType, setMatchType] = useState<MatchType>("doubles");
+  const sportCarouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollSportCarousel = (direction: "left" | "right") => {
+    if (sportCarouselRef.current) {
+      const scrollAmount = direction === "left" ? -240 : 240;
+      sportCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
   const [sessionTitle, setSessionTitle] = useState("");
   const [sessionDate, setSessionDate] = useState("");
   const [courtLocation, setCourtLocation] = useState("");
@@ -314,8 +377,14 @@ export default function HomePage() {
       ? customInitialMatchesCount + extraMatchesCount
       : baseMatchesCount + extraMatchesCount;
 
-  const handleSelectSport = (sport: SportType) => {
+  const handleSelectSport = (sport: SportType, index?: number) => {
     setSelectedSport(sport);
+    if (typeof index === "number" && sportCarouselRef.current) {
+      const card = sportCarouselRef.current.children[index] as HTMLElement;
+      if (card) {
+        card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    }
     if (sport === "badminton") {
       setEquipmentPricingModel("per_unit");
       setCostPerUnitInput("12000");
@@ -596,41 +665,132 @@ export default function HomePage() {
             </div>
 
             <form onSubmit={handleCreateSession} className="flex flex-col gap-6">
-              {/* 1. Pilihan Sport Neo-Brutalist */}
+              {/* 1. Pilihan Sport Neo-Brutalist Slider Carousel */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-black mb-2.5">
-                  1. Pilih Cabang Olahraga
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-                  {sports.map((s) => {
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <label className="block text-xs font-black uppercase tracking-wider text-black">
+                      1. Pilih Cabang Olahraga ({sports.length} Cabor)
+                    </label>
+                    <span className="text-[10px] font-mono font-bold text-black/60 hidden sm:inline">
+                      • Geser / Slider
+                    </span>
+                  </div>
+
+                  {/* Navigasi Kiri & Kanan Carousel */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => scrollSportCarousel("left")}
+                      className="h-8 w-8 rounded-lg bg-white hover:bg-[#ccff00] border-2 border-black flex items-center justify-center text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                      title="Geser ke Kiri"
+                      aria-label="Geser ke Kiri"
+                    >
+                      <ChevronLeft className="h-4 w-4 stroke-[3]" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollSportCarousel("right")}
+                      className="h-8 w-8 rounded-lg bg-white hover:bg-[#ccff00] border-2 border-black flex items-center justify-center text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                      title="Geser ke Kanan"
+                      aria-label="Geser ke Kanan"
+                    >
+                      <ChevronRight className="h-4 w-4 stroke-[3]" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Carousel Container */}
+                <div
+                  ref={sportCarouselRef}
+                  className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 pt-1 px-1 -mx-1 select-none no-scrollbar touch-pan-x"
+                >
+                  {sports.map((s, idx) => {
                     const isSelected = selectedSport === s.type;
-                    const bgAccent =
-                      s.type === "badminton"
-                        ? "bg-[#ccff00] text-black"
-                        : s.type === "tennis"
-                        ? "bg-[#ff5500] text-white"
-                        : s.type === "padel"
-                        ? "bg-[#00e5ff] text-black"
-                        : s.type === "table_tennis"
-                        ? "bg-[#ff2a5f] text-white"
-                        : s.type === "pickleball"
-                        ? "bg-[#a3e635] text-black"
-                        : "bg-[#f59e0b] text-black";
+                    const meta = SPORT_META[s.type] || {
+                      tagline: "Raket & Bola",
+                      equipmentBadge: s.emoji,
+                      bgSelected: "bg-[#ccff00] text-black",
+                      colorAccent: "#ccff00",
+                      courtName: "Lapangan",
+                    };
 
                     return (
-                      <button
-                        type="button"
+                      <div
                         key={s.type}
-                        onClick={() => handleSelectSport(s.type)}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-3 sm:p-4 rounded-2xl border-3 border-black transition-all text-center cursor-pointer ${
+                        onClick={() => handleSelectSport(s.type, idx)}
+                        className={`w-[170px] sm:w-[190px] shrink-0 snap-start p-3.5 sm:p-4 rounded-2xl border-3 border-black transition-all cursor-pointer flex flex-col justify-between group ${
                           isSelected
-                            ? `${bgAccent} shadow-[4px_4px_0px_#000] translate-x-[-1px] translate-y-[-1px]`
+                            ? `${meta.bgSelected} shadow-[5px_5px_0px_#000] translate-x-[-1px] translate-y-[-1px]`
                             : "bg-[#faf8f2] text-black hover:bg-white hover:shadow-[3px_3px_0px_#000]"
                         }`}
                       >
-                        <span className="text-2xl sm:text-3xl">{s.emoji}</span>
-                        <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider">{s.displayName}</span>
-                      </button>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span
+                              className={`text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded border border-black shadow-[1px_1px_0px_#000] ${
+                                isSelected ? "bg-black text-white" : "bg-white text-black"
+                              }`}
+                            >
+                              {meta.equipmentBadge}
+                            </span>
+                            {isSelected && (
+                              <span className="text-[10px] font-black uppercase bg-black text-[#ccff00] px-1.5 py-0.5 rounded border border-black">
+                                ✓ AKTIF
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col items-center text-center my-2">
+                            <span className="text-4xl sm:text-5xl group-hover:scale-110 transition-transform duration-150 inline-block drop-shadow-[2px_2px_0px_rgba(0,0,0,0.15)]">
+                              {s.emoji}
+                            </span>
+                            <span className="text-sm sm:text-base font-black uppercase tracking-wider mt-2">
+                              {s.displayName}
+                            </span>
+                            <span
+                              className={`text-[10px] font-bold mt-1 line-clamp-1 ${
+                                isSelected ? "opacity-90" : "text-slate-600"
+                              }`}
+                            >
+                              {meta.tagline}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-2.5 border-t-2 border-black/20 flex items-center justify-center">
+                          <span
+                            className={`w-full py-1 text-center text-[10px] font-mono font-black uppercase rounded-lg border transition-all ${
+                              isSelected
+                                ? "bg-black text-white border-black shadow-[1px_1px_0px_#000]"
+                                : "bg-white/80 text-black border-black/40 group-hover:border-black group-hover:bg-white"
+                            }`}
+                          >
+                            {isSelected ? "Sedang Dipilih" : "Pilih Cabor"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Dot / Pill Indicators */}
+                <div className="flex items-center justify-center gap-1.5 mt-1.5">
+                  {sports.map((s, idx) => {
+                    const isSelected = selectedSport === s.type;
+                    return (
+                      <button
+                        key={s.type}
+                        type="button"
+                        onClick={() => handleSelectSport(s.type, idx)}
+                        className={`transition-all rounded-full border border-black cursor-pointer ${
+                          isSelected
+                            ? "w-6 h-2 bg-black"
+                            : "w-2 h-2 bg-black/20 hover:bg-black/50"
+                        }`}
+                        title={s.displayName}
+                        aria-label={`Pilih ${s.displayName}`}
+                      />
                     );
                   })}
                 </div>
