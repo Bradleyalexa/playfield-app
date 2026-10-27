@@ -102,7 +102,13 @@ function isNonPlayerLine(text: string): boolean {
  * Checks if content is an empty placeholder slot like "-", "(open)", "kosong", "slot 8"
  */
 function isPlaceholderSlot(content: string): boolean {
-  const c = content.trim();
+  // First strip emojis, brackets, and variation selectors before checking placeholder
+  const c = content
+    .replace(/[\(\[\{][^\)\]\}]*[\)\]\}]/g, "")
+    .replace(/[\p{Extended_Pictographic}\uFE00-\uFE0F\u200D\u2600-\u27BF\uE000-\uF8FF]/gu, "")
+    .trim()
+    .toLowerCase();
+
   if (!c) return true;
   if (/^[-–—._~()]+$/.test(c)) return true;
   if (
@@ -112,7 +118,6 @@ function isPlaceholderSlot(content: string): boolean {
   ) {
     return true;
   }
-  if (/^\(open\s*(slot)?\)$/i.test(c)) return true;
   return false;
 }
 
@@ -155,19 +160,20 @@ function processPlayerLine(rawLine: string): ParsedPlayerResult {
     skillLevel = 3;
   }
 
-  // 3. Clean Name: Remove brackets, status tags, mentions
+  // 3. Clean Name: Remove brackets, status tags, mentions, and ALL emojis / checkmarks
   let cleanName = cleanLine
     .replace(/\s*[\(\[\{][^\)\]\}]*[\)\]\}]/g, " ") // remove bracket content (Pro), [Lunas]
     .replace(
       /\s*[-–—/]\s*(lunas|transfer|bayar|paid|tamu|cash|dp|pending|w|m|p|l|beg|inter|adv|pro|newbie).*$/i,
       ""
     ) // remove trailing payment/status
+    .replace(/[\p{Extended_Pictographic}\uFE00-\uFE0F\u200D\u2600-\u27BF\uE000-\uF8FF]/gu, "") // Clean emojis like ✅, ✔️, ☑️, 🏸, 💵, etc.
     .replace(/[@#][\w.-]+/g, "") // remove @mentions
     .replace(/\s+/g, " ")
     .trim();
 
   // Strip trailing punctuation
-  cleanName = cleanName.replace(/[-–—.,/]+$/, "").trim();
+  cleanName = cleanName.replace(/[-–—.,/;]+$/, "").trim();
 
   return {
     name: cleanName,
@@ -185,16 +191,24 @@ function processPlayerLine(rawLine: string): ParsedPlayerResult {
  * - Bulleted player lists: "- Jane", "• Yovi", "* Surya"
  * - Plain name lists (line by line)
  * - Filtering out headers, dates, venues, fee, courts, hosts, and chat chatter
- * - Ignoring empty slots / placeholders (e.g. "4. -", "5. (open)", "6. kosong", "7. slot")
+ * - Multiple numbered entries on one line: "24. alex 25. kosong 26. doni"
+ * - Ignoring empty slots / placeholders (e.g. "25. kosong", "4. -", "5. (open)", "6. slot")
+ * - Stripping checkmark and decorative emojis: "Alex ✅", "Doni ✔️", "Santi 🏸"
  */
 export function parseWhatsAppList(rawText: string): ParsedPlayerResult[] {
   if (!rawText || !rawText.trim()) return [];
 
-  const lines = rawText.split(/\r?\n/);
+  // Normalize: if multiple numbered items are on the same line (e.g. "24. alex 25. kosong 26. doni" or comma-separated)
+  // split them into newlines!
+  const normalizedText = rawText
+    .split(/(?<=[^\r\n])[,;]?\s+(?=(?:\[?\d+[\.\)\-\]]|\(\d+\))\s+)/)
+    .join("\n");
+
+  const lines = normalizedText.split(/\r?\n/);
 
   // Pattern for numbered lines:
   // "1. Jane", "2) Yovi", "3 - Surya", "[4] Santo", "(5) Efendi", "   6. Santi"
-  const numberedPattern = /^(?:\[?(\d+)[\.\)\-\]]|\((\d+)\))\s*(.+)$/i;
+  const numberedPattern = /^(?:\[?(\d+)[\.\)\-\]]|\((\d+)\))\s*(.*)$/i;
   // Pattern for bulleted lines:
   // "- Jane", "• Yovi", "* Surya"
   const bulletPattern = /^[-–—•*]\s+(.+)$/;
@@ -206,7 +220,7 @@ export function parseWhatsAppList(rawText: string): ParsedPlayerResult[] {
     if (!trimmed) continue;
     const match = trimmed.match(numberedPattern);
     if (match) {
-      const content = match[3].trim();
+      const content = match[3] ? match[3].trim() : "";
       if (!isPlaceholderSlot(content) && !isNonPlayerLine(content)) {
         numberedCandidates.push({
           lineIndex: i,
