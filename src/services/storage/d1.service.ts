@@ -10,6 +10,8 @@ class D1DatabaseService {
   private databaseId: string = "";
   private apiToken: string = "";
 
+  private hasWarnedAuth: boolean = false;
+
   constructor() {
     this.accountId = process.env.CLOUDFLARE_ACCOUNT_ID || "";
     this.databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID || "";
@@ -43,6 +45,15 @@ class D1DatabaseService {
       });
 
       if (!res.ok) {
+        if (res.status === 403) {
+          if (!this.hasWarnedAuth) {
+            this.hasWarnedAuth = true;
+            console.warn(
+              "[D1DatabaseService] Cloudflare API token lacks D1 permissions (HTTP 403). Session persists via R2 & memory cache."
+            );
+          }
+          return null;
+        }
         const errText = await res.text();
         console.error("[D1DatabaseService] HTTP error from Cloudflare D1 API:", res.status, errText);
         return null;
