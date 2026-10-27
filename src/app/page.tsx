@@ -328,6 +328,21 @@ export default function HomePage() {
       setCostPerUnitInput("30000");
       setCostPerSlopInput("90000");
       setUnitsPerSlopInput("3");
+    } else if (sport === "table_tennis") {
+      setEquipmentPricingModel("per_unit");
+      setCostPerUnitInput("10000");
+      setCostPerSlopInput("50000");
+      setUnitsPerSlopInput("6");
+    } else if (sport === "pickleball") {
+      setEquipmentPricingModel("per_slop");
+      setCostPerUnitInput("35000");
+      setCostPerSlopInput("105000");
+      setUnitsPerSlopInput("3");
+    } else if (sport === "squash") {
+      setEquipmentPricingModel("per_slop");
+      setCostPerUnitInput("45000");
+      setCostPerSlopInput("130000");
+      setUnitsPerSlopInput("3");
     }
   };
 
@@ -351,7 +366,7 @@ export default function HomePage() {
     demo.players = initialPlayers;
     demo.allowSpectatorScoreUpdate = allowSpectatorScoreUpdate;
 
-    // Konfigurasi Equipment (Cock / Bola & Slop)
+    // Konfigurasi Equipment (Cock / Bola & Slop/Box/Tube)
     const isTrackingEquipment = billingModelChoice === "track_equipment";
     demo.sportConfig.equipment = {
       enabled: isTrackingEquipment,
@@ -360,11 +375,26 @@ export default function HomePage() {
           ? "shuttlecock"
           : selectedSport === "tennis"
           ? "ball_can"
-          : "padel_ball",
+          : selectedSport === "padel"
+          ? "padel_ball"
+          : selectedSport === "table_tennis"
+          ? "table_tennis_ball"
+          : selectedSport === "pickleball"
+          ? "pickleball_ball"
+          : "squash_ball",
       totalUsed: 0,
       costPerUnit: Math.max(
         0,
-        parseInt(costPerUnitInput, 10) || (selectedSport === "badminton" ? 12000 : 25000)
+        parseInt(costPerUnitInput, 10) ||
+          (selectedSport === "badminton"
+            ? 12000
+            : selectedSport === "table_tennis"
+            ? 10000
+            : selectedSport === "pickleball"
+            ? 35000
+            : selectedSport === "squash"
+            ? 45000
+            : 25000)
       ),
       billingMode: "shared_all",
       pricingModel: equipmentPricingModel,
@@ -394,10 +424,18 @@ export default function HomePage() {
     const generatedCourts: Court[] = [];
     for (let i = 1; i <= courtCount; i++) {
       const colorName = courtColors[(i - 1) % courtColors.length];
+      const courtLabel =
+        selectedSport === "table_tennis"
+          ? `Meja ${i} (Area ${colorName})`
+          : selectedSport === "squash"
+          ? `Court ${i} (Glass Back)`
+          : selectedSport === "tennis"
+          ? `Court ${i} (Hard Court ${colorName})`
+          : `Lapangan ${i} (Karpet ${colorName})`;
       generatedCourts.push({
         id: `c${i}-${Date.now()}`,
         courtNumber: i,
-        courtName: `Lapangan ${i} (Karpet ${colorName})`,
+        courtName: courtLabel,
         currentMatch: undefined,
       });
     }
@@ -550,29 +588,35 @@ export default function HomePage() {
                 <label className="block text-xs font-black uppercase tracking-wider text-black mb-2.5">
                   1. Pilih Cabang Olahraga
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
                   {sports.map((s) => {
                     const isSelected = selectedSport === s.type;
                     const bgAccent =
                       s.type === "badminton"
-                        ? "bg-[#ccff00]"
+                        ? "bg-[#ccff00] text-black"
                         : s.type === "tennis"
                         ? "bg-[#ff5500] text-white"
-                        : "bg-[#00e5ff]";
+                        : s.type === "padel"
+                        ? "bg-[#00e5ff] text-black"
+                        : s.type === "table_tennis"
+                        ? "bg-[#ff2a5f] text-white"
+                        : s.type === "pickleball"
+                        ? "bg-[#a3e635] text-black"
+                        : "bg-[#f59e0b] text-black";
 
                     return (
                       <button
                         type="button"
                         key={s.type}
                         onClick={() => handleSelectSport(s.type)}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border-3 border-black transition-all text-center cursor-pointer ${
+                        className={`flex flex-col items-center justify-center gap-1.5 p-3 sm:p-4 rounded-2xl border-3 border-black transition-all text-center cursor-pointer ${
                           isSelected
                             ? `${bgAccent} shadow-[4px_4px_0px_#000] translate-x-[-1px] translate-y-[-1px]`
                             : "bg-[#faf8f2] text-black hover:bg-white hover:shadow-[3px_3px_0px_#000]"
                         }`}
                       >
-                        <span className="text-3xl">{s.emoji}</span>
-                        <span className="text-xs font-black uppercase tracking-wider">{s.displayName}</span>
+                        <span className="text-2xl sm:text-3xl">{s.emoji}</span>
+                        <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider">{s.displayName}</span>
                       </button>
                     );
                   })}

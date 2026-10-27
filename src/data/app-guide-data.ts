@@ -28,7 +28,7 @@ export const CARA_PAKAI_STEPS: GuideStep[] = [
     title: "Buat Sesi Mabar Baru (Hanya 30 Detik)",
     subtitle: "Atur cabor, durasi jam sewa GOR, dan model patungan biaya",
     description:
-      "Mulai dengan memilih cabang olahraga mabar Anda: Badminton, Tennis Lapangan, atau Padel Tennis. Tentukan jam mulai, durasi sewa, dan jumlah lapangan yang disewa di GOR.",
+      "Mulai dengan memilih cabang olahraga mabar Anda: Badminton, Tennis Lapangan, Padel, Tenis Meja (Pingpong), Pickleball, atau Squash. Tentukan jam mulai, durasi sewa, dan jumlah lapangan/meja yang disewa di GOR/club.",
     features: [
       "Prediksi Cerdas: Sistem otomatis menghitung estimasi jumlah ronde dan total match yang optimal sesuai durasi sewa.",
       "Pilihan Model Biaya: Pilih Bagi Rata Per Orang (Fixed), Hitung Shuttlecock/Bola Terpakai, atau Bebas Biaya (Gratis).",

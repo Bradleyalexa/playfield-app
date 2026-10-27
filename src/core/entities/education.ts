@@ -183,4 +183,166 @@ export const SPORT_GUIDES: Record<SportType, SportGuide> = {
       "Jangan membenturkan raket ke dinding kaca saat mengejar bola.",
     ],
   },
+
+  table_tennis: {
+    sport: "table_tennis",
+    title: "Tenis Meja (Ping Pong)",
+    badge: "🏓 Cepat, Refleks Kilat & Merakyat",
+    overview:
+      "Tenis meja memadukan refleks super cepat, variasi spin bola yang tajam (topspin, backspin, sidespin), dan penempatan bola akurat di atas meja 2,74 m x 1,525 m.",
+    scoringRules: [
+      "Standar ITTF: Game dimainkan hingga 11 poin dengan sistem rally point. Pemenang wajib unggul selisih minimal 2 poin.",
+      "Rotasi Servis 2 Poin: Servis berganti pemegang setiap 2 poin. Pada deuce (10-10), servis berganti setiap 1 poin.",
+      "Aturan Servis Ganda: Servis wajib memantul menyilang dari kotak kanan server menuju kotak kanan receiver.",
+      "Format Klasik 21 Poin: Sistem tradisional komunitas di mana game dimainkan sampai 21 poin dan servis berganti tiap 5 poin.",
+    ],
+    courtPositions: [
+      {
+        title: "Rotasi Pukulan Ganda Tenis Meja",
+        subtitle: "Pukulan Wajib Bergantian Antar Partner",
+        description:
+          "Dalam nomor ganda, pemain harus memukul secara bergantian (A1 → B1 → A2 → B2). Pemain harus segera bergerak menyamping memberi ruang bagi partnernya.",
+        tag: "Doubles Rotation",
+      },
+      {
+        title: "Posisi Siap (Ready Stance)",
+        subtitle: "Pusat Keseimbangan Rendah",
+        description:
+          "Badan condong ke depan, lutut ditekuk rileks, dan bat selalu berada di depan dada agar siap mengantisipasi bola smash maupun chop cepat.",
+        tag: "Fundamental",
+      },
+    ],
+    tipsAndTricks: [
+      {
+        title: "Kuasai Brush Contact untuk Spin",
+        category: "Teknik",
+        description:
+          "Gesek bola dengan permukaan karet bat saat puncak pantulan untuk menghasilkan topspin tajam yang menukik deras ke meja lawan.",
+      },
+      {
+        title: "Eksploitasi Sisi Backhand Lawan",
+        category: "Taktik",
+        description:
+          "Sebagian besar pemain komunitas lebih rentan terhadap dorongan backhand. Gunakan servis pendek berputar untuk memancing bola tanggung.",
+      },
+      {
+        title: "Etika Bola Pinggiran (Edge & Net Ball)",
+        category: "Etika",
+        description:
+          "Jika bola Anda mengenai ujung meja (edge) atau bibir net lalu masuk secara beruntung, angkat tangan sebagai gestur meminta maaf secara sopan.",
+      },
+    ],
+    etiquette: [
+      "Jangan menyentuh permukaan meja dengan tangan yang tidak memegang bat saat reli sedang berlangsung.",
+      "Kembalikan bola dengan menggelindingkannya di atas meja ke arah penyervis, jangan dilempar sembarangan.",
+    ],
+  },
+
+  pickleball: {
+    sport: "pickleball",
+    title: "Pickleball",
+    badge: "🥒 Tren Olahraga Raket Terhangat Dunia",
+    overview:
+      "Perpaduan seru antara tenis, bulutangkis, dan pingpong yang dimainkan di lapangan seukuran bulutangkis dengan paddle solid dan bola berlubang (wiffle ball).",
+    scoringRules: [
+      "Standar Side-Out Scoring (11 Poin): Hanya tim yang memegang servis yang dapat mencetak poin. Target 11 poin dengan selisih 2 poin.",
+      "Modern Rally Scoring (15 / 21 Poin): Setiap reli menghasilkan poin untuk mempercepat pertandingan dan efisiensi waktu sewa lapangan.",
+      "Zona Non-Volley (The Kitchen): Dilarang memukul bola secara langsung di udara (volley) saat kaki menyentuh atau berada di dalam area 2,13 m dari net.",
+      "Two-Bounce Rule: Servis harus memantul satu kali sebelum di-return, dan bola return juga harus memantul satu kali sebelum tim penyervis boleh memukulnya.",
+    ],
+    courtPositions: [
+      {
+        title: "Formasi Kitchen Line (Dink Battle)",
+        subtitle: "Zona Utama Perebutan Poin",
+        description:
+          "Setelah two-bounce rule terpenuhi, kedua pemain harus maju merapatkan posisi ke garis Kitchen untuk memulai adu dink sabar.",
+        tag: "Kitchen Control",
+      },
+      {
+        title: "Third Shot Drop (Transisi)",
+        subtitle: "Kunci Emas Menuju Net",
+        description:
+          "Pukulan ketiga yang dilambungkan halus dari baseline agar jatuh mati di area Kitchen lawan, memberi waktu tim Anda maju ke net.",
+        tag: "Strategy",
+      },
+    ],
+    tipsAndTricks: [
+      {
+        title: "The Dink Shot: Pukulan Sabar",
+        category: "Teknik",
+        description:
+          "Pukul bola lembut dengan ayunan bahu (tanpa pergelangan tangan) agar bola jatuh persis di dalam Kitchen lawan tanpa melambung tinggi.",
+      },
+      {
+        title: "Sabar Sebelum Speed-Up",
+        category: "Taktik",
+        description:
+          "Jangan terburu-buru melakukan smash keras dari bola rendah di bawah net. Tunggu sampai bola lawan melambung tanggung untuk melakukan serangan mendadak.",
+      },
+      {
+        title: "Umumkan Skor Lengkap Sebelum Servis",
+        category: "Etika",
+        description:
+          "Server wajib menyebutkan 3 angka skor (Skor Tim Servis - Skor Tim Receiver - Server 1 atau 2) secara lantang sebelum mengayunkan servis.",
+      },
+    ],
+    etiquette: [
+      "Hargai zona Kitchen: akui kesalahan dengan sportif jika kaki Anda menyentuh garis Kitchen saat melakukan volley.",
+      "Gunakan bola indoor untuk lapangan kayu/vinyl dan bola outdoor berlubang 40 untuk lapangan semen/aspal.",
+    ],
+  },
+
+  squash: {
+    sport: "squash",
+    title: "Squash (Tenis Dinding)",
+    badge: "💥 Olahraga Paling Menguras Kalori",
+    overview:
+      "Olahraga raket berdinding empat yang menuntut daya tahan aerobik luar biasa, kecepatan reaksi kilat, dan taktik cerdas menguasai titik T (T-Position).",
+    scoringRules: [
+      "Standar WSF (PAR-11): Point-A-Rally sampai 11 poin. Setiap reli menghasilkan poin. Pada skor 10-10, dibutuhkan keunggulan selisih 2 poin untuk menang.",
+      "Batas Dinding: Bola harus mengenai dinding depan di atas garis 'Tin' (setinggi 48 cm dari lantai) dan di bawah garis batas 'Out' atas.",
+      "Satu Pantulan Lantai: Bola boleh mengenai dinding samping atau belakang berkali-kali, asalkan hanya memantul 1 kali di lantai sebelum dipukul.",
+      "Let vs Stroke: Jika pergerakan atau ayunan raket terhalang lawan, mintalah 'Let' (reli diulang) atau dapatkan 'Stroke' (poin langsung jika terhalang jalur bola ke dinding depan).",
+    ],
+    courtPositions: [
+      {
+        title: "Kuasai Titik T (T-Position)",
+        subtitle: "Pusat Kendali Lapangan",
+        description:
+          "Titik persimpangan garis tengah lapangan adalah pusat kontrol. Setelah memukul bola, segera bergerak kembali ke T untuk menjangkau seluruh 4 sudut lapangan.",
+        tag: "T-Domination",
+      },
+      {
+        title: "Defending from the Back Corners",
+        subtitle: "Manfaatkan Pantulan Dinding Belakang",
+        description:
+          "Jika terdesak ke pojok belakang, gunakan pukulan lob tinggi ke dinding depan atau pantulan sudut (boast) untuk membeli waktu kembali ke T.",
+        tag: "Defense",
+      },
+    ],
+    tipsAndTricks: [
+      {
+        title: "Pukulan Straight Drive (The Rail)",
+        category: "Teknik",
+        description:
+          "Pukul bola menempel rapat di sepanjang dinding samping menuju sudut belakang (nick) agar lawan kesulitan mengayunkan raket.",
+      },
+      {
+        title: "Drop Shot Halus di Depan",
+        category: "Taktik",
+        description:
+          "Saat lawan terjebak jauh di belakang, lepaskan drop shot lembut persis di atas garis Tin dinding depan untuk mematikan langkah lawan.",
+      },
+      {
+        title: "Keselamatan Nomor Satu (Safety First)",
+        category: "Etika",
+        description:
+          "Jangan pernah memaksakan pukulan jika raket Anda berisiko mengenai badan lawan. Selalu tahan ayunan dan minta 'Let'.",
+      },
+    ],
+    etiquette: [
+      "Wajib mengenakan kacamata pelindung mata (protective eyewear) selama berada di dalam lapangan squash.",
+      "Gunakan sepatu bersol karet non-marking agar tidak meninggalkan bekas hitam di lantai kayu parket.",
+    ],
+  },
 };

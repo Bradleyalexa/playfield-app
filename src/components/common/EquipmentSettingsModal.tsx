@@ -55,9 +55,63 @@ export function EquipmentSettingsModal({
     onClose();
   };
 
-  const isBadminton = sport === "badminton";
-  const unitLabel = isBadminton ? "Shuttlecock" : "Bola";
-  const slopLabel = isBadminton ? "Slop (Tabung)" : "Can (Kaleng)";
+  const getPackagingLabels = (sp?: SportType) => {
+    switch (sp) {
+      case "badminton":
+        return { unit: "Shuttlecock", package: "Slop (Tabung)", shortPkg: "Slop" };
+      case "table_tennis":
+        return { unit: "Bola Pingpong", package: "Box (Kotak)", shortPkg: "Box" };
+      case "pickleball":
+        return { unit: "Bola Pickleball", package: "Tube (Tabung)", shortPkg: "Tube" };
+      case "squash":
+        return { unit: "Bola Squash", package: "Box (Dus)", shortPkg: "Box" };
+      case "tennis":
+      case "padel":
+      default:
+        return { unit: "Bola", package: "Can (Kaleng)", shortPkg: "Can" };
+    }
+  };
+
+  const packaging = getPackagingLabels(sport);
+  const unitLabel = packaging.unit;
+  const slopLabel = packaging.package;
+  const shortPkg = packaging.shortPkg;
+
+  const quickPresets =
+    sport === "badminton"
+      ? [
+          { label: "120rb", val: 120000 },
+          { label: "140rb", val: 140000 },
+          { label: "160rb", val: 160000 },
+          { label: "290rb", val: 290000 },
+        ]
+      : sport === "table_tennis"
+      ? [
+          { label: "35rb", val: 35000 },
+          { label: "50rb", val: 50000 },
+          { label: "75rb", val: 75000 },
+          { label: "100rb", val: 100000 },
+        ]
+      : sport === "pickleball"
+      ? [
+          { label: "85rb", val: 85000 },
+          { label: "105rb", val: 105000 },
+          { label: "125rb", val: 125000 },
+          { label: "150rb", val: 150000 },
+        ]
+      : sport === "squash"
+      ? [
+          { label: "110rb", val: 110000 },
+          { label: "130rb", val: 130000 },
+          { label: "150rb", val: 150000 },
+          { label: "180rb", val: 180000 },
+        ]
+      : [
+          { label: "75rb", val: 75000 },
+          { label: "85rb", val: 85000 },
+          { label: "90rb", val: 90000 },
+          { label: "110rb", val: 110000 },
+        ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
@@ -120,7 +174,7 @@ export function EquipmentSettingsModal({
                 }`}
               >
                 <Package className="h-4 w-4" />
-                <span>Hitung Per {isBadminton ? "Slop" : "Can"}</span>
+                <span>Hitung Per {shortPkg}</span>
               </button>
             </div>
           </div>
@@ -168,7 +222,7 @@ export function EquipmentSettingsModal({
                 <div>
                   <span className="text-xs font-black text-black block">Total {unitLabel} Terpakai:</span>
                   <span className="text-[10px] text-slate-600 font-bold">
-                    Setara ~{Math.ceil(totalUsed / 12)} slop
+                    Setara ~{Math.ceil(totalUsed / unitsPerSlop)} {shortPkg.toLowerCase()}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -195,7 +249,7 @@ export function EquipmentSettingsModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-black uppercase text-black block mb-1">
-                    Harga Per {isBadminton ? "Slop" : "Can"} (Rp):
+                    Harga Per {shortPkg} (Rp):
                   </label>
                   <div className="flex items-center gap-1.5">
                     <span className="font-mono font-black text-xs">Rp</span>
@@ -212,7 +266,7 @@ export function EquipmentSettingsModal({
 
                 <div>
                   <label className="text-[11px] font-black uppercase text-black block mb-1">
-                    Isi Butir Per {isBadminton ? "Slop" : "Can"}:
+                    Isi Butir Per {shortPkg}:
                   </label>
                   <input
                     type="number"
@@ -225,14 +279,9 @@ export function EquipmentSettingsModal({
                 </div>
               </div>
 
-              {/* Quick Slop Presets */}
+              {/* Quick Slop/Package Presets */}
               <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { label: "120rb", val: 120000 },
-                  { label: "140rb", val: 140000 },
-                  { label: "160rb", val: 160000 },
-                  { label: "290rb", val: 290000 },
-                ].map((item) => (
+                {quickPresets.map((item) => (
                   <button
                     key={item.val}
                     type="button"
@@ -248,11 +297,11 @@ export function EquipmentSettingsModal({
                 ))}
               </div>
 
-              {/* Adjust Slop Terbuka */}
+              {/* Adjust Slop/Package Terbuka */}
               <div className="pt-2 border-t border-black/15 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-black text-black block">
-                    Jumlah {isBadminton ? "Slop" : "Can"} Dibuka:
+                    Jumlah {shortPkg} Dibuka:
                   </span>
                   <span className="text-[10px] text-slate-600 font-bold">
                     Kapasitas {slopUsed * unitsPerSlop} butir ({totalUsed} butir terpakai)
@@ -287,7 +336,7 @@ export function EquipmentSettingsModal({
               </span>
               <span className="text-xs font-bold text-black">
                 {pricingModel === "per_slop"
-                  ? `${slopUsed} ${isBadminton ? "Slop" : "Can"} × ${formatRupiah(costPerSlop)}`
+                  ? `${slopUsed} ${shortPkg} × ${formatRupiah(costPerSlop)}`
                   : `${totalUsed} Butir × ${formatRupiah(costPerUnit)}`}
               </span>
             </div>

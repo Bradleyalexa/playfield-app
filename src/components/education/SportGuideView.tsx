@@ -12,7 +12,10 @@ export function SportGuideView() {
   const sportsList: { type: SportType; label: string; icon: string; accent: string }[] = [
     { type: "badminton", label: "Badminton", icon: "🏸", accent: "bg-[#ccff00]" },
     { type: "tennis", label: "Tennis Lapangan", icon: "🎾", accent: "bg-[#ff5500] text-white" },
-    { type: "padel", label: "Padel Tennis", icon: "🏓", accent: "bg-[#00e5ff]" },
+    { type: "padel", label: "Padel Tennis", icon: "🎾", accent: "bg-[#00e5ff]" },
+    { type: "table_tennis", label: "Tenis Meja", icon: "🏓", accent: "bg-[#f472b6]" },
+    { type: "pickleball", label: "Pickleball", icon: "🥒", accent: "bg-[#a7f3d0]" },
+    { type: "squash", label: "Squash", icon: "💥", accent: "bg-[#ffde00]" },
   ];
 
   return (

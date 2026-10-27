@@ -126,16 +126,40 @@ export class LocalStorageAdapter {
     const courtCount = 2;
     const initialMatches = generateBalancedMatches(demoPlayers, courtCount, 1);
 
+    const defaultTitle =
+      sport === "table_tennis"
+        ? "Mabar Tenis Meja Pingpong Arena"
+        : sport === "pickleball"
+        ? "Mabar Pickleball Community Jakarta"
+        : sport === "squash"
+        ? "Mabar Squash Club Wall Session"
+        : sport === "tennis"
+        ? "Mabar Tennis Court Session"
+        : sport === "padel"
+        ? "Mabar Padel Cage Session"
+        : "Mabar Ceria Badminton GOR Tomang";
+
+    const courtPrefix = sport === "table_tennis" ? "Meja" : sport === "squash" ? "Court" : "Lapangan";
     const courts = [
-      { id: "c1", courtNumber: 1, courtName: "Lapangan 1 (Karpet Hijau)", currentMatch: initialMatches.matches[0] || undefined },
-      { id: "c2", courtNumber: 2, courtName: "Lapangan 2 (Karpet Biru)", currentMatch: initialMatches.matches[1] || undefined },
+      {
+        id: "c1",
+        courtNumber: 1,
+        courtName: `${courtPrefix} 1 (${sport === "table_tennis" ? "Area A" : sport === "squash" ? "Glass Back" : "Karpet Hijau"})`,
+        currentMatch: initialMatches.matches[0] || undefined,
+      },
+      {
+        id: "c2",
+        courtNumber: 2,
+        courtName: `${courtPrefix} 2 (${sport === "table_tennis" ? "Area B" : sport === "squash" ? "Glass Back" : "Karpet Biru"})`,
+        currentMatch: initialMatches.matches[1] || undefined,
+      },
     ];
 
     const session: GameSession = {
       id: `session-${Date.now()}`,
       publicSlug: slug,
       adminKey,
-      title: "Mabar Ceria Badminton GOR Tomang",
+      title: defaultTitle,
       sport,
       courtCount,
       status: "active",
@@ -156,7 +180,14 @@ export class LocalStorageAdapter {
       matchDurationMinutes: 15,
       algorithm: "playfields_mix",
       estimatedMatchesCount: Math.ceil((2 * 60 / 15) * courtCount) + 10,
-      courtLocation: "GOR Tomang Barat, Lapangan 1-2",
+      courtLocation:
+        sport === "table_tennis"
+          ? "Pingpong Hall Arena, Meja 1-2"
+          : sport === "squash"
+          ? "Gelora Squash Centre, Court 1-2"
+          : sport === "pickleball"
+          ? "Pickleball Hub Senayan, Lapangan 1-2"
+          : "GOR Tomang Barat, Lapangan 1-2",
       googleMapsUrl: "https://maps.google.com/?q=GOR+Tomang+Barat",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

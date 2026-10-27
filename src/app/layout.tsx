@@ -23,7 +23,7 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Playfield — Pocket Assistant Host Mabar & Pengatur Rotasi Lapangan",
   description:
-    "Aplikasi pengatur game untuk host mabar olahraga (Badminton, Tennis, Padel) di Indonesia. Smart WhatsApp list parser, rotasi ganda seimbang, tracker shuttlecock, dan mode TV GOR display.",
+    "Aplikasi pengatur game untuk host mabar olahraga (Badminton, Tennis, Padel, Tenis Meja, Pickleball, Squash) di Indonesia. Smart WhatsApp list parser, rotasi ganda seimbang, tracker shuttlecock & bola, dan mode TV GOR display.",
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

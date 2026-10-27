@@ -87,13 +87,21 @@ export function CourtCard({
   }
 
   // Cek validasi skor menggunakan sport strategy
-  const strategy = SportRegistry.getStrategy(
+  const sportTypeForStrategy =
     sportConfig.equipment.unitName === "shuttlecock"
       ? "badminton"
       : sportConfig.equipment.unitName === "ball_can"
       ? "tennis"
-      : "padel"
-  );
+      : sportConfig.equipment.unitName === "padel_ball"
+      ? "padel"
+      : sportConfig.equipment.unitName === "table_tennis_ball"
+      ? "table_tennis"
+      : sportConfig.equipment.unitName === "pickleball_ball"
+      ? "pickleball"
+      : sportConfig.equipment.unitName === "squash_ball"
+      ? "squash"
+      : "badminton";
+  const strategy = SportRegistry.getStrategy(sportTypeForStrategy);
   const validation = strategy.validateScore(match.scoreA, match.scoreB, sportConfig);
 
   const handleAnnounce = () => {
@@ -442,12 +450,12 @@ export function CourtCard({
         {onAddCockToMatch && sportConfig.equipment.enabled !== false && (
           <button
             onClick={() => onAddCockToMatch(court.courtNumber)}
-            title="Tambah pemakaian shuttlecock untuk match ini"
+            title={sportConfig.equipment.unitName === "shuttlecock" ? "Tambah pemakaian shuttlecock untuk match ini" : "Tambah pemakaian bola untuk match ini"}
             className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 rounded-lg border-2 border-black bg-[#ffde00] py-2 text-xs font-black text-black uppercase tracking-wider shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
             <Flame className="h-3.5 w-3.5 fill-black" />
             <span>
-              +1 {sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
+              +1 {sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Bola"} (
               {match.equipmentUsedCount || 1})
             </span>
           </button>

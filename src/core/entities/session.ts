@@ -1,7 +1,13 @@
 import { Court, Match } from "./match";
 import { Player } from "./player";
 
-export type SportType = "badminton" | "tennis" | "padel";
+export type SportType =
+  | "badminton"
+  | "tennis"
+  | "padel"
+  | "table_tennis"
+  | "pickleball"
+  | "squash";
 
 export type SessionStatus = "active" | "completed" | "archived";
 
@@ -124,7 +130,13 @@ export type EquipmentPricingModel = "per_unit" | "per_slop";
 
 export interface EquipmentConfig {
   enabled?: boolean; // false jika paket all-in-one / tanpa hitung cock
-  unitName: "shuttlecock" | "ball_can" | "padel_ball";
+  unitName:
+    | "shuttlecock"
+    | "ball_can"
+    | "padel_ball"
+    | "table_tennis_ball"
+    | "pickleball_ball"
+    | "squash_ball";
   totalUsed: number;
   costPerUnit: number;
   billingMode: "shared_all" | "per_match";

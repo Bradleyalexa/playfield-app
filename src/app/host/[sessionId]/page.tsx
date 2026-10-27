@@ -1420,15 +1420,22 @@ function HostDashboardContent({ params }: HostPageProps) {
                     <>
                       <Package className="h-4 w-4 stroke-[2.5]" />
                       <span>
-                        +1 {session.sport === "badminton" ? "Slop" : "Can"} (
-                        {session.sportConfig.equipment.slopUsed ?? 1})
+                        +1{" "}
+                        {session.sport === "badminton"
+                          ? "Slop"
+                          : session.sport === "pickleball"
+                          ? "Tube"
+                          : session.sport === "table_tennis" || session.sport === "squash"
+                          ? "Box"
+                          : "Can"}{" "}
+                        ({session.sportConfig.equipment.slopUsed ?? 1})
                       </span>
                     </>
                   ) : (
                     <>
                       <Flame className="h-4 w-4 fill-black" />
                       <span>
-                        +1 {session.sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Ball"} (
+                        +1 {session.sportConfig.equipment.unitName === "shuttlecock" ? "Cock" : "Bola"} (
                         {session.sportConfig.equipment.totalUsed})
                       </span>
                     </>
