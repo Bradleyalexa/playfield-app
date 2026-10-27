@@ -44,6 +44,7 @@ import { AlgorithmExplainerModal } from "../components/schedule/AlgorithmExplain
 import { WaPasteModal } from "../components/players/WaPasteModal";
 import { DonateCreatorModal } from "../components/common/DonateCreatorModal";
 import { HelpGuideModal } from "../components/common/HelpGuideModal";
+import { SessionWizardForm } from "../components/session/SessionWizardForm";
 import { CARA_PAKAI_STEPS, FAQ_ITEMS, FAQ_CATEGORIES } from "../data/app-guide-data";
 import { Player, SkillLevel, getTierFromSkill, getTierLabel } from "../core/entities/player";
 import { generateBalancedMatches, addMinutesToTimeString } from "../core/matchmaking/balanced-queue";
@@ -118,6 +119,7 @@ export default function HomePage() {
   const router = useRouter();
   const [selectedSport, setSelectedSport] = useState<SportType>("badminton");
   const [matchType, setMatchType] = useState<MatchType>("doubles");
+  const [formMode, setFormMode] = useState<"wizard" | "full">("wizard");
   const sportCarouselRef = useRef<HTMLDivElement>(null);
 
   const scrollSportCarousel = (direction: "left" | "right") => {
@@ -652,19 +654,138 @@ export default function HomePage() {
         {/* Form Buat Sesi Baru */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
           <div className="lg:col-span-2 rounded-3xl border-3 sm:border-4 border-black bg-white p-4 sm:p-8 shadow-[6px_6px_0px_#000] sm:shadow-[8px_8px_0px_#000]">
-            <div className="flex items-center gap-3 pb-4 border-b-3 border-black mb-6">
-              <div className="h-11 w-11 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center font-black shrink-0">
-                <Plus className="h-6 w-6 stroke-[3]" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b-3 border-black mb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-xl bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center font-black shrink-0">
+                  <Plus className="h-6 w-6 stroke-[3]" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black text-black uppercase tracking-wide">Buat Sesi Mabar Baru</h2>
+                  <p className="text-xs font-bold text-slate-600">
+                    Konfigurasikan jam sewa, durasi, algoritma, dan opsional biaya bola
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-black text-black uppercase tracking-wide">Buat Sesi Mabar Baru</h2>
-                <p className="text-xs font-bold text-slate-600">
-                  Konfigurasikan jam sewa, durasi, algoritma, dan opsional biaya bola
-                </p>
+
+              {/* Mode Switcher: Step-by-Step vs 1 Halaman */}
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#faf8f2] border-2 border-black self-start sm:self-auto shadow-[2px_2px_0px_#000]">
+                <button
+                  type="button"
+                  onClick={() => setFormMode("wizard")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                    formMode === "wizard"
+                      ? "bg-[#ccff00] text-black border-2 border-black shadow-[1px_1px_0px_#000]"
+                      : "bg-transparent text-slate-600 hover:text-black"
+                  }`}
+                >
+                  <Sliders className="h-3.5 w-3.5 stroke-[2.5]" />
+                  <span>Mode Bertahap</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormMode("full")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                    formMode === "full"
+                      ? "bg-white text-black border-2 border-black shadow-[1px_1px_0px_#000]"
+                      : "bg-transparent text-slate-600 hover:text-black"
+                  }`}
+                >
+                  <Receipt className="h-3.5 w-3.5 stroke-[2.5]" />
+                  <span>1 Halaman</span>
+                </button>
               </div>
             </div>
 
-            <form onSubmit={handleCreateSession} className="flex flex-col gap-6">
+            {formMode === "wizard" ? (
+              <SessionWizardForm
+                sports={sports}
+                sportMeta={SPORT_META}
+                selectedSport={selectedSport}
+                onSelectSport={handleSelectSport}
+                matchType={matchType}
+                setMatchType={setMatchType}
+                courtCount={courtCount}
+                setCourtCount={setCourtCount}
+                startTime={startTime}
+                setStartTime={setStartTime}
+                adjustStartTime={adjustStartTime}
+                durationHours={durationHours}
+                setDurationHours={setDurationHours}
+                isCustomDuration={isCustomDuration}
+                setIsCustomDuration={setIsCustomDuration}
+                customDurationInput={customDurationInput}
+                setCustomDurationInput={setCustomDurationInput}
+                matchDurationMinutes={matchDurationMinutes}
+                setMatchDurationMinutes={setMatchDurationMinutes}
+                isCustomMatchDuration={isCustomMatchDuration}
+                setIsCustomMatchDuration={setIsCustomMatchDuration}
+                customMatchDurationInput={customMatchDurationInput}
+                setCustomMatchDurationInput={setCustomMatchDurationInput}
+                effectiveDurationHours={effectiveDurationHours}
+                effectiveMatchDurationMinutes={effectiveMatchDurationMinutes}
+                estimatedRounds={estimatedRounds}
+                baseMatchesCount={baseMatchesCount}
+                totalProjectedMatches={totalProjectedMatches}
+                selectedAlgorithm={selectedAlgorithm}
+                setSelectedAlgorithm={setSelectedAlgorithm}
+                customInitialMatchesCount={customInitialMatchesCount}
+                setCustomInitialMatchesCount={setCustomInitialMatchesCount}
+                onOpenAlgoExplainer={() => setIsAlgoExplainerOpen(true)}
+                initialPlayers={initialPlayers}
+                quickPlayerName={quickPlayerName}
+                setQuickPlayerName={setQuickPlayerName}
+                quickGender={quickGender}
+                setQuickGender={setQuickGender}
+                quickSkill={quickSkill}
+                setQuickSkill={setQuickSkill}
+                onAddQuickPlayer={handleAddQuickPlayer}
+                onOpenWaModal={() => setIsWaModalOpen(true)}
+                onLoadDemoPlayers={handleLoadDemo4Players}
+                onRemovePlayer={handleRemoveInitialPlayer}
+                onToggleGender={handleToggleInitialPlayerGender}
+                onCycleSkill={handleCycleInitialPlayerSkill}
+                onToggleArrival={handleToggleInitialPlayerArrival}
+                sessionTitle={sessionTitle}
+                setSessionTitle={setSessionTitle}
+                sessionDate={sessionDate}
+                setSessionDate={setSessionDate}
+                courtLocation={courtLocation}
+                setCourtLocation={setCourtLocation}
+                googleMapsUrl={googleMapsUrl}
+                setGoogleMapsUrl={setGoogleMapsUrl}
+                billingModelChoice={billingModelChoice}
+                setBillingModelChoice={setBillingModelChoice}
+                fixedPriceInput={fixedPriceInput}
+                setFixedPriceInput={setFixedPriceInput}
+                courtRentalFeeInput={courtRentalFeeInput}
+                setCourtRentalFeeInput={setCourtRentalFeeInput}
+                equipmentPricingModel={equipmentPricingModel}
+                setEquipmentPricingModel={setEquipmentPricingModel}
+                costPerUnitInput={costPerUnitInput}
+                setCostPerUnitInput={setCostPerUnitInput}
+                costPerSlopInput={costPerSlopInput}
+                setCostPerSlopInput={setCostPerSlopInput}
+                unitsPerSlopInput={unitsPerSlopInput}
+                setUnitsPerSlopInput={setUnitsPerSlopInput}
+                bankNameInput={bankNameInput}
+                setBankNameInput={setBankNameInput}
+                accountNumberInput={accountNumberInput}
+                setAccountNumberInput={setAccountNumberInput}
+                accountHolderInput={accountHolderInput}
+                setAccountHolderInput={setAccountHolderInput}
+                allowSpectatorScoreUpdate={allowSpectatorScoreUpdate}
+                setAllowSpectatorScoreUpdate={setAllowSpectatorScoreUpdate}
+                isLocationDropdownOpen={isLocationDropdownOpen}
+                setIsLocationDropdownOpen={setIsLocationDropdownOpen}
+                isBillingDropdownOpen={isBillingDropdownOpen}
+                setIsBillingDropdownOpen={setIsBillingDropdownOpen}
+                isAdvancedDropdownOpen={isAdvancedDropdownOpen}
+                setIsAdvancedDropdownOpen={setIsAdvancedDropdownOpen}
+                onSubmit={handleCreateSession}
+                onSwitchToFullForm={() => setFormMode("full")}
+              />
+            ) : (
+              <form onSubmit={handleCreateSession} className="flex flex-col gap-6">
               {/* 1. Pilihan Sport Neo-Brutalist Slider Carousel */}
               <div>
                 <div className="flex items-center justify-between mb-2.5">
@@ -2275,6 +2396,7 @@ export default function HomePage() {
                 <span>Mulai Atur Lapangan & Tampilkan Jadwal</span>
               </button>
             </form>
+          )}
           </div>
 
           {/* Sesi Terakhir (Recent Sessions Dropdown - Tampilkan 2 Recent Aja) */}
