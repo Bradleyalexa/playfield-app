@@ -1277,6 +1277,14 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
   };
 
+  // 9c. Tutup Modal Feedback & Lanjutkan ke Modal Donasi Creator
+  const handleCloseFeedbackModal = () => {
+    setIsFeedbackModalOpen(false);
+    setTimeout(() => {
+      setIsDonateModalOpen(true);
+    }, 300);
+  };
+
   // 10. Buka Kembali Sesi Mabar (Safety valve jika salah klik)
   const handleReopenSession = () => {
     const updated: GameSession = {
@@ -1896,11 +1904,11 @@ function HostDashboardContent({ params }: HostPageProps) {
       {/* Modal Feedback setelah Selesai Mabar */}
       <FeedbackModal
         isOpen={isFeedbackModalOpen}
-        onClose={() => setIsFeedbackModalOpen(false)}
+        onClose={handleCloseFeedbackModal}
         session={session}
       />
 
-      {/* Modal Donasi ke Creator Playfield (Muncul setelah selesaikan mabar) */}
+      {/* Modal Donasi ke Creator Playfield (Muncul setelah feedback selesai/dilewati) */}
       <DonateCreatorModal
         isOpen={isDonateModalOpen}
         onClose={() => setIsDonateModalOpen(false)}

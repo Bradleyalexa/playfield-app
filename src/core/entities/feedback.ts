@@ -10,3 +10,4 @@ export interface SessionFeedback {
   createdAt: string;
   userAgent?: string;
 }
+
