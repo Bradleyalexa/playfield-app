@@ -45,6 +45,7 @@ import { ReshuffleConsentModal } from "../../../components/schedule/ReshuffleCon
 import { FinishSessionModal } from "../../../components/schedule/FinishSessionModal";
 import { CompletedSessionRecap } from "../../../components/schedule/CompletedSessionRecap";
 import { DonateCreatorModal } from "../../../components/common/DonateCreatorModal";
+import { FeedbackModal } from "../../../components/common/FeedbackModal";
 import { SpectatorQrModal } from "../../../components/common/SpectatorQrModal";
 import { MatchRecapModal } from "../../../components/schedule/MatchRecapModal";
 import { calculateRentalTimeInfo, RentalTimeInfo } from "../../../lib/time-tracker";
@@ -94,6 +95,7 @@ function HostDashboardContent({ params }: HostPageProps) {
 
   // Modal Selesaikan Mabar
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
   const [isSpectatorQrOpen, setIsSpectatorQrOpen] = useState(false);
 
@@ -1259,9 +1261,9 @@ function HostDashboardContent({ params }: HostPageProps) {
 
     AudioAnnouncer.announceGeneral("Sesi mabar hari ini resmi diselesaikan! Terima kasih semua pemain.");
 
-    // Langsung buka popup modal donasi creator setelah konfirmasi selesaikan mabar
+    // Buka popup feedback setelah konfirmasi selesaikan mabar
     setTimeout(() => {
-      setIsDonateModalOpen(true);
+      setIsFeedbackModalOpen(true);
     }, 600);
   };
 
@@ -1888,6 +1890,13 @@ function HostDashboardContent({ params }: HostPageProps) {
         isOpen={isFinishModalOpen}
         onClose={() => setIsFinishModalOpen(false)}
         onConfirmFinish={handleConfirmFinishSession}
+        session={session}
+      />
+
+      {/* Modal Feedback setelah Selesai Mabar */}
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
         session={session}
       />
 

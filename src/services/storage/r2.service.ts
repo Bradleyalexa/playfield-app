@@ -1,9 +1,10 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { GameSession } from "../../core/entities/session";
+import { SessionFeedback } from "../../core/entities/feedback";
 
 /**
  * Cloudflare R2 Client Service (S3-Compatible)
- * Digunakan untuk menyimpan snapshot live session.json dengan latensi rendah dan tanpa biaya egress.
+ * Digunakan untuk menyimpan snapshot live session.json dan feedback surat tanpa biaya egress.
  */
 class R2StorageService {
   private client: S3Client | null = null;
@@ -99,6 +100,93 @@ class R2StorageService {
         console.error("[R2StorageService] Gagal ambil snapshot dari R2:", error);
       }
       return null;
+    }
+  }
+
+  /**
+   * Simpan feedback / surat dari user ke Cloudflare R2
+   */
+  public async uploadFeedback(feedback: SessionFeedback): Promise<boolean> {
+    if (!this.client) {
+      return false;
+    }
+
+    try {
+      const key = `feedbacks/${feedback.id}.json`;
+      const body = JSON.stringify(feedback);
+
+      await this.client.send(
+        new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+          Body: body,
+          ContentType: "application/json",
+        })
+      );
+
+      return true;
+    } catch (error) {
+      console.error("[R2StorageService] Gagal simpan feedback ke R2:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Ambil seluruh feedback dari Cloudflare R2 (diurutkan dari yang terbaru)
+   */
+  public async listFeedbacks(limit: number = 100): Promise<SessionFeedback[]> {
+    if (!this.client) {
+      return [];
+    }
+
+    try {
+      const listRes = await this.client.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucketName,
+          Prefix: "feedbacks/",
+          MaxKeys: limit,
+        })
+      );
+
+      const contents = listRes.Contents || [];
+      if (contents.length === 0) return [];
+
+      // Sort LastModified descending
+      contents.sort((a, b) => {
+        const timeA = a.LastModified ? new Date(a.LastModified).getTime() : 0;
+        const timeB = b.LastModified ? new Date(b.LastModified).getTime() : 0;
+        return timeB - timeA;
+      });
+
+      const feedbacks: SessionFeedback[] = [];
+      // Ambil isi setiap surat
+      await Promise.all(
+        contents.map(async (obj) => {
+          if (!obj.Key) return;
+          try {
+            const getRes = await this.client!.send(
+              new GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: obj.Key,
+              })
+            );
+            if (getRes.Body) {
+              const bodyStr = await getRes.Body.transformToString();
+              const item = JSON.parse(bodyStr) as SessionFeedback;
+              feedbacks.push(item);
+            }
+          } catch (e) {
+            // Ignore individual read error
+          }
+        })
+      );
+
+      // Re-sort by createdAt descending
+      feedbacks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return feedbacks;
+    } catch (error) {
+      console.error("[R2StorageService] Gagal membaca list feedbacks dari R2:", error);
+      return [];
     }
   }
 }
