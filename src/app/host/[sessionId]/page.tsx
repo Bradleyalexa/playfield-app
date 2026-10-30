@@ -76,6 +76,7 @@ function HostDashboardContent({ params }: HostPageProps) {
   const [isAllMatchesModalOpen, setIsAllMatchesModalOpen] = useState(false);
   const [isMatchRecapModalOpen, setIsMatchRecapModalOpen] = useState(false);
   const [isCreateMatchModalOpen, setIsCreateMatchModalOpen] = useState(false);
+  const [selectedCourtForManualMatch, setSelectedCourtForManualMatch] = useState<number>(1);
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [lastReshuffleSnapshot, setLastReshuffleSnapshot] = useState<GameSession | null>(null);
@@ -1366,10 +1367,32 @@ function HostDashboardContent({ params }: HostPageProps) {
     }
   };
 
+  // 8e. Buka Modal Susun Match Manual dengan Target Lapangan Tertentu
+  const handleOpenManualMatch = (courtNum?: number) => {
+    if (courtNum && courtNum >= 1) {
+      setSelectedCourtForManualMatch(courtNum);
+    } else {
+      const firstEmpty = session?.courts.find(
+        (c) => !c.currentMatch || c.currentMatch.status !== "in_progress"
+      );
+      setSelectedCourtForManualMatch(firstEmpty ? firstEmpty.courtNumber : 1);
+    }
+    setIsCreateMatchModalOpen(true);
+  };
+
   // 9. Simpan Custom Match yang disusun manual oleh host
   const handleSaveCustomMatch = (newMatch: Match, assignToCourtImmediately: boolean) => {
     let updatedCourts = [...session.courts];
+    let updatedMatches = [...session.matches];
+
     if (assignToCourtImmediately) {
+      // Jika lapangan target sudah memiliki match in_progress yang sedang berjalan, ganti match tersebut
+      const targetCourt = session.courts.find((c) => c.courtNumber === newMatch.courtNumber);
+      if (targetCourt?.currentMatch) {
+        const oldId = targetCourt.currentMatch.id;
+        updatedMatches = updatedMatches.filter((m) => m.id !== oldId);
+      }
+
       updatedCourts = updatedCourts.map((c) => {
         if (c.courtNumber === newMatch.courtNumber) {
           return { ...c, currentMatch: newMatch };
@@ -1378,7 +1401,7 @@ function HostDashboardContent({ params }: HostPageProps) {
       });
     }
 
-    const updatedMatches = [...session.matches, newMatch];
+    updatedMatches.push(newMatch);
     const updatedPlayers = recalculatePlayerStats(session.players, updatedMatches);
 
     const updated: GameSession = {
@@ -1673,7 +1696,7 @@ function HostDashboardContent({ params }: HostPageProps) {
 
             {/* Tombol Susun Match Sendiri */}
             <button
-              onClick={() => setIsCreateMatchModalOpen(true)}
+              onClick={() => handleOpenManualMatch()}
               className="flex items-center gap-1.5 rounded-xl bg-[#fef08a] border-2 border-black px-4 py-2 text-xs font-black text-black uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:bg-[#fde047] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#000] transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4 stroke-[3]" />
@@ -1896,7 +1919,7 @@ function HostDashboardContent({ params }: HostPageProps) {
             </h2>
 
             <button
-              onClick={() => setIsCreateMatchModalOpen(true)}
+              onClick={() => handleOpenManualMatch()}
               className="flex items-center gap-1 rounded-lg bg-black text-white px-3 py-1 text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-neutral-800 transition-all cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5 stroke-[3]" />
@@ -1917,7 +1940,7 @@ function HostDashboardContent({ params }: HostPageProps) {
                 onAddCockToMatch={handleAddCockToCourt}
                 onNextRound={handleNextRound}
                 onFinishAndNextRound={handleFinishAndNextRound}
-                onManualMatch={() => setIsCreateMatchModalOpen(true)}
+                onManualMatch={(cNum) => handleOpenManualMatch(cNum)}
                 onQuickSubstitute={handleOpenQuickSubstitute}
                 onReshuffleCourt={handleReshuffleSingleCourt}
               />
@@ -2011,6 +2034,7 @@ function HostDashboardContent({ params }: HostPageProps) {
         isOpen={isCreateMatchModalOpen}
         onClose={() => setIsCreateMatchModalOpen(false)}
         session={session}
+        initialCourtNumber={selectedCourtForManualMatch}
         onSaveCustomMatch={handleSaveCustomMatch}
       />
 

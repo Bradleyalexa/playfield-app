@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Plus, Users, Shield, CheckCircle2, Trophy, Flame, Shuffle, RotateCcw, Sparkles, HeartHandshake } from "lucide-react";
 import { getTierLabel, Player } from "../../core/entities/player";
 import { GameSession } from "../../core/entities/session";
@@ -10,6 +10,7 @@ interface CreateCustomMatchModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: GameSession;
+  initialCourtNumber?: number;
   onSaveCustomMatch: (newMatch: Match, assignToCourtImmediately: boolean) => void;
 }
 
@@ -17,9 +18,10 @@ export function CreateCustomMatchModal({
   isOpen,
   onClose,
   session,
+  initialCourtNumber = 1,
   onSaveCustomMatch,
 }: CreateCustomMatchModalProps) {
-  const [courtNumber, setCourtNumber] = useState<number>(1);
+  const [courtNumber, setCourtNumber] = useState<number>(initialCourtNumber);
   const [roundNumber, setRoundNumber] = useState<number>(session.currentRound || 1);
   const [teamAPlayer1Id, setTeamAPlayer1Id] = useState<string>("");
   const [teamAPlayer2Id, setTeamAPlayer2Id] = useState<string>("");
@@ -27,6 +29,19 @@ export function CreateCustomMatchModal({
   const [teamBPlayer2Id, setTeamBPlayer2Id] = useState<string>("");
   const [assignNow, setAssignNow] = useState<boolean>(true);
   const [shuffleNotice, setShuffleNotice] = useState<string | null>(null);
+
+  // Sinkronisasi nomor lapangan setiap kali modal dibuka untuk lapangan tertentu
+  useEffect(() => {
+    if (isOpen) {
+      setCourtNumber(initialCourtNumber || 1);
+      setRoundNumber(session.currentRound || 1);
+      setTeamAPlayer1Id("");
+      setTeamAPlayer2Id("");
+      setTeamBPlayer1Id("");
+      setTeamBPlayer2Id("");
+      setAssignNow(true);
+    }
+  }, [isOpen, initialCourtNumber, session.currentRound]);
 
   if (!isOpen) return null;
 
@@ -46,15 +61,21 @@ export function CreateCustomMatchModal({
     }
   });
 
-  const currentlyPlayingIds = new Set(playerPlayingCourtMap.keys());
+  // Pemain yang sedang bertanding di lapangan LAIN (bukan lapangan yang sedang disusun ini)
+  const otherCourtPlayingIds = new Set(
+    [...playerPlayingCourtMap.entries()]
+      .filter(([_, cNum]) => cNum !== courtNumber)
+      .map(([pId]) => pId)
+  );
 
   const isSingles = session.matchType === "singles";
 
-  // Pool pemain siap main (aktif & tiba), diutamakan yang sedang istirahat
-  const readyPlayers = session.players.filter((p) => p.status === "active" && p.isArrived !== false);
-  const restingPlayers = readyPlayers.filter((p) => !currentlyPlayingIds.has(p.id));
+  // Pool pemain siap main (aktif & tiba), diutamakan yang TIDAK sedang main di lapangan lain
+  const readyPlayers = session.players.filter(
+    (p) => p.status === "active" && p.isArrived !== false && !otherCourtPlayingIds.has(p.id)
+  );
   const minRequired = isSingles ? 2 : 4;
-  const candidatePool = restingPlayers.length >= minRequired ? restingPlayers : readyPlayers;
+  const candidatePool = readyPlayers;
 
   // 1. Acak Seimbang Level
   const handleShuffleByLevel = () => {
@@ -353,7 +374,7 @@ export function CreateCustomMatchModal({
                   const playingCourt = playerPlayingCourtMap.get(p.id);
                   const playingTag = playingCourt ? `⚡ [Sedang Main di Lap ${playingCourt}] ` : "";
                   const isAlreadySelected = selectedIds.has(p.id) && currentSelectedId !== p.id;
-                  const isPlayingOnOtherCourt = Boolean(playingCourt) && assignNow;
+                  const isPlayingOnOtherCourt = Boolean(playingCourt && playingCourt !== courtNumber) && assignNow;
                   const isBlocked = isAlreadySelected || isPlayingOnOtherCourt;
 
                   return (
