@@ -474,10 +474,10 @@ export function CourtCard({
           <button
             onClick={() => onFinishAndNextRound(court.courtNumber)}
             className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-black uppercase tracking-wider border-2 border-black bg-[#ccff00] hover:bg-[#b8e600] text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-            title="Selesaikan match di lapangan ini dan langsung panggil pemain berikutnya untuk lapangan ini"
+            title="Selesaikan match di lapangan ini dan langsung shuffle match baru untuk lapangan ini saja (tidak menaikkan ronde sesi)"
           >
-            <FastForward className="h-3.5 w-3.5 stroke-[3]" />
-            <span>Selesai & Next ⏩</span>
+            <Shuffle className="h-3.5 w-3.5 stroke-[3]" />
+            <span>Selesai & Shuffle Lagi</span>
           </button>
         )}
       </div>

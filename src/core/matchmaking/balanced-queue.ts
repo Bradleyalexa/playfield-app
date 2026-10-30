@@ -447,6 +447,77 @@ export function generateBalancedMatches(
 }
 
 /**
+ * Merotasi pasangan jika 4 pemain yang terpilih sama persis dengan match sebelumnya
+ * Menghindari situasi di mana 4 pemain yang sama mendapatkan partner & lawan yang identik
+ */
+export function rotatePairsIfSameFour(
+  newTeamA: Player[],
+  newTeamB: Player[],
+  prevMatch?: Match
+): { teamA: Player[]; teamB: Player[] } {
+  if (!prevMatch || !prevMatch.teamA || !prevMatch.teamB) {
+    return { teamA: newTeamA, teamB: newTeamB };
+  }
+  if (newTeamA.length !== 2 || newTeamB.length !== 2) {
+    return { teamA: newTeamA, teamB: newTeamB };
+  }
+  if (prevMatch.teamA.length !== 2 || prevMatch.teamB.length !== 2) {
+    return { teamA: newTeamA, teamB: newTeamB };
+  }
+
+  const currentIds = new Set([...newTeamA, ...newTeamB].map((p) => p.id));
+  const prevIds = new Set([...prevMatch.teamA, ...prevMatch.teamB].map((p) => p.id));
+
+  // Cek apakah 4 pemainnya sama persis
+  if (currentIds.size !== 4 || prevIds.size !== 4) return { teamA: newTeamA, teamB: newTeamB };
+  for (const id of currentIds) {
+    if (!prevIds.has(id)) return { teamA: newTeamA, teamB: newTeamB };
+  }
+
+  // Cek apakah partner tim A sama persis dengan partner di match sebelumnya
+  const prevTeamAIds = new Set(prevMatch.teamA.map((p) => p.id));
+  const prevTeamBIds = new Set(prevMatch.teamB.map((p) => p.id));
+
+  const isSamePairing =
+    (prevTeamAIds.has(newTeamA[0].id) && prevTeamAIds.has(newTeamA[1].id)) ||
+    (prevTeamBIds.has(newTeamA[0].id) && prevTeamBIds.has(newTeamA[1].id));
+
+  if (!isSamePairing) {
+    return { teamA: newTeamA, teamB: newTeamB };
+  }
+
+  // 4 pemain sama dan susunan timnya persis sama!
+  // Urutkan 4 pemain berdasarkan skillLevel
+  const sorted = [...newTeamA, ...newTeamB].sort((a, b) => b.skillLevel - a.skillLevel);
+
+  // Cari partner p0 di match sebelumnya
+  const p0 = sorted[0];
+  const p0PartnerPrev = prevMatch.teamA.some((p) => p.id === p0.id)
+    ? prevMatch.teamA.find((p) => p.id !== p0.id)
+    : prevMatch.teamB.find((p) => p.id !== p0.id);
+
+  if (p0PartnerPrev?.id === sorted[3].id) {
+    // Sebelumnya (0, 3) vs (1, 2) -> rotasikan ke (0, 2) vs (1, 3)
+    return {
+      teamA: [sorted[0], sorted[2]],
+      teamB: [sorted[1], sorted[3]],
+    };
+  } else if (p0PartnerPrev?.id === sorted[2].id) {
+    // Sebelumnya (0, 2) vs (1, 3) -> rotasikan ke (0, 1) vs (2, 3)
+    return {
+      teamA: [sorted[0], sorted[1]],
+      teamB: [sorted[2], sorted[3]],
+    };
+  } else {
+    // Sebelumnya (0, 1) vs (2, 3) -> rotasikan ke (0, 3) vs (1, 2)
+    return {
+      teamA: [sorted[0], sorted[3]],
+      teamB: [sorted[1], sorted[2]],
+    };
+  }
+}
+
+/**
  * Simulator & Proyektor Jadwal Seluruh Pertandingan
  * Mengkalkulasi seluruh ronde dari durasi sewa lapangan + 10 match ekstra
  */

@@ -58,7 +58,12 @@ import {
   SessionBillingConfig,
   calculateEquipmentCost,
 } from "../../../core/entities/session";
-import { generateBalancedMatches, recalculatePlayerStats, ProjectedMatch } from "../../../core/matchmaking/balanced-queue";
+import {
+  generateBalancedMatches,
+  recalculatePlayerStats,
+  rotatePairsIfSameFour,
+  ProjectedMatch,
+} from "../../../core/matchmaking/balanced-queue";
 import { formatRupiah } from "../../../lib/utils";
 import { AudioAnnouncer } from "../../../services/audio/announcer";
 import { LocalStorageAdapter } from "../../../services/storage/local-storage.adapter";
@@ -569,11 +574,21 @@ function HostDashboardContent({ params }: HostPageProps) {
     setUndoFinishData(null);
   };
 
-  // 3b. Selesaikan Match Lapangan Ini & Langsung Putar Match Berikutnya
-  // (Jika multi-lapangan & lapangan lain masih main, HANYA putar lapangan ini tanpa mengganggu lapangan lain!)
+  // 3b. Selesaikan Match Lapangan Ini & Langsung Shuffle Match Baru untuk Lapangan Ini Saja
+  // (Penting: Sesi TIDAK akan naik ronde! Pergantian ronde hanya jika seluruh lapangan selesai dan tombol 'Ronde Berikutnya' ditekan)
   const handleFinishAndNextRound = (courtNumber: number) => {
     const currentMatch = session.matches.find((m) => m.courtNumber === courtNumber && m.status === "in_progress");
     if (!currentMatch) return;
+
+    // Alert konfirmasi transparan ke Host
+    const confirmShuffle = window.confirm(
+      `Selesaikan pertandingan Lapangan ${courtNumber} dan shuffle lagi?\n\n` +
+      `⚠️ PERHATIAN:\n` +
+      `Tombol ini HANYA menyelesaikan pertandingan dan mengacak pemain untuk Lapangan ${courtNumber} saja.\n\n` +
+      `Ronde sesi TIDAK akan naik ke Ronde berikutnya. Ronde baru akan berganti saat semua lapangan selesai dan Anda menekan tombol "Ronde Berikutnya".\n\n` +
+      `Lanjutkan?`
+    );
+    if (!confirmShuffle) return;
 
     try {
       confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
@@ -598,145 +613,107 @@ function HostDashboardContent({ params }: HostPageProps) {
     const isSingles = session.matchType === "singles";
     const minPlayersNeeded = isSingles ? 2 : 4;
 
-    // Cek apakah ada lapangan LAIN yang masih aktif bermain (status === "in_progress")
-    const otherInProgressCourts = session.courts.filter(
-      (c) => c.courtNumber !== courtNumber && c.currentMatch && c.currentMatch.status === "in_progress"
-    );
-
-    if (session.courtCount > 1 && otherInProgressCourts.length > 0) {
-      // MODE ROTASI ASINKRON: Lapangan lain masih main, putar match HANYA untuk LAPANGAN INI!
-      const otherPlayingIds = new Set<string>();
-      otherInProgressCourts.forEach((c) => {
-        if (c.currentMatch) {
-          [...c.currentMatch.teamA, ...c.currentMatch.teamB].forEach((p) => otherPlayingIds.add(p.id));
-        }
-      });
-      session.matches.forEach((m) => {
-        if (m.courtNumber !== courtNumber && m.status === "in_progress") {
-          [...m.teamA, ...m.teamB].forEach((p) => otherPlayingIds.add(p.id));
-        }
-      });
-
-      // Pemain yang baru selesai di lapangan ini
-      const justFinishedIds = new Set([...currentMatch.teamA, ...currentMatch.teamB].map((p) => p.id));
-
-      // Prioritaskan pemain istirahat yang BUKAN baru selesai dari lapangan ini
-      let eligiblePool = updatedPlayers.filter(
-        (p) => p.status === "active" && p.isArrived !== false && !otherPlayingIds.has(p.id) && !justFinishedIds.has(p.id)
-      );
-
-      // Jika pemain istirahat murni kurang dari kebutuhan lapangan, sertakan pemain yang baru selesai
-      if (eligiblePool.length < minPlayersNeeded) {
-        eligiblePool = updatedPlayers.filter(
-          (p) => p.status === "active" && p.isArrived !== false && !otherPlayingIds.has(p.id)
-        );
+    // Kunci pemain yang sedang bertanding di lapangan LAIN
+    const otherPlayingIds = new Set<string>();
+    session.courts.forEach((c) => {
+      if (c.courtNumber !== courtNumber && c.currentMatch && c.currentMatch.status === "in_progress") {
+        [...c.currentMatch.teamA, ...c.currentMatch.teamB].forEach((p) => otherPlayingIds.add(p.id));
       }
-
-      if (eligiblePool.length >= minPlayersNeeded) {
-        const singleResult = generateBalancedMatches(
-          eligiblePool,
-          1,
-          session.currentRound,
-          session.algorithm || "playfields_mix",
-          updatedMatches,
-          session.matchType || "doubles"
-        );
-
-        if (singleResult.matches.length > 0) {
-          const nextMatch: Match = {
-            ...singleResult.matches[0],
-            id: `match-c${courtNumber}-${Date.now()}`,
-            courtNumber,
-            roundNumber: session.currentRound,
-            status: "in_progress",
-            startedAt: new Date().toISOString(),
-            scoreA: 0,
-            scoreB: 0,
-            winner: undefined,
-          };
-
-          const updatedCourts = session.courts.map((c) =>
-            c.courtNumber === courtNumber ? { ...c, currentMatch: nextMatch } : c
-          );
-
-          const finalMatches = [...updatedMatches, nextMatch];
-          const finalPlayers = recalculatePlayerStats(session.players, finalMatches);
-
-          const updated: GameSession = {
-            ...session,
-            players: finalPlayers,
-            matches: finalMatches,
-            courts: updatedCourts,
-          };
-
-          setSession(updated);
-          LocalStorageAdapter.saveSession(updated);
-          AudioAnnouncer.announceMatch(courtNumber, nextMatch.teamA, nextMatch.teamB);
-          return;
-        }
+    });
+    session.matches.forEach((m) => {
+      if (m.courtNumber !== courtNumber && m.status === "in_progress") {
+        [...m.teamA, ...m.teamB].forEach((p) => otherPlayingIds.add(p.id));
       }
-
-      // Jika pemain istirahat tidak cukup untuk mengisi lapangan ini saat ini:
-      // Kosongkan lapangan ini menunggu lapangan lain beres
-      const updatedCourts = session.courts.map((c) =>
-        c.courtNumber === courtNumber ? { ...c, currentMatch: undefined } : c
-      );
-
-      const updated: GameSession = {
-        ...session,
-        players: updatedPlayers,
-        matches: updatedMatches,
-        courts: updatedCourts,
-      };
-
-      setSession(updated);
-      LocalStorageAdapter.saveSession(updated);
-      AudioAnnouncer.announceGeneral(
-        `Match Lapangan ${courtNumber} selesai. Menunggu pemain dari lapangan lain selesai untuk giliran berikutnya.`
-      );
-      return;
-    }
-
-    // JIKA SELURUH LAPANGAN SELESAI (atau sesi hanya 1 lapangan):
-    // Rotasikan ronde berikutnya serentak untuk seluruh lapangan
-    const nextRoundNumber = session.currentRound + 1;
-    const result = generateBalancedMatches(
-      updatedPlayers,
-      session.courtCount,
-      nextRoundNumber,
-      session.algorithm || "playfields_mix",
-      updatedMatches,
-      session.matchType || "doubles"
-    );
-
-    if (result.matches.length === 0) {
-      alert(
-        isSingles
-          ? "Pemain aktif kurang dari 2 orang untuk membentuk match tunggal!"
-          : "Pemain aktif kurang dari 4 orang untuk membentuk match ganda!"
-      );
-      return;
-    }
-
-    const updatedCourts = session.courts.map((c) => {
-      const matchForCourt = result.matches.find((m) => m.courtNumber === c.courtNumber);
-      return { ...c, currentMatch: matchForCourt };
     });
 
-    const finalMatches = [...updatedMatches, ...result.matches];
-    const finalPlayers = recalculatePlayerStats(session.players, finalMatches);
+    // Pemain yang baru selesai di lapangan ini
+    const justFinishedIds = new Set([...currentMatch.teamA, ...currentMatch.teamB].map((p) => p.id));
+
+    // Prioritaskan pemain istirahat yang BUKAN baru selesai dari lapangan ini
+    let eligiblePool = updatedPlayers.filter(
+      (p) => p.status === "active" && p.isArrived !== false && !otherPlayingIds.has(p.id) && !justFinishedIds.has(p.id)
+    );
+
+    // Jika pemain istirahat murni kurang dari kebutuhan lapangan, sertakan pemain yang baru selesai
+    if (eligiblePool.length < minPlayersNeeded) {
+      eligiblePool = updatedPlayers.filter(
+        (p) => p.status === "active" && p.isArrived !== false && !otherPlayingIds.has(p.id)
+      );
+    }
+
+    if (eligiblePool.length >= minPlayersNeeded) {
+      const singleResult = generateBalancedMatches(
+        eligiblePool,
+        1,
+        session.currentRound,
+        session.algorithm || "playfields_mix",
+        updatedMatches,
+        session.matchType || "doubles"
+      );
+
+      if (singleResult.matches.length > 0) {
+        let nextTeamA = singleResult.matches[0].teamA;
+        let nextTeamB = singleResult.matches[0].teamB;
+
+        // Cek apakah 4 pemain sama persis dengan match yang baru selesai di lapangan ini
+        // Jika sama, rotasikan kombinasi partner agar tidak terbentuk pasangan yang persis sama
+        const rotated = rotatePairsIfSameFour(nextTeamA, nextTeamB, currentMatch);
+        nextTeamA = rotated.teamA;
+        nextTeamB = rotated.teamB;
+
+        const nextMatch: Match = {
+          ...singleResult.matches[0],
+          id: `match-c${courtNumber}-${Date.now()}`,
+          courtNumber,
+          roundNumber: session.currentRound,
+          teamA: nextTeamA,
+          teamB: nextTeamB,
+          status: "in_progress",
+          startedAt: new Date().toISOString(),
+          scoreA: 0,
+          scoreB: 0,
+          winner: undefined,
+        };
+
+        const updatedCourts = session.courts.map((c) =>
+          c.courtNumber === courtNumber ? { ...c, currentMatch: nextMatch } : c
+        );
+
+        const finalMatches = [...updatedMatches, nextMatch];
+        const finalPlayers = recalculatePlayerStats(session.players, finalMatches);
+
+        const updated: GameSession = {
+          ...session,
+          players: finalPlayers,
+          matches: finalMatches,
+          courts: updatedCourts,
+        };
+
+        setSession(updated);
+        LocalStorageAdapter.saveSession(updated);
+        AudioAnnouncer.announceMatch(courtNumber, nextMatch.teamA, nextMatch.teamB);
+        return;
+      }
+    }
+
+    // Jika pemain yang siap bermain tidak cukup untuk mengisi lapangan ini saat ini:
+    // Kosongkan lapangan ini menunggu lapangan lain beres atau host klik Ronde Berikutnya
+    const updatedCourts = session.courts.map((c) =>
+      c.courtNumber === courtNumber ? { ...c, currentMatch: undefined } : c
+    );
 
     const updated: GameSession = {
       ...session,
-      currentRound: nextRoundNumber,
-      players: finalPlayers,
-      matches: finalMatches,
+      players: updatedPlayers,
+      matches: updatedMatches,
       courts: updatedCourts,
     };
 
     setSession(updated);
     LocalStorageAdapter.saveSession(updated);
-    AudioAnnouncer.announceGeneral(`Ronde ${nextRoundNumber} dimulai. Seluruh pemain harap bersiap di lapangan.`);
+    AudioAnnouncer.announceGeneral(
+      `Match Lapangan ${courtNumber} selesai. Menunggu pemain dari lapangan lain selesai untuk giliran berikutnya.`
+    );
   };
 
   // 4. Mulai Ronde Berikutnya Serentak (Algoritma Penyeimbang Otomatis)
@@ -1232,11 +1209,22 @@ function HostDashboardContent({ params }: HostPageProps) {
       return;
     }
 
+    const courtMatchOld = session.courts.find((c) => c.courtNumber === courtNumber)?.currentMatch;
+    const lastCourtMatch = courtMatchOld || [...session.matches].reverse().find((m) => m.courtNumber === courtNumber);
+
+    let matchTeamA = fresh.matches[0].teamA;
+    let matchTeamB = fresh.matches[0].teamB;
+    const rotated = rotatePairsIfSameFour(matchTeamA, matchTeamB, lastCourtMatch);
+    matchTeamA = rotated.teamA;
+    matchTeamB = rotated.teamB;
+
     const newMatch: Match = {
       ...fresh.matches[0],
       id: `match-c${courtNumber}-${Date.now()}`,
       courtNumber,
       roundNumber: session.currentRound,
+      teamA: matchTeamA,
+      teamB: matchTeamB,
       status: "in_progress",
       startedAt: new Date().toISOString(),
       scoreA: 0,
@@ -1248,7 +1236,6 @@ function HostDashboardContent({ params }: HostPageProps) {
       c.courtNumber === courtNumber ? { ...c, currentMatch: newMatch } : c
     );
 
-    const courtMatchOld = session.courts.find((c) => c.courtNumber === courtNumber)?.currentMatch;
     let updatedMatches = session.matches.filter((m) => !courtMatchOld || m.id !== courtMatchOld.id);
     updatedMatches.push(newMatch);
 
