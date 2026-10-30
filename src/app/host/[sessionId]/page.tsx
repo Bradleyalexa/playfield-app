@@ -610,6 +610,11 @@ function HostDashboardContent({ params }: HostPageProps) {
           [...c.currentMatch.teamA, ...c.currentMatch.teamB].forEach((p) => otherPlayingIds.add(p.id));
         }
       });
+      session.matches.forEach((m) => {
+        if (m.courtNumber !== courtNumber && m.status === "in_progress") {
+          [...m.teamA, ...m.teamB].forEach((p) => otherPlayingIds.add(p.id));
+        }
+      });
 
       // Pemain yang baru selesai di lapangan ini
       const justFinishedIds = new Set([...currentMatch.teamA, ...currentMatch.teamB].map((p) => p.id));
@@ -1043,6 +1048,11 @@ function HostDashboardContent({ params }: HostPageProps) {
         c.currentMatch.teamB.forEach((p) => lockedPlayerIds.add(p.id));
       }
     });
+    session.matches.forEach((m) => {
+      if (m.status === "in_progress") {
+        [...m.teamA, ...m.teamB].forEach((p) => lockedPlayerIds.add(p.id));
+      }
+    });
 
     const eligiblePool = activePlayers.filter((p) => !lockedPlayerIds.has(p.id));
     const emptyOrResetCourts = session.courts.filter(
@@ -1184,6 +1194,11 @@ function HostDashboardContent({ params }: HostPageProps) {
         c.currentMatch.teamB.forEach((p) => otherPlayingIds.add(p.id));
       }
     });
+    session.matches.forEach((m) => {
+      if (m.courtNumber !== courtNumber && m.status === "in_progress") {
+        [...m.teamA, ...m.teamB].forEach((p) => otherPlayingIds.add(p.id));
+      }
+    });
 
     // Filter pemain aktif yang SUDAH TIBA di lokasi dan TIDAK sedang bermain
     const eligiblePool = accuratePlayers.filter(
@@ -1207,7 +1222,7 @@ function HostDashboardContent({ params }: HostPageProps) {
       1,
       session.currentRound,
       session.algorithm || "playfields_mix",
-      session.matches.filter((m) => m.status === "completed"),
+      session.matches,
       session.matchType || "doubles"
     );
 
