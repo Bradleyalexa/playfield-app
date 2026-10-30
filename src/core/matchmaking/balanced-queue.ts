@@ -451,9 +451,13 @@ export function generateBalancedMatches(
  * Mengkalkulasi seluruh ronde dari durasi sewa lapangan + 10 match ekstra
  */
 export function generateProjectedSchedule(session: GameSession): ProjectedRound[] {
+  if (!session || !session.players || session.players.length === 0) {
+    return [];
+  }
+
   const durationMinutes = (session.durationHours || 2) * 60;
   const matchMins = session.matchDurationMinutes || 15;
-  const courtCount = session.courtCount || 2;
+  const courtCount = session.courtCount || session.courts?.length || 2;
   const startTime = session.startTime || "19:00";
 
   // Hitung jumlah ronde reguler berdasarkan durasi sewa lapangan
@@ -467,6 +471,30 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
 
   // Salin pool pemain virtual untuk simulasi ronde masa depan (pastikan statistik awal akurat)
   const virtualPlayers: Player[] = recalculatePlayerStats(session.players, session.matches).map((p) => ({ ...p }));
+
+  // Buat riwayat simulasi pertandingan. Semua pertandingan aktif / selesai dijadikan 'completed'
+  // agar simulasi masa depan tidak memblokir pemain yang sedang bermain di ronde saat ini.
+  const simulatedHistory: Match[] = (session.matches || []).map((m) => ({
+    ...m,
+    status: "completed" as const,
+    winner: m.winner || (m.scoreA > m.scoreB ? "A" : m.scoreB > m.scoreA ? "B" : "A"),
+  }));
+
+  // Pastikan match dari courts saat ini juga masuk ke simulatedHistory jika belum ada di session.matches
+  if (session.courts) {
+    session.courts.forEach((c) => {
+      if (c.currentMatch) {
+        const exists = simulatedHistory.some((m) => m.id === c.currentMatch!.id);
+        if (!exists) {
+          simulatedHistory.push({
+            ...c.currentMatch,
+            status: "completed" as const,
+            winner: c.currentMatch.winner || "A",
+          });
+        }
+      }
+    });
+  }
 
   for (let r = 1; r <= totalRoundsToProject; r++) {
     const roundStartMinutes = (r - 1) * matchMins;
@@ -488,7 +516,7 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
 
     if (isPast) {
       // Ronde masa lalu: Ambil dari riwayat match aktual
-      const pastMatches = session.matches.filter((m) => m.roundNumber === r);
+      const pastMatches = (session.matches || []).filter((m) => m.roundNumber === r);
       const pastMatchIds = new Set(pastMatches.flatMap((m) => [...m.teamA, ...m.teamB].map((p) => p.id)));
       const resting = session.players.filter((p) => !pastMatchIds.has(p.id));
 
@@ -514,8 +542,8 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
         restingPlayers: resting,
       });
     } else if (isCurrent) {
-      // Ronde saat ini: Ambil dari match lapangan saat ini
-      const currentCourtMatches: ProjectedMatch[] = session.courts
+      // Ronde saat ini: Ambil dari match lapangan saat ini jika ada
+      const currentCourtMatches: ProjectedMatch[] = (session.courts || [])
         .map((c) => {
           if (!c.currentMatch) return null;
           return {
@@ -534,39 +562,94 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
         })
         .filter(Boolean) as ProjectedMatch[];
 
-      const activePlayingIds = new Set(
-        currentCourtMatches.flatMap((m) => [...m.teamA, ...m.teamB].map((p) => p.id))
-      );
-      const resting = session.players.filter((p) => !activePlayingIds.has(p.id));
+      if (currentCourtMatches.length > 0) {
+        const activePlayingIds = new Set(
+          currentCourtMatches.flatMap((m) => [...m.teamA, ...m.teamB].map((p) => p.id))
+        );
+        const resting = session.players.filter((p) => !activePlayingIds.has(p.id));
 
-      projectedRounds.push({
-        roundNumber: r,
-        timeRange,
-        isCompleted: false,
-        isCurrent: true,
-        isSameTierRound,
-        matches: currentCourtMatches,
-        restingPlayers: resting,
-      });
-
-      // Update virtual players dengan match saat ini
-      currentCourtMatches.forEach((m) => {
-        [...m.teamA, ...m.teamB].forEach((p) => {
-          const vp = virtualPlayers.find((v) => v.id === p.id);
-          if (vp) {
-            vp.gamesPlayed += 1;
-            vp.lastPlayedRound = r;
-          }
+        projectedRounds.push({
+          roundNumber: r,
+          timeRange,
+          isCompleted: false,
+          isCurrent: true,
+          isSameTierRound,
+          matches: currentCourtMatches,
+          restingPlayers: resting,
         });
-      });
+
+        // Update virtual players dengan match saat ini
+        currentCourtMatches.forEach((m) => {
+          [...m.teamA, ...m.teamB].forEach((p) => {
+            const vp = virtualPlayers.find((v) => v.id === p.id);
+            if (vp) {
+              vp.gamesPlayed += 1;
+              vp.lastPlayedRound = r;
+            }
+          });
+        });
+      } else {
+        // Jika lapangan sedang kosong di ronde ini, prediksikan pertandingan
+        const simResult = generateBalancedMatches(
+          virtualPlayers,
+          courtCount,
+          r,
+          session.algorithm || "playfields_mix",
+          simulatedHistory,
+          session.matchType || "doubles"
+        );
+
+        const projectedMatches: ProjectedMatch[] = simResult.matches.map((m) => ({
+          id: `projected-${r}-${m.courtNumber}`,
+          roundNumber: r,
+          courtNumber: m.courtNumber,
+          estimatedStartTime: startFormatted,
+          estimatedEndTime: endFormatted,
+          teamA: m.teamA,
+          teamB: m.teamB,
+          status: "scheduled" as const,
+        }));
+
+        projectedRounds.push({
+          roundNumber: r,
+          timeRange,
+          isCompleted: false,
+          isCurrent: true,
+          isSameTierRound,
+          matches: projectedMatches,
+          restingPlayers: simResult.restingPlayers,
+        });
+
+        simResult.matches.forEach((m) => {
+          simulatedHistory.push({
+            id: `sim-${r}-${m.courtNumber}`,
+            roundNumber: r,
+            courtNumber: m.courtNumber,
+            teamA: m.teamA,
+            teamB: m.teamB,
+            status: "completed",
+            scoreA: 21,
+            scoreB: 19,
+            winner: "A",
+          });
+
+          [...m.teamA, ...m.teamB].forEach((p) => {
+            const vp = virtualPlayers.find((v) => v.id === p.id);
+            if (vp) {
+              vp.gamesPlayed += 1;
+              vp.lastPlayedRound = r;
+            }
+          });
+        });
+      }
     } else {
-      // Ronde masa depan: Prediksi menggunakan algoritma yang dipilih
+      // Ronde masa depan: Prediksi menggunakan algoritma yang dipilih dan simulatedHistory
       const simResult = generateBalancedMatches(
         virtualPlayers,
         courtCount,
         r,
         session.algorithm || "playfields_mix",
-        session.matches,
+        simulatedHistory,
         session.matchType || "doubles"
       );
 
@@ -591,8 +674,20 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
         restingPlayers: simResult.restingPlayers,
       });
 
-      // Update jatah main virtual players agar ronde berikutnya terus seimbang
+      // Update riwayat simulasi dan jatah main virtual players agar ronde-ronde berikutnya terus seimbang
       simResult.matches.forEach((m) => {
+        simulatedHistory.push({
+          id: `sim-${r}-${m.courtNumber}`,
+          roundNumber: r,
+          courtNumber: m.courtNumber,
+          teamA: m.teamA,
+          teamB: m.teamB,
+          status: "completed",
+          scoreA: 21,
+          scoreB: 19,
+          winner: "A",
+        });
+
         [...m.teamA, ...m.teamB].forEach((p) => {
           const vp = virtualPlayers.find((v) => v.id === p.id);
           if (vp) {
