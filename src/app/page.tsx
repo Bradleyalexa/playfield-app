@@ -470,42 +470,14 @@ export default function HomePage() {
     demo.courts = generatedCourts;
 
     // Shuffle & Matchmaking Ronde 1 berdasarkan algoritma yang dipilih
-    if (selectedAlgorithm === "custom_manual") {
-      const customMatches: Match[] = [];
-      const totalToInit = customInitialMatchesCount || (courtCount * 2);
-      if (initialPlayers.length >= 4) {
-        for (let i = 0; i < totalToInit; i++) {
-          const cNum = (i % courtCount) + 1;
-          const rNum = Math.floor(i / courtCount) + 1;
-          const four = initialPlayers.slice(0, 4);
-          customMatches.push({
-            id: `custom-init-${i + 1}-${Date.now()}`,
-            courtNumber: cNum,
-            roundNumber: rNum,
-            teamA: [four[0], four[1]],
-            teamB: [four[2], four[3]],
-            scoreA: 0,
-            scoreB: 0,
-            status: "in_progress",
-            startedAt: new Date().toISOString(),
-            equipmentUsedCount: 1,
-          });
-        }
-        demo.matches = customMatches;
-        demo.courts = generatedCourts.map((c) => ({
-          ...c,
-          currentMatch: customMatches.find((m) => m.courtNumber === c.courtNumber && m.roundNumber === 1),
-        }));
-      } else {
-        demo.matches = [];
-        demo.courts = generatedCourts;
-      }
-    } else if (initialPlayers.length >= (matchType === "singles" ? 2 : 4)) {
+    const minPlayersNeeded = matchType === "singles" ? 2 : 4;
+    if (initialPlayers.length >= minPlayersNeeded) {
+      const algoToUse = selectedAlgorithm === "custom_manual" ? "random_fun" : selectedAlgorithm;
       const initialMatches = generateBalancedMatches(
         initialPlayers,
         courtCount,
         1,
-        selectedAlgorithm,
+        algoToUse,
         [],
         matchType
       );
