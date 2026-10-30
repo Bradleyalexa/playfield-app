@@ -268,6 +268,16 @@ class R2StorageService {
               const players = (data.players || []).map((p: any) =>
                 typeof p === "string" ? p : p.name || p.id || "Pemain"
               );
+
+              // Abaikan sesi yang hanya berisi 4 pemain dummy default
+              const DUMMY_PLAYERS = new Set(["hendra setiawan", "kevin sanjaya", "greysia polii", "apriyani rahayu"]);
+              if (
+                players.length === 4 &&
+                players.every((p: string) => DUMMY_PLAYERS.has(p.trim().toLowerCase()))
+              ) {
+                return;
+              }
+
               const matches = data.matches || [];
               const completedMatches = matches.filter((m: any) => m.status === "completed");
 
