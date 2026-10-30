@@ -50,6 +50,10 @@ export function addMinutesToTimeString(timeStr: string, minutesToAdd: number): s
  * Menghindari bug desinkronisasi gamesPlayed / lastPlayedRound di runtime.
  */
 export function recalculatePlayerStats(players: Player[], matches: Match[]): Player[] {
+  if (!matches || matches.length === 0) {
+    return players;
+  }
+
   const gamesMap = new Map<string, number>();
   const lastRoundMap = new Map<string, number>();
 
@@ -69,11 +73,15 @@ export function recalculatePlayerStats(players: Player[], matches: Match[]): Pla
     });
   });
 
-  return players.map((p) => ({
-    ...p,
-    gamesPlayed: gamesMap.get(p.id) || 0,
-    lastPlayedRound: lastRoundMap.get(p.id) || 0,
-  }));
+  return players.map((p) => {
+    const actualCompleted = gamesMap.get(p.id) || 0;
+    const actualLastRound = lastRoundMap.get(p.id) || 0;
+    return {
+      ...p,
+      gamesPlayed: Math.max(p.gamesPlayed || 0, actualCompleted),
+      lastPlayedRound: Math.max(p.lastPlayedRound || 0, actualLastRound),
+    };
+  });
 }
 
 /**
