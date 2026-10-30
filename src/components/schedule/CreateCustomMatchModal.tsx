@@ -37,11 +37,16 @@ export function CreateCustomMatchModal({
     return a.name.localeCompare(b.name);
   });
 
-  const currentlyPlayingIds = new Set(
-    session.courts.flatMap((c) =>
-      c.currentMatch ? [...c.currentMatch.teamA, ...c.currentMatch.teamB].map((p) => p.id) : []
-    )
-  );
+  const playerPlayingCourtMap = new Map<string, number>();
+  session.courts.forEach((c) => {
+    if (c.currentMatch && c.currentMatch.status === "in_progress") {
+      [...c.currentMatch.teamA, ...c.currentMatch.teamB].forEach((p) => {
+        playerPlayingCourtMap.set(p.id, c.courtNumber);
+      });
+    }
+  });
+
+  const currentlyPlayingIds = new Set(playerPlayingCourtMap.keys());
 
   const isSingles = session.matchType === "singles";
 
@@ -338,129 +343,106 @@ export function CreateCustomMatchModal({
           </div>
 
           {/* Grid Pemilihan Tim A & Tim B */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Tim A Box */}
-            <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#f0fdf4] border-2 border-black shadow-[3px_3px_0px_#000]">
-              <span className="font-mono text-xs font-black uppercase px-2 py-0.5 rounded bg-emerald-300 border border-black self-start">
-                TIM A ({isSingles ? "1 PEMAIN" : "2 PEMAIN"})
-              </span>
+          {(() => {
+            const renderOptions = (currentSelectedId: string, placeholder: string) => (
+              <>
+                <option value="">{placeholder}</option>
+                {activePlayers.map((p) => {
+                  const tier = getTierLabel(p.publicTier);
+                  const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
+                  const playingCourt = playerPlayingCourtMap.get(p.id);
+                  const playingTag = playingCourt ? `⚡ [Sedang Main di Lap ${playingCourt}] ` : "";
+                  const isAlreadySelected = selectedIds.has(p.id) && currentSelectedId !== p.id;
+                  const isPlayingOnOtherCourt = Boolean(playingCourt) && assignNow;
+                  const isBlocked = isAlreadySelected || isPlayingOnOtherCourt;
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
-                  Pemain 1 (Tim A)
-                </label>
-                <select
-                  value={teamAPlayer1Id}
-                  onChange={(e) => setTeamAPlayer1Id(e.target.value)}
-                  className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
-                >
-                  <option value="">-- Pilih Pemain 1 --</option>
-                  {activePlayers.map((p) => {
-                    const tier = getTierLabel(p.publicTier);
-                    const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
-                    return (
-                      <option
-                        key={p.id}
-                        value={p.id}
-                        disabled={selectedIds.has(p.id) && teamAPlayer1Id !== p.id}
+                  return (
+                    <option
+                      key={p.id}
+                      value={p.id}
+                      disabled={isBlocked}
+                    >
+                      {playingTag}{arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
+                    </option>
+                  );
+                })}
+              </>
+            );
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Tim A Box */}
+                <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#f0fdf4] border-2 border-black shadow-[3px_3px_0px_#000]">
+                  <span className="font-mono text-xs font-black uppercase px-2 py-0.5 rounded bg-emerald-300 border border-black self-start">
+                    TIM A ({isSingles ? "1 PEMAIN" : "2 PEMAIN"})
+                  </span>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
+                      Pemain 1 (Tim A)
+                    </label>
+                    <select
+                      value={teamAPlayer1Id}
+                      onChange={(e) => setTeamAPlayer1Id(e.target.value)}
+                      className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
+                    >
+                      {renderOptions(teamAPlayer1Id, "-- Pilih Pemain 1 --")}
+                    </select>
+                  </div>
+
+                  {!isSingles && (
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
+                        Pemain 2 (Tim A)
+                      </label>
+                      <select
+                        value={teamAPlayer2Id}
+                        onChange={(e) => setTeamAPlayer2Id(e.target.value)}
+                        className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
                       >
-                        {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              {!isSingles && (
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
-                    Pemain 2 (Tim A)
-                  </label>
-                  <select
-                    value={teamAPlayer2Id}
-                    onChange={(e) => setTeamAPlayer2Id(e.target.value)}
-                    className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
-                  >
-                    <option value="">-- Pilih Pemain 2 --</option>
-                    {activePlayers.map((p) => {
-                      const tier = getTierLabel(p.publicTier);
-                      const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
-                      return (
-                        <option
-                          key={p.id}
-                          value={p.id}
-                          disabled={selectedIds.has(p.id) && teamAPlayer2Id !== p.id}
-                        >
-                          {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
-                        </option>
-                      );
-                    })}
-                  </select>
+                        {renderOptions(teamAPlayer2Id, "-- Pilih Pemain 2 --")}
+                      </select>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Tim B Box */}
-            <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#f0f9ff] border-2 border-black shadow-[3px_3px_0px_#000]">
-              <span className="font-mono text-xs font-black uppercase px-2 py-0.5 rounded bg-sky-300 border border-black self-start">
-                TIM B ({isSingles ? "1 PEMAIN" : "2 PEMAIN"})
-              </span>
+                {/* Tim B Box */}
+                <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#f0f9ff] border-2 border-black shadow-[3px_3px_0px_#000]">
+                  <span className="font-mono text-xs font-black uppercase px-2 py-0.5 rounded bg-sky-300 border border-black self-start">
+                    TIM B ({isSingles ? "1 PEMAIN" : "2 PEMAIN"})
+                  </span>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
-                  Pemain 1 (Tim B)
-                </label>
-                <select
-                  value={teamBPlayer1Id}
-                  onChange={(e) => setTeamBPlayer1Id(e.target.value)}
-                  className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
-                >
-                  <option value="">-- Pilih Pemain 1 --</option>
-                  {activePlayers.map((p) => {
-                    const tier = getTierLabel(p.publicTier);
-                    const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
-                    return (
-                      <option
-                        key={p.id}
-                        value={p.id}
-                        disabled={selectedIds.has(p.id) && teamBPlayer1Id !== p.id}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
+                      Pemain 1 (Tim B)
+                    </label>
+                    <select
+                      value={teamBPlayer1Id}
+                      onChange={(e) => setTeamBPlayer1Id(e.target.value)}
+                      className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
+                    >
+                      {renderOptions(teamBPlayer1Id, "-- Pilih Pemain 1 --")}
+                    </select>
+                  </div>
+
+                  {!isSingles && (
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
+                        Pemain 2 (Tim B)
+                      </label>
+                      <select
+                        value={teamBPlayer2Id}
+                        onChange={(e) => setTeamBPlayer2Id(e.target.value)}
+                        className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
                       >
-                        {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              {!isSingles && (
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-black/60 mb-1">
-                    Pemain 2 (Tim B)
-                  </label>
-                  <select
-                    value={teamBPlayer2Id}
-                    onChange={(e) => setTeamBPlayer2Id(e.target.value)}
-                    className="w-full rounded-xl bg-white border-2 border-black px-2.5 py-2 text-xs font-bold text-black cursor-pointer"
-                  >
-                    <option value="">-- Pilih Pemain 2 --</option>
-                    {activePlayers.map((p) => {
-                      const tier = getTierLabel(p.publicTier);
-                      const arriveTag = p.isArrived === false ? "⏳ [Belum Tiba] " : "";
-                      return (
-                        <option
-                          key={p.id}
-                          value={p.id}
-                          disabled={selectedIds.has(p.id) && teamBPlayer2Id !== p.id}
-                        >
-                          {arriveTag}{p.name} ({p.gender === "M" ? "M" : "W"} - {tier.label.replace("Tier ", "")})
-                        </option>
-                      );
-                    })}
-                  </select>
+                        {renderOptions(teamBPlayer2Id, "-- Pilih Pemain 2 --")}
+                      </select>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            );
+          })()}
 
           {/* Opsi Langsung Tampilkan di Lapangan Saat Ini */}
           <div className="flex items-center gap-2 p-3 rounded-xl bg-white border-2 border-black text-xs font-bold">

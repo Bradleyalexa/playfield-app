@@ -47,7 +47,7 @@ import { HelpGuideModal } from "../components/common/HelpGuideModal";
 import { SessionWizardForm } from "../components/session/SessionWizardForm";
 import { CARA_PAKAI_STEPS, FAQ_ITEMS, FAQ_CATEGORIES } from "../data/app-guide-data";
 import { Player, SkillLevel, getTierFromSkill, getTierLabel } from "../core/entities/player";
-import { generateBalancedMatches, addMinutesToTimeString } from "../core/matchmaking/balanced-queue";
+import { generateBalancedMatches, recalculatePlayerStats, addMinutesToTimeString } from "../core/matchmaking/balanced-queue";
 import {
   ALGORITHM_REGISTRY,
   BillingModel,
@@ -510,6 +510,7 @@ export default function HomePage() {
         matchType
       );
       demo.matches = initialMatches.matches;
+      demo.players = recalculatePlayerStats(initialPlayers, demo.matches);
       demo.courts = generatedCourts.map((c) => ({
         ...c,
         currentMatch: initialMatches.matches.find((m) => m.courtNumber === c.courtNumber) || undefined,

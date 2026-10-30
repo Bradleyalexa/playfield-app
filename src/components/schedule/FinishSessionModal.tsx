@@ -72,14 +72,18 @@ export function FinishSessionModal({
   // Hitung MVP (Paling banyak menang & win rate - mendukung match ber-skor maupun tanpa skor)
   const playerStats = session.players.map((p) => {
     let won = 0;
-    let played = p.gamesPlayed;
+    let actualPlayed = 0;
     session.matches.forEach((m) => {
       if (m.status === "completed") {
         const winner = getMatchWinner(m);
-        if (m.teamA.some((pl) => pl.id === p.id) && winner === "A") won++;
-        if (m.teamB.some((pl) => pl.id === p.id) && winner === "B") won++;
+        const inA = m.teamA.some((pl) => pl.id === p.id);
+        const inB = m.teamB.some((pl) => pl.id === p.id);
+        if (inA || inB) actualPlayed++;
+        if (inA && winner === "A") won++;
+        if (inB && winner === "B") won++;
       }
     });
+    const played = Math.max(actualPlayed, p.gamesPlayed);
     const wr = played > 0 ? Math.round((won / played) * 100) : 0;
     return { player: p, won, played, wr };
   });

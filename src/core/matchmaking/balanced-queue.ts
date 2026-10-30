@@ -45,6 +45,38 @@ export function addMinutesToTimeString(timeStr: string, minutesToAdd: number): s
 }
 
 /**
+ * Menghitung ulang statistik kehadiran & jumlah main pemain (Single Source of Truth)
+ * langsung dari riwayat seluruh pertandingan aktual.
+ * Menghindari bug desinkronisasi gamesPlayed / lastPlayedRound di runtime.
+ */
+export function recalculatePlayerStats(players: Player[], matches: Match[]): Player[] {
+  const gamesMap = new Map<string, number>();
+  const lastRoundMap = new Map<string, number>();
+
+  matches.forEach((m) => {
+    const playerList = [...(m.teamA || []), ...(m.teamB || [])];
+    playerList.forEach((p: any) => {
+      const pId = typeof p === "string" ? p : p?.id;
+      if (!pId) return;
+
+      if (m.status === "completed") {
+        gamesMap.set(pId, (gamesMap.get(pId) || 0) + 1);
+      }
+      const r = m.roundNumber || 0;
+      if (r > (lastRoundMap.get(pId) || 0)) {
+        lastRoundMap.set(pId, r);
+      }
+    });
+  });
+
+  return players.map((p) => ({
+    ...p,
+    gamesPlayed: gamesMap.get(p.id) || 0,
+    lastPlayedRound: lastRoundMap.get(p.id) || 0,
+  }));
+}
+
+/**
  * Smart Matchmaking Engine dengan Multi-Algoritma Mabar Lapangan
  */
 export function generateBalancedMatches(
@@ -60,21 +92,41 @@ export function generateBalancedMatches(
   const minPlayersNeeded = playersPerCourt;
   const totalSlotsNeeded = courtCount * playersPerCourt;
 
-  // 1. Filter hanya pemain aktif yang SUDAH TIBA di lokasi (GOR)
-  // Pemain yang belum datang (isArrived === false) otomatis ditahan dari rotasi lapangan
-  const activePool = allPlayers.filter((p) => p.status === "active" && p.isArrived !== false);
+  // 1. Selalu pastikan data statistik pemain akurat dari riwayat match (Single Source of Truth)
+  const accuratePlayers = recalculatePlayerStats(allPlayers, previousMatches);
+
+  // 2. Kunci pemain yang SEDANG BERTANDING di lapangan lain (status === "in_progress")
+  // Pemain ini TIDAK BOLEH dijadwalkan ganda / bentrok di lapangan lain pada saat bersamaan!
+  const currentlyPlayingIds = new Set<string>();
+  previousMatches.forEach((m) => {
+    if (m.status === "in_progress") {
+      [...(m.teamA || []), ...(m.teamB || [])].forEach((p: any) => {
+        const id = typeof p === "string" ? p : p?.id;
+        if (id) currentlyPlayingIds.add(id);
+      });
+    }
+  });
+
+  // 3. Filter hanya pemain aktif yang SUDAH TIBA di lokasi (GOR) dan TIDAK sedang main di lapangan lain
+  const activePool = accuratePlayers.filter(
+    (p) => p.status === "active" && p.isArrived !== false && !currentlyPlayingIds.has(p.id)
+  );
 
   if (activePool.length < minPlayersNeeded) {
     return { matches: [], restingPlayers: activePool };
   }
 
-  // 2. Pemilihan siapa yang masuk ke lapangan pada ronde ini berdasarkan algoritma
+  // 4. Pemilihan siapa yang masuk ke lapangan pada ronde ini berdasarkan algoritma
   let selectedPlayers: Player[] = [];
   let restingPlayers: Player[] = [];
 
   if (algorithm === "random_fun") {
-    // Acak murni tanpa melihat statistik
-    const shuffled = [...activePool].sort(() => Math.random() - 0.5);
+    // Acak murni menggunakan Fisher-Yates shuffle
+    const shuffled = [...activePool];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     const slots = Math.min(totalSlotsNeeded, Math.floor(shuffled.length / playersPerCourt) * playersPerCourt);
     selectedPlayers = shuffled.slice(0, slots);
     restingPlayers = shuffled.slice(slots);
@@ -87,6 +139,12 @@ export function generateBalancedMatches(
 
     const kingIds = new Set(kingPlayers.map((p) => p.id));
     const nonKings = activePool.filter((p) => !kingIds.has(p.id));
+
+    // Fisher-Yates pre-shuffle nonKings
+    for (let i = nonKings.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [nonKings[i], nonKings[j]] = [nonKings[j], nonKings[i]];
+    }
 
     // Sort penantang berdasarkan jatah main & istirahat
     nonKings.sort((a, b) => {
@@ -102,22 +160,27 @@ export function generateBalancedMatches(
     selectedPlayers = [...kingPlayers, ...chosenNonKings];
     restingPlayers = nonKings.slice(chosenNonKings.length);
   } else {
-    // Prioritas umum (playfields_mix, fair_playtime, dll): Main paling sedikit, lalu istirahat paling lama
-    const sorted = [...activePool].sort((a, b) => {
+    // Prioritas umum (playfields_mix, fair_playtime, dll):
+    // 1. Fisher-Yates pre-shuffle agar adil saat statistik seimbang
+    const candidates = [...activePool];
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+
+    // 2. Stable Sort: Main paling sedikit (gamesPlayed), lalu istirahat paling lama (roundNumber - lastPlayedRound)
+    candidates.sort((a, b) => {
       if (a.gamesPlayed !== b.gamesPlayed) {
         return a.gamesPlayed - b.gamesPlayed;
       }
       const restA = roundNumber - a.lastPlayedRound;
       const restB = roundNumber - b.lastPlayedRound;
-      if (restA !== restB) {
-        return restB - restA;
-      }
-      return Math.random() - 0.5;
+      return restB - restA; // Istirahat lebih lama diprioritaskan
     });
 
-    const slots = Math.min(totalSlotsNeeded, Math.floor(sorted.length / playersPerCourt) * playersPerCourt);
-    selectedPlayers = sorted.slice(0, slots);
-    restingPlayers = sorted.slice(slots);
+    const slots = Math.min(totalSlotsNeeded, Math.floor(candidates.length / playersPerCourt) * playersPerCourt);
+    selectedPlayers = candidates.slice(0, slots);
+    restingPlayers = candidates.slice(slots);
   }
 
   const matches: Match[] = [];
@@ -394,8 +457,8 @@ export function generateProjectedSchedule(session: GameSession): ProjectedRound[
 
   const projectedRounds: ProjectedRound[] = [];
 
-  // Salin pool pemain virtual untuk simulasi ronde masa depan
-  const virtualPlayers: Player[] = session.players.map((p) => ({ ...p }));
+  // Salin pool pemain virtual untuk simulasi ronde masa depan (pastikan statistik awal akurat)
+  const virtualPlayers: Player[] = recalculatePlayerStats(session.players, session.matches).map((p) => ({ ...p }));
 
   for (let r = 1; r <= totalRoundsToProject; r++) {
     const roundStartMinutes = (r - 1) * matchMins;

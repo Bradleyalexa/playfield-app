@@ -67,22 +67,26 @@ export function CompletedSessionRecap({
   // Hitung statistik seluruh pemain (mendukung match ber-skor maupun tanpa skor numerik)
   const playerStats = session.players.map((p) => {
     let won = 0;
+    let played = 0;
     let totalPoints = 0;
     session.matches.forEach((m) => {
       if (m.status === "completed") {
         const winner = getMatchWinner(m);
         if (m.teamA.some((pl) => pl.id === p.id)) {
+          played++;
           totalPoints += m.scoreA;
           if (winner === "A") won++;
         }
         if (m.teamB.some((pl) => pl.id === p.id)) {
+          played++;
           totalPoints += m.scoreB;
           if (winner === "B") won++;
         }
       }
     });
-    const wr = p.gamesPlayed > 0 ? Math.round((won / p.gamesPlayed) * 100) : 0;
-    return { player: p, won, played: p.gamesPlayed, wr, totalPoints };
+    const effectivePlayed = Math.max(played, p.gamesPlayed);
+    const wr = effectivePlayed > 0 ? Math.round((won / effectivePlayed) * 100) : 0;
+    return { player: p, won, played: effectivePlayed, wr, totalPoints };
   });
 
   playerStats.sort((a, b) => b.won - a.won || b.wr - a.wr || b.totalPoints - a.totalPoints);

@@ -29,6 +29,7 @@ import { SpectatorQrModal } from "../../../components/common/SpectatorQrModal";
 import { getTierLabel, Player } from "../../../core/entities/player";
 import { getMatchWinner } from "../../../core/entities/match";
 import { ALGORITHM_REGISTRY, GameSession } from "../../../core/entities/session";
+import { recalculatePlayerStats } from "../../../core/matchmaking/balanced-queue";
 import { LocalStorageAdapter } from "../../../services/storage/local-storage.adapter";
 import { calculateRentalTimeInfo, RentalTimeInfo } from "../../../lib/time-tracker";
 
@@ -193,19 +194,31 @@ function LiveSpectatorContent({ params }: LivePageProps) {
       current = { ...current, courts: healedCourts };
     }
 
+    const applySession = (raw: GameSession | null) => {
+      if (!raw) {
+        setSession(null);
+        return;
+      }
+      const synced = {
+        ...raw,
+        players: recalculatePlayerStats(raw.players || [], raw.matches || []),
+      };
+      setSession(synced);
+    };
+
     if (current) {
-      setSession(current);
+      applySession(current);
     }
 
     // Ambil data terbaru dari cloud (R2/D1/API)
     LocalStorageAdapter.fetchRemoteSession(sessionId).then((remote) => {
       if (remote) {
-        setSession(remote);
+        applySession(remote);
       } else if (!current) {
         if (sessionId === "demo" || sessionId.startsWith("demo-")) {
-          setSession(LocalStorageAdapter.createDemoSession("badminton"));
+          applySession(LocalStorageAdapter.createDemoSession("badminton"));
         } else {
-          setSession(LocalStorageAdapter.createDemoSession("badminton"));
+          applySession(LocalStorageAdapter.createDemoSession("badminton"));
         }
       }
     });
@@ -213,13 +226,13 @@ function LiveSpectatorContent({ params }: LivePageProps) {
     // Polling berkala tiap 7 detik agar penonton mendapatkan live score real-time
     const pollTimer = setInterval(() => {
       LocalStorageAdapter.fetchRemoteSession(sessionId).then((remote) => {
-        if (remote) setSession(remote);
+        if (remote) applySession(remote);
       });
     }, 7000);
 
     const handleSync = (e: any) => {
       if (e.detail && (e.detail.id === sessionId || e.detail.publicSlug === sessionId)) {
-        setSession(e.detail);
+        applySession(e.detail);
       }
     };
     window.addEventListener("clubcourt:session_updated", handleSync);
