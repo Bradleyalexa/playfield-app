@@ -2720,6 +2720,20 @@ export default function HomePage() {
               ❓ FAQ Mabar
             </button>
             <span className="text-black/30 hidden sm:inline">•</span>
+            <Link
+              href="/analytics"
+              className="text-xs font-black uppercase text-black hover:text-[#ff5500] hover:underline px-2 py-1"
+            >
+              📊 Analitik Harian
+            </Link>
+            <span className="text-black/30 hidden sm:inline">•</span>
+            <Link
+              href="/mailbox"
+              className="text-xs font-black uppercase text-black hover:text-[#ff5500] hover:underline px-2 py-1"
+            >
+              ✉️ Mailbox
+            </Link>
+            <span className="text-black/30 hidden sm:inline">•</span>
             <button
               type="button"
               onClick={() => setIsDonateCreatorOpen(true)}

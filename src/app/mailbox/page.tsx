@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   MessageSquare,
   Activity,
+  BarChart3,
 } from "lucide-react";
 import { SessionFeedback } from "../../core/entities/feedback";
 
@@ -100,14 +101,24 @@ export default function MailboxPage() {
             </div>
           </div>
 
-          <button
-            onClick={fetchFeedbacks}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-zinc-100 text-xs font-bold shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/analytics"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-[#faf8f2] hover:bg-[#ccff00] text-xs font-bold shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              <span>Analitik Sesi</span>
+            </Link>
+
+            <button
+              onClick={fetchFeedbacks}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-zinc-100 text-xs font-bold shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
         </div>
       </header>
 
