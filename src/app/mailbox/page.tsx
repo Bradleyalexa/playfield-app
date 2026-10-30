@@ -14,8 +14,10 @@ import {
   MessageSquare,
   Activity,
   BarChart3,
+  Lock,
 } from "lucide-react";
 import { SessionFeedback } from "../../core/entities/feedback";
+import { AdminPinGate, lockAdminSession } from "../../components/common/AdminPinGate";
 
 export default function MailboxPage() {
   const [feedbacks, setFeedbacks] = useState<SessionFeedback[]>([]);
@@ -27,7 +29,11 @@ export default function MailboxPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/feedback", { cache: "no-store" });
+      const pin = typeof window !== "undefined" ? sessionStorage.getItem("playfield_admin_pin") || "4137" : "4137";
+      const res = await fetch(`/api/feedback?pin=${pin}`, {
+        cache: "no-store",
+        headers: { "x-admin-pin": pin },
+      });
       if (!res.ok) throw new Error("Gagal mengambil data mailbox");
       const data = await res.json();
       setFeedbacks(data.feedbacks || []);
@@ -74,56 +80,66 @@ export default function MailboxPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f2] text-black font-sans selection:bg-[#ccff00] selection:text-black">
-      {/* Top Header */}
-      <header className="border-b-3 border-black bg-white sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="p-2 rounded-xl border-2 border-black bg-[#faf8f2] hover:bg-[#ccff00] text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-              title="Kembali ke Beranda"
-            >
-              <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-[#ccff00] border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_#000]">
-                <Inbox className="h-4 w-4 stroke-[2.5]" />
-              </div>
-              <div>
-                <h1 className="text-base sm:text-lg font-black uppercase tracking-tight leading-none">
-                  Mailbox Feedback
-                </h1>
-                <p className="text-[11px] font-bold text-slate-500">
-                  Kotak Masuk Surat & Masukan Host Playfield
-                </p>
+    <AdminPinGate pageTitle="Mailbox Feedback">
+      <div className="min-h-screen bg-[#faf8f2] text-black font-sans selection:bg-[#ccff00] selection:text-black">
+        {/* Top Header */}
+        <header className="border-b-3 border-black bg-white sticky top-0 z-30">
+          <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="p-2 rounded-xl border-2 border-black bg-[#faf8f2] hover:bg-[#ccff00] text-black shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                title="Kembali ke Beranda"
+              >
+                <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
+              </Link>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-[#ccff00] border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_#000]">
+                  <Inbox className="h-4 w-4 stroke-[2.5]" />
+                </div>
+                <div>
+                  <h1 className="text-base sm:text-lg font-black uppercase tracking-tight leading-none">
+                    Mailbox Feedback
+                  </h1>
+                  <p className="text-[11px] font-bold text-slate-500">
+                    Kotak Masuk Surat & Masukan Host Playfield
+                  </p>
+                </div>
               </div>
             </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href="/analytics"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-[#faf8f2] hover:bg-[#ccff00] text-xs font-bold shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              >
+                <BarChart3 className="h-3.5 w-3.5" />
+                <span>Analitik Sesi</span>
+              </Link>
+
+              <button
+                onClick={fetchFeedbacks}
+                disabled={isLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-zinc-100 text-xs font-bold shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+
+              <button
+                onClick={() => lockAdminSession()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-rose-100 hover:bg-rose-200 text-rose-900 text-xs font-bold shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                title="Kunci sesi admin"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Kunci</span>
+              </button>
+            </div>
           </div>
+        </header>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/analytics"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-[#faf8f2] hover:bg-[#ccff00] text-xs font-bold shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-            >
-              <BarChart3 className="h-3.5 w-3.5" />
-              <span>Analitik Sesi</span>
-            </Link>
-
-            <button
-              onClick={fetchFeedbacks}
-              disabled={isLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-zinc-100 text-xs font-bold shadow-[2px_2px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-5">
+        {/* Main Content */}
+        <main className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-5">
         {/* Metric Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="rounded-2xl border-2 border-black bg-white p-3.5 shadow-[3px_3px_0px_#000]">
@@ -250,6 +266,7 @@ export default function MailboxPage() {
         )}
       </main>
     </div>
+    </AdminPinGate>
   );
 }
 

@@ -45,15 +45,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
+const ADMIN_PIN = "4137";
+
 /**
  * GET /api/feedback
  * Mengambil daftar feedback untuk dicek manual oleh admin/creator
+ * Dilindungi PIN admin 4137
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = request.nextUrl;
+    const pin = request.headers.get("x-admin-pin") || searchParams.get("pin");
+
+    if (pin !== ADMIN_PIN) {
+      return NextResponse.json(
+        { error: "Unauthorized: Akses ditolak. PIN admin salah atau tidak ada." },
+        { status: 401 }
+      );
+    }
+
     const feedbacks = await r2Service.listFeedbacks(100);
     return NextResponse.json({ success: true, count: feedbacks.length, feedbacks });
   } catch (error: any) {
+    if (error?.digest?.startsWith?.("NEXT_")) {
+      throw error;
+    }
     console.error("[Feedback API] Error listing feedbacks:", error);
     return NextResponse.json({ error: "Gagal mengambil daftar feedback" }, { status: 500 });
   }
