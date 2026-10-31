@@ -1018,24 +1018,23 @@ function HostDashboardContent({ params }: HostPageProps) {
       return;
     }
 
-    // Filter pemain yang sedang bermain di lapangan yang tidak di-reset (lapangan aktif yang berjalan)
+    // 1. Lapangan yang benar-benar sedang bertanding aktif (skor > 0) DILINDUNGI agar pertandingannya tidak hilang/kacau
+    const lockedCourts = session.courts.filter(
+      (c) => c.currentMatch && (c.currentMatch.scoreA > 0 || c.currentMatch.scoreB > 0)
+    );
     const lockedPlayerIds = new Set<string>();
-    session.courts.forEach((c) => {
-      if (c.currentMatch && c.currentMatch.status === "in_progress") {
-        c.currentMatch.teamA.forEach((p) => lockedPlayerIds.add(p.id));
-        c.currentMatch.teamB.forEach((p) => lockedPlayerIds.add(p.id));
-      }
-    });
-    session.matches.forEach((m) => {
-      if (m.status === "in_progress") {
-        [...m.teamA, ...m.teamB].forEach((p) => lockedPlayerIds.add(p.id));
-      }
+    lockedCourts.forEach((c) => {
+      c.currentMatch?.teamA.forEach((p) => lockedPlayerIds.add(p.id));
+      c.currentMatch?.teamB.forEach((p) => lockedPlayerIds.add(p.id));
     });
 
-    const eligiblePool = activePlayers.filter((p) => !lockedPlayerIds.has(p.id));
+    // 2. Lapangan yang siap di-reset & diacak ulang (lapangan kosong atau skor masih 0-0)
     const emptyOrResetCourts = session.courts.filter(
       (c) => !c.currentMatch || (c.currentMatch.scoreA === 0 && c.currentMatch.scoreB === 0)
     );
+
+    // 3. Pool pemain yang berhak diacak ulang: semua pemain aktif yang TIDAK sedang bermain di lockedCourts
+    const eligiblePool = activePlayers.filter((p) => !lockedPlayerIds.has(p.id));
 
     if (eligiblePool.length < minPlayers && emptyOrResetCourts.length > 0) {
       alert(
@@ -1046,24 +1045,37 @@ function HostDashboardContent({ params }: HostPageProps) {
       return;
     }
 
+    // 4. Riwayat match yang diteruskan ke generator matchmaking:
+    // HANYA match yang sudah 'completed' dan match aktif yang ada di lockedCourts
+    const lockedMatchIds = new Set(lockedCourts.map((c) => c.currentMatch?.id).filter(Boolean));
+    const previousMatchesForGen = session.matches.filter(
+      (m) => m.status === "completed" || lockedMatchIds.has(m.id)
+    );
+
     const fresh = generateBalancedMatches(
       eligiblePool,
       emptyOrResetCourts.length,
       session.currentRound,
       session.algorithm || "playfields_mix",
-      session.matches.filter((m) => m.status === "completed"),
+      previousMatchesForGen,
       session.matchType || "doubles"
     );
 
     let updatedCourts = [...session.courts];
-    let updatedMatches = [
-      ...session.matches.filter((m) => m.status === "completed" || lockedPlayerIds.has(m.teamA[0]?.id)),
-    ];
+    // Simpan match yang sudah completed dan match berjalan di lockedCourts.
+    // Match lama dari emptyOrResetCourts dihapus agar tidak menjadi ghost match.
+    let updatedMatches = session.matches.filter(
+      (m) => m.status === "completed" || lockedMatchIds.has(m.id)
+    );
 
     emptyOrResetCourts.forEach((court, idx) => {
       const matchForCourt = fresh.matches[idx];
       if (matchForCourt) {
-        const adjustedMatch: Match = { ...matchForCourt, courtNumber: court.courtNumber };
+        const adjustedMatch: Match = {
+          ...matchForCourt,
+          id: `match-c${court.courtNumber}-${Date.now()}-${idx}`,
+          courtNumber: court.courtNumber,
+        };
         updatedMatches.push(adjustedMatch);
         updatedCourts = updatedCourts.map((c) =>
           c.courtNumber === court.courtNumber ? { ...c, currentMatch: adjustedMatch } : c
@@ -1164,7 +1176,7 @@ function HostDashboardContent({ params }: HostPageProps) {
     // Sinkronkan data statistik pemain
     const accuratePlayers = recalculatePlayerStats(session.players, session.matches);
 
-    // Pemain yang sedang bertanding di lapangan LAIN tidak boleh diikutsertakan
+    // Pemain yang sedang bertanding di lapangan LAIN (berdasarkan status aktif lapangan di session.courts)
     const otherPlayingIds = new Set<string>();
     session.courts.forEach((c) => {
       if (c.courtNumber !== courtNumber && c.currentMatch && c.currentMatch.status === "in_progress") {
@@ -1172,13 +1184,8 @@ function HostDashboardContent({ params }: HostPageProps) {
         c.currentMatch.teamB.forEach((p) => otherPlayingIds.add(p.id));
       }
     });
-    session.matches.forEach((m) => {
-      if (m.courtNumber !== courtNumber && m.status === "in_progress") {
-        [...m.teamA, ...m.teamB].forEach((p) => otherPlayingIds.add(p.id));
-      }
-    });
 
-    // Filter pemain aktif yang SUDAH TIBA di lokasi dan TIDAK sedang bermain
+    // Filter pemain aktif yang SUDAH TIBA di lokasi dan TIDAK sedang bermain di lapangan lain
     const eligiblePool = accuratePlayers.filter(
       (p) => p.status === "active" && p.isArrived !== false && !otherPlayingIds.has(p.id)
     );
@@ -1195,12 +1202,23 @@ function HostDashboardContent({ params }: HostPageProps) {
       return;
     }
 
+    // Riwayat match yang diteruskan: Hanya match completed dan match aktif di lapangan LAIN.
+    // Jangan biarkan match lama di lapangan ini mengunci pemain di dalam generator.
+    const otherCourtMatchIds = new Set(
+      session.courts
+        .filter((c) => c.courtNumber !== courtNumber && c.currentMatch?.status === "in_progress")
+        .map((c) => c.currentMatch!.id)
+    );
+    const previousMatchesForGen = session.matches.filter(
+      (m) => m.status === "completed" || otherCourtMatchIds.has(m.id)
+    );
+
     const fresh = generateBalancedMatches(
       eligiblePool,
       1,
       session.currentRound,
       session.algorithm || "playfields_mix",
-      session.matches,
+      previousMatchesForGen,
       session.matchType || "doubles"
     );
 
@@ -1236,7 +1254,10 @@ function HostDashboardContent({ params }: HostPageProps) {
       c.courtNumber === courtNumber ? { ...c, currentMatch: newMatch } : c
     );
 
-    let updatedMatches = session.matches.filter((m) => !courtMatchOld || m.id !== courtMatchOld.id);
+    const oldMatchId = courtMatchOld?.id;
+    let updatedMatches = session.matches.filter(
+      (m) => (m.status === "completed" || m.courtNumber !== courtNumber) && (!oldMatchId || m.id !== oldMatchId)
+    );
     updatedMatches.push(newMatch);
 
     const updatedPlayers = recalculatePlayerStats(session.players, updatedMatches);

@@ -116,12 +116,20 @@ export function generateBalancedMatches(
   });
 
   // 3. Filter hanya pemain aktif yang SUDAH TIBA di lokasi (GOR) dan TIDAK sedang main di lapangan lain
-  const activePool = accuratePlayers.filter(
+  let activePool = accuratePlayers.filter(
     (p) => p.status === "active" && p.isArrived !== false && !currentlyPlayingIds.has(p.id)
   );
 
+  // Fallback pengaman: Jika activePool kurang dari syarat minimal tetapi allPlayers memiliki cukup pemain aktif
+  // (misalnya karena match in_progress lama dari lapangan ini atau saat kocok ulang 1 lapangan),
+  // gunakan pemain aktif dari allPlayers agar sistem tidak gagal menyusun pertandingan.
   if (activePool.length < minPlayersNeeded) {
-    return { matches: [], restingPlayers: activePool };
+    const fallbackActive = accuratePlayers.filter((p) => p.status === "active" && p.isArrived !== false);
+    if (fallbackActive.length >= minPlayersNeeded) {
+      activePool = fallbackActive;
+    } else {
+      return { matches: [], restingPlayers: activePool };
+    }
   }
 
   // 4. Pemilihan siapa yang masuk ke lapangan pada ronde ini berdasarkan algoritma
