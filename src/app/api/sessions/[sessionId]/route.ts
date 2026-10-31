@@ -77,7 +77,27 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid session payload" }, { status: 400 });
     }
 
-    session.updatedAt = new Date().toISOString();
+    // Cegah request out-of-order yang lebih tua menimpa state yang lebih baru di memory cache
+    const existing =
+      globalSessionCache.get(session.id) ||
+      globalSessionCache.get(session.publicSlug) ||
+      (sessionId ? globalSessionCache.get(sessionId) : undefined);
+
+    if (
+      existing &&
+      existing.updatedAt &&
+      session.updatedAt &&
+      new Date(session.updatedAt).getTime() < new Date(existing.updatedAt).getTime()
+    ) {
+      return NextResponse.json({
+        success: true,
+        skippedStale: true,
+        id: existing.id,
+        publicSlug: existing.publicSlug,
+      });
+    }
+
+    session.updatedAt = session.updatedAt || new Date().toISOString();
 
     // 1. Simpan di in-memory cache
     globalSessionCache.set(session.id, session);

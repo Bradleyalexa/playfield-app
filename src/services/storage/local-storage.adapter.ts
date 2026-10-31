@@ -8,6 +8,8 @@ const STORAGE_PREFIX = "clubcourt_session_";
 const RECENT_SESSIONS_KEY = "clubcourt_recent_sessions";
 
 export class LocalStorageAdapter {
+  private static syncTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
   private static isAvailable(): boolean {
     return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
   }
@@ -17,19 +19,29 @@ export class LocalStorageAdapter {
 
     session.updatedAt = new Date().toISOString();
 
-    // 1. Simpan payload sesi di LocalStorage
+    // 1. Simpan payload sesi di LocalStorage (instant)
     this.saveSessionLocalOnly(session);
 
-    // 2. Kirim sinkronisasi ke serverless API / Cloud (R2 & D1) secara asynchronous
+    // 2. Kirim sinkronisasi ke serverless API / Cloud (R2 & D1) dengan coalescing/debounce
+    // agar klik skor cepat (+1 beruntun) tidak saling balapan (race condition) di jaringan GOR
     if (typeof window !== "undefined") {
-      fetch(`/api/sessions/${session.publicSlug}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(session),
-      }).catch((err) => {
-        // Silently fail if offline or network unreachable
-        console.debug("[LocalStorageAdapter] Cloud sync skipped:", err);
-      });
+      const slugKey = session.publicSlug || session.id;
+      const existingTimer = this.syncTimers.get(slugKey);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+      }
+      const snapshotToPush = JSON.stringify(session);
+      const timer = setTimeout(() => {
+        this.syncTimers.delete(slugKey);
+        fetch(`/api/sessions/${encodeURIComponent(slugKey)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: snapshotToPush,
+        }).catch((err) => {
+          console.debug("[LocalStorageAdapter] Cloud sync skipped:", err);
+        });
+      }, 120);
+      this.syncTimers.set(slugKey, timer);
     }
 
     // 3. Dispatch window event agar tab/komponen lain auto-refresh
@@ -74,12 +86,24 @@ export class LocalStorageAdapter {
    */
   public static async fetchRemoteSession(idOrSlug: string): Promise<GameSession | null> {
     try {
-      const res = await fetch(`/api/sessions/${idOrSlug}`);
+      const res = await fetch(`/api/sessions/${encodeURIComponent(idOrSlug)}`, {
+        cache: "no-store",
+      });
       if (!res.ok) return null;
       const json = await res.json();
       if (json && json.session) {
-        this.saveSessionLocalOnly(json.session);
-        return json.session as GameSession;
+        const remoteSession = json.session as GameSession;
+        const localSession = this.getSession(idOrSlug);
+        if (
+          localSession &&
+          localSession.updatedAt &&
+          remoteSession.updatedAt &&
+          new Date(localSession.updatedAt).getTime() > new Date(remoteSession.updatedAt).getTime()
+        ) {
+          return localSession;
+        }
+        this.saveSessionLocalOnly(remoteSession);
+        return remoteSession;
       }
     } catch {
       // Offline / network failure

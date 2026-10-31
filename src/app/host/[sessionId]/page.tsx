@@ -229,7 +229,19 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.fetchRemoteSession(sessionId).then((remote) => {
       if (isCancelled) return;
       if (remote) {
-        checkAuthAndApply(remote);
+        // Cegah overwrite jika data lokal memiliki timestamp updatedAt yang lebih baru dari cloud
+        const localLatest = LocalStorageAdapter.getSession(sessionId) || current;
+        if (
+          localLatest &&
+          localLatest.updatedAt &&
+          remote.updatedAt &&
+          new Date(localLatest.updatedAt).getTime() > new Date(remote.updatedAt).getTime()
+        ) {
+          checkAuthAndApply(localLatest);
+          LocalStorageAdapter.saveSession(localLatest);
+        } else {
+          checkAuthAndApply(remote);
+        }
       } else if (!current) {
         // Jika tidak ada di local dan tidak ada di cloud
         if (sessionId === "demo" || sessionId.startsWith("demo-")) {
@@ -978,9 +990,11 @@ function HostDashboardContent({ params }: HostPageProps) {
       );
     }
 
+    const syncedPlayers = recalculatePlayerStats(updatedPlayers, updatedMatches);
+
     const updated: GameSession = {
       ...session,
-      players: updatedPlayers,
+      players: syncedPlayers,
       courts: updatedCourts,
       matches: updatedMatches,
     };
@@ -1071,10 +1085,18 @@ function HostDashboardContent({ params }: HostPageProps) {
     emptyOrResetCourts.forEach((court, idx) => {
       const matchForCourt = fresh.matches[idx];
       if (matchForCourt) {
+        let matchTeamA = matchForCourt.teamA;
+        let matchTeamB = matchForCourt.teamB;
+        const rotated = rotatePairsIfSameFour(matchTeamA, matchTeamB, court.currentMatch);
+        matchTeamA = rotated.teamA;
+        matchTeamB = rotated.teamB;
+
         const adjustedMatch: Match = {
           ...matchForCourt,
           id: `match-c${court.courtNumber}-${Date.now()}-${idx}`,
           courtNumber: court.courtNumber,
+          teamA: matchTeamA,
+          teamB: matchTeamB,
         };
         updatedMatches.push(adjustedMatch);
         updatedCourts = updatedCourts.map((c) =>
@@ -1128,6 +1150,19 @@ function HostDashboardContent({ params }: HostPageProps) {
   const handleConfirmSubstitute = (substitutePlayer: Player) => {
     if (!targetPlayerToSubstitute || !session) return;
 
+    // Pastikan pemain pengganti tidak sedang bertanding di lapangan aktif
+    const alreadyPlayingCourt = session.courts.find(
+      (c) =>
+        c.currentMatch &&
+        c.currentMatch.status === "in_progress" &&
+        (c.currentMatch.teamA.some((p) => p.id === substitutePlayer.id) ||
+          c.currentMatch.teamB.some((p) => p.id === substitutePlayer.id))
+    );
+    if (alreadyPlayingCourt) {
+      alert(`${substitutePlayer.name} sedang bertanding di Lapangan ${alreadyPlayingCourt.courtNumber}!`);
+      return;
+    }
+
     const targetCourt = session.courts.find((c) => c.courtNumber === substituteCourtNumber);
     if (!targetCourt || !targetCourt.currentMatch) return;
 
@@ -1153,8 +1188,11 @@ function HostDashboardContent({ params }: HostPageProps) {
       m.id === curMatch.id ? updatedMatch : m
     );
 
+    const updatedPlayers = recalculatePlayerStats(session.players, updatedMatches);
+
     const updated: GameSession = {
       ...session,
+      players: updatedPlayers,
       courts: updatedCourts,
       matches: updatedMatches,
     };
@@ -1275,8 +1313,47 @@ function HostDashboardContent({ params }: HostPageProps) {
   };
 
   // 6k. Tarik Maju Match dari Proyeksi Jadwal ke Lapangan Tertentu
-  const handleFastTrackMatch = (projectedMatch: ProjectedMatch, targetCourtNumber: number) => {
-    if (!session) return;
+  const handleFastTrackMatch = (projectedMatch: ProjectedMatch, targetCourtNumber: number): boolean => {
+    if (!session) return false;
+
+    // 1. Cek apakah ada pemain di match ini yang SEDANG BERTANDING di lapangan LAIN
+    const matchPlayerIds = new Set(
+      [...projectedMatch.teamA, ...projectedMatch.teamB].map((p) => p.id)
+    );
+    const conflictingCourt = session.courts.find(
+      (c) =>
+        c.courtNumber !== targetCourtNumber &&
+        c.currentMatch &&
+        c.currentMatch.status === "in_progress" &&
+        (c.currentMatch.teamA.some((p) => matchPlayerIds.has(p.id)) ||
+          c.currentMatch.teamB.some((p) => matchPlayerIds.has(p.id)))
+    );
+
+    if (conflictingCourt && conflictingCourt.currentMatch) {
+      const conflictingNames = [
+        ...conflictingCourt.currentMatch.teamA,
+        ...conflictingCourt.currentMatch.teamB,
+      ]
+        .filter((p) => matchPlayerIds.has(p.id))
+        .map((p) => p.name)
+        .join(", ");
+      alert(
+        `Tidak dapat menarik maju match ini sekarang karena ${conflictingNames} masih sedang bertanding di Lapangan ${conflictingCourt.courtNumber}!`
+      );
+      return false;
+    }
+
+    // 2. Cek apakah lapangan target sedang ada pertandingan dengan skor berjalan (> 0)
+    const targetCourt = session.courts.find((c) => c.courtNumber === targetCourtNumber);
+    if (
+      targetCourt?.currentMatch &&
+      (targetCourt.currentMatch.scoreA > 0 || targetCourt.currentMatch.scoreB > 0)
+    ) {
+      const ok = window.confirm(
+        `Lapangan ${targetCourtNumber} masih memiliki pertandingan aktif dengan skor (${targetCourt.currentMatch.scoreA} - ${targetCourt.currentMatch.scoreB}).\n\nMenarik maju match ini akan menggantikan pertandingan di Lapangan ${targetCourtNumber}. Lanjutkan?`
+      );
+      if (!ok) return false;
+    }
 
     const newMatch: Match = {
       ...projectedMatch,
@@ -1294,7 +1371,7 @@ function HostDashboardContent({ params }: HostPageProps) {
       c.courtNumber === targetCourtNumber ? { ...c, currentMatch: newMatch } : c
     );
 
-    const courtMatchOld = session.courts.find((c) => c.courtNumber === targetCourtNumber)?.currentMatch;
+    const courtMatchOld = targetCourt?.currentMatch;
     let updatedMatches = session.matches.filter((m) => !courtMatchOld || m.id !== courtMatchOld.id);
     updatedMatches.push(newMatch);
 
@@ -1311,6 +1388,7 @@ function HostDashboardContent({ params }: HostPageProps) {
     LocalStorageAdapter.saveSession(updated);
     AudioAnnouncer.announceGeneral(`Match berhasil ditarik maju ke Lapangan ${targetCourtNumber}.`);
     AudioAnnouncer.announceMatch(targetCourtNumber, newMatch.teamA, newMatch.teamB);
+    return true;
   };
 
   // 7. Tambah Pemain Manual Tunggal
@@ -1394,6 +1472,32 @@ function HostDashboardContent({ params }: HostPageProps) {
     let updatedMatches = [...session.matches];
 
     if (assignToCourtImmediately) {
+      // Pastikan tidak ada pemain di newMatch yang sedang bertanding aktif di lapangan LAIN
+      const matchPlayerIds = new Set(
+        [...newMatch.teamA, ...newMatch.teamB].map((p) => p.id)
+      );
+      const conflictingCourt = session.courts.find(
+        (c) =>
+          c.courtNumber !== newMatch.courtNumber &&
+          c.currentMatch &&
+          c.currentMatch.status === "in_progress" &&
+          (c.currentMatch.teamA.some((p) => matchPlayerIds.has(p.id)) ||
+            c.currentMatch.teamB.some((p) => matchPlayerIds.has(p.id)))
+      );
+      if (conflictingCourt && conflictingCourt.currentMatch) {
+        const conflictingNames = [
+          ...conflictingCourt.currentMatch.teamA,
+          ...conflictingCourt.currentMatch.teamB,
+        ]
+          .filter((p) => matchPlayerIds.has(p.id))
+          .map((p) => p.name)
+          .join(", ");
+        alert(
+          `Tidak dapat memasang langsung ke Lapangan ${newMatch.courtNumber} karena ${conflictingNames} masih sedang bermain di Lapangan ${conflictingCourt.courtNumber}!`
+        );
+        return;
+      }
+
       // Jika lapangan target sudah memiliki match in_progress yang sedang berjalan, ganti match tersebut
       const targetCourt = session.courts.find((c) => c.courtNumber === newMatch.courtNumber);
       if (targetCourt?.currentMatch) {
@@ -1401,15 +1505,25 @@ function HostDashboardContent({ params }: HostPageProps) {
         updatedMatches = updatedMatches.filter((m) => m.id !== oldId);
       }
 
+      const activeCustomMatch: Match = {
+        ...newMatch,
+        status: "in_progress",
+      };
+
       updatedCourts = updatedCourts.map((c) => {
         if (c.courtNumber === newMatch.courtNumber) {
-          return { ...c, currentMatch: newMatch };
+          return { ...c, currentMatch: activeCustomMatch };
         }
         return c;
       });
+      updatedMatches.push(activeCustomMatch);
+    } else {
+      updatedMatches.push({
+        ...newMatch,
+        status: "queued",
+      });
     }
 
-    updatedMatches.push(newMatch);
     const updatedPlayers = recalculatePlayerStats(session.players, updatedMatches);
 
     const updated: GameSession = {

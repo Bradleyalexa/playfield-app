@@ -51,7 +51,11 @@ export function addMinutesToTimeString(timeStr: string, minutesToAdd: number): s
  */
 export function recalculatePlayerStats(players: Player[], matches: Match[]): Player[] {
   if (!matches || matches.length === 0) {
-    return players;
+    return players.map((p) => ({
+      ...p,
+      gamesPlayed: 0,
+      lastPlayedRound: 0,
+    }));
   }
 
   const gamesMap = new Map<string, number>();
@@ -66,9 +70,11 @@ export function recalculatePlayerStats(players: Player[], matches: Match[]): Pla
       if (m.status === "completed") {
         gamesMap.set(pId, (gamesMap.get(pId) || 0) + 1);
       }
-      const r = m.roundNumber || 0;
-      if (r > (lastRoundMap.get(pId) || 0)) {
-        lastRoundMap.set(pId, r);
+      if (m.status === "completed" || m.status === "in_progress") {
+        const r = m.roundNumber || 0;
+        if (r > (lastRoundMap.get(pId) || 0)) {
+          lastRoundMap.set(pId, r);
+        }
       }
     });
   });
@@ -78,8 +84,8 @@ export function recalculatePlayerStats(players: Player[], matches: Match[]): Pla
     const actualLastRound = lastRoundMap.get(p.id) || 0;
     return {
       ...p,
-      gamesPlayed: Math.max(p.gamesPlayed || 0, actualCompleted),
-      lastPlayedRound: Math.max(p.lastPlayedRound || 0, actualLastRound),
+      gamesPlayed: actualCompleted,
+      lastPlayedRound: actualLastRound,
     };
   });
 }
@@ -296,6 +302,20 @@ export function generateBalancedMatches(
     }
   }
 
+  // Peta riwayat pasangan (partner history) untuk mencegah pasangan identik berulang terus-menerus
+  const partnerCountMap = new Map<string, number>();
+  const getPairKey = (id1: string, id2: string) => (id1 < id2 ? `${id1}:${id2}` : `${id2}:${id1}`);
+  previousMatches.forEach((m) => {
+    if (m.teamA && m.teamA.length === 2 && m.teamA[0]?.id && m.teamA[1]?.id) {
+      const k = getPairKey(m.teamA[0].id, m.teamA[1].id);
+      partnerCountMap.set(k, (partnerCountMap.get(k) || 0) + 1);
+    }
+    if (m.teamB && m.teamB.length === 2 && m.teamB[0]?.id && m.teamB[1]?.id) {
+      const k = getPairKey(m.teamB[0].id, m.teamB[1].id);
+      partnerCountMap.set(k, (partnerCountMap.get(k) || 0) + 1);
+    }
+  });
+
   // 4. Pembagian Pasangan per Lapangan berdasarkan Algoritma
   for (let c = 0; c < actualCourtsToMake; c++) {
     const courtFour = courtPlayerGroups[c] || selectedPlayers.slice(c * 4, (c + 1) * 4);
@@ -432,6 +452,55 @@ export function generateBalancedMatches(
         teamB = [courtFour[1], courtFour[2]];
         break;
       }
+    }
+
+    // Optimasi Anti-Repetisi Partner:
+    // Jika pasangan default sudah pernah berpasangan di ronde sebelumnya (kecuali Tahta King of Court di Lap 1),
+    // cari variasi pasangan di antara ke-4 pemain ini yang belum pernah (atau paling jarang) berpasangan.
+    const isKingThroneCourt = algorithm === "king_of_court" && c === 0 && roundNumber > 1 && previousMatches.length > 0;
+    if (!isKingThroneCourt && teamA.length === 2 && teamB.length === 2) {
+      const a0 = teamA[0];
+      const a1 = teamA[1];
+      const b0 = teamB[0];
+      const b1 = teamB[1];
+
+      const getRepeats = (tA: Player[], tB: Player[]) =>
+        (partnerCountMap.get(getPairKey(tA[0].id, tA[1].id)) || 0) +
+        (partnerCountMap.get(getPairKey(tB[0].id, tB[1].id)) || 0);
+
+      const getSkillDiff = (tA: Player[], tB: Player[]) =>
+        Math.abs(tA[0].skillLevel + tA[1].skillLevel - (tB[0].skillLevel + tB[1].skillLevel));
+
+      const baseRepeats = getRepeats(teamA, teamB);
+      if (baseRepeats > 0) {
+        const baseSkillDiff = getSkillDiff(teamA, teamB);
+        const options = [
+          { tA: [a0, a1], tB: [b0, b1], idx: 0 },
+          { tA: [a0, b0], tB: [a1, b1], idx: 1 },
+          { tA: [a0, b1], tB: [a1, b0], idx: 2 },
+        ].map((opt) => ({
+          ...opt,
+          repeats: getRepeats(opt.tA, opt.tB),
+          skillDiff: getSkillDiff(opt.tA, opt.tB),
+        }));
+
+        // Filter opsi yang keseimbangan skill-nya masih wajar (maksimal selisih +2 dari default)
+        const viableOptions = options.filter((opt) => opt.skillDiff <= baseSkillDiff + 2);
+        const poolToPick = viableOptions.length > 0 ? viableOptions : options;
+
+        poolToPick.sort((x, y) => {
+          if (x.repeats !== y.repeats) return x.repeats - y.repeats;
+          if (x.skillDiff !== y.skillDiff) return x.skillDiff - y.skillDiff;
+          return x.idx - y.idx;
+        });
+
+        teamA = poolToPick[0].tA;
+        teamB = poolToPick[0].tB;
+      }
+
+      // Catat pasangan yang baru terbentuk agar lapangan berikutnya di ronde yang sama juga tahu
+      partnerCountMap.set(getPairKey(teamA[0].id, teamA[1].id), (partnerCountMap.get(getPairKey(teamA[0].id, teamA[1].id)) || 0) + 1);
+      partnerCountMap.set(getPairKey(teamB[0].id, teamB[1].id), (partnerCountMap.get(getPairKey(teamB[0].id, teamB[1].id)) || 0) + 1);
     }
 
     matches.push({

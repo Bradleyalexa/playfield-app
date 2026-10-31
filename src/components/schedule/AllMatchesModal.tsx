@@ -30,7 +30,7 @@ interface AllMatchesModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: GameSession;
-  onFastTrackMatch?: (match: ProjectedMatch, targetCourtNumber: number) => void;
+  onFastTrackMatch?: (match: ProjectedMatch, targetCourtNumber: number) => boolean | void;
 }
 
 export function AllMatchesModal({
@@ -776,8 +776,10 @@ export function AllMatchesModal({
                                   const targetCourt = emptyCourt
                                     ? emptyCourt.courtNumber
                                     : match.courtNumber;
-                                  onFastTrackMatch(match, targetCourt);
-                                  onClose();
+                                  const ok = onFastTrackMatch(match, targetCourt);
+                                  if (ok !== false) {
+                                    onClose();
+                                  }
                                 }}
                                 className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#ccff00] hover:bg-[#b8e600] text-black border border-black font-black text-[9px] sm:text-[10px] uppercase shadow-[1px_1px_0px_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
                                 title="Tarik match ini sekarang ke lapangan"

@@ -220,6 +220,19 @@ export function CreateCustomMatchModal({
       }
     }
 
+    if (assignNow) {
+      const conflictingPlayer = [playerA1, playerA2, playerB1, playerB2]
+        .filter((p): p is Player => Boolean(p))
+        .find((p) => otherCourtPlayingIds.has(p.id));
+      if (conflictingPlayer) {
+        const otherCourtNum = playerPlayingCourtMap.get(conflictingPlayer.id);
+        alert(
+          `Pemain "${conflictingPlayer.name}" saat ini masih sedang bertanding di Lapangan ${otherCourtNum}. Silakan pilih pemain lain atau selesaikan pertandingan di Lapangan ${otherCourtNum} terlebih dahulu.`
+        );
+        return;
+      }
+    }
+
     const newMatch: Match = {
       id: `custom-match-r${roundNumber}-c${courtNumber}-${Date.now()}`,
       courtNumber,
@@ -228,7 +241,7 @@ export function CreateCustomMatchModal({
       teamB: isSingles ? [playerB1!] : [playerB1!, playerB2!],
       scoreA: 0,
       scoreB: 0,
-      status: "in_progress",
+      status: assignNow ? "in_progress" : "queued",
       startedAt: new Date().toISOString(),
       equipmentUsedCount: 1,
     };
