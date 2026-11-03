@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cara Pakai Playfield • Panduan Lengkap Host Mabar Tanpa Ribet",
+  title: "Cara Pakai & Panduan Lengkap Host Mabar",
   description:
     "Pelajari cara mengoperasikan Playfield untuk mengatur rotasi lapangan mabar, copy-paste list WhatsApp, display TV GOR kiosk, live scoring, dan split bill otomatis.",
   keywords: [
@@ -33,7 +33,26 @@ export const metadata: Metadata = {
     "mabar squash jakarta",
     "rekap mabar whatsapp",
     "matchmaking mabar",
+    "format whatsapp mabar",
   ],
+  alternates: {
+    canonical: "/cara-pakai",
+  },
+  openGraph: {
+    title: "Cara Pakai & Panduan Lengkap Host Mabar | Playfield",
+    description:
+      "Pelajari cara mengoperasikan Playfield untuk mengatur rotasi lapangan mabar, copy-paste list WhatsApp, display TV GOR kiosk, live scoring, dan split bill otomatis.",
+    url: "/cara-pakai",
+    type: "article",
+    images: [
+      {
+        url: "/playfield_banner.png",
+        width: 920,
+        height: 320,
+        alt: "Panduan Host Mabar Playfield",
+      },
+    ],
+  },
 };
 
 const ICON_MAP: Record<string, React.ElementType> = {

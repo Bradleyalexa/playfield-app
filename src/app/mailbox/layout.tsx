@@ -1,0 +1,17 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Mailbox",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
+export default function MailboxLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <>{children}</>;
+}
