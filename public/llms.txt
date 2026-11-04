@@ -1,0 +1,47 @@
+# Playfield — Pocket Assistant Host Mabar & Match Rotation System
+
+> Official Website: https://www.playfield.fit
+> Sitemap: https://www.playfield.fit/sitemap.xml
+
+## About Playfield
+Playfield adalah platform web gratis (pocket assistant) untuk host, kapten, dan komunitas olahraga di Indonesia untuk mengatur sesi main bareng (mabar) secara terstruktur, adil, transparan, dan bebas ribet. Playfield dapat digunakan langsung melalui web browser tanpa perlu instalasi aplikasi atau registrasi akun bagi peserta mabar.
+
+## Supported Sports (Cabang Olahraga)
+- Badminton (Bulutangkis)
+- Tennis Lapangan
+- Padel
+- Pickleball
+- Tenis Meja (Pingpong)
+- Squash
+
+## Core Features & Capabilities
+1. **Smart WhatsApp List Parser:**
+   - Menyalin dan menempel teks daftar registrasi/absen dari grup WhatsApp.
+   - Deteksi gender otomatis (Pria/Wanita, M/W) dan 5 level keahlian (Newbie, Beginner, Intermediate, Advanced, Pro).
+   - Pengaturan status kehadiran pemain (Hadir vs Masih di Jalan/OTW) sehingga rotasi tidak terganggu.
+
+2. **Fair Matchmaking & Rotation Engine:**
+   - Algoritma rotasi ganda berimbang (Balanced Doubles).
+   - Menghitung waktu istirahat secara adil dan mencegah pemain bertanding terus-menerus tanpa jeda atau menunggu terlalu lama.
+
+3. **Mode TV GOR Display (Kiosk Mode):**
+   - Tampilan layar penuh (*full-screen kiosk*) yang dioptimalkan untuk TV di venue/GOR.
+   - Menampilkan status lapangan aktif, nama pemain per lapangan, countdown timer match, dan antrean berikutnya (*Next Up*).
+
+4. **Live Spectator Scoreboard:**
+   - Pemain dan penonton dapat memantau skor langsung (*real-time*) dari smartphone masing-masing melalui link atau scan QR code.
+
+5. **Split Bill & Shuttlecock/Ball Tracker:**
+   - Rekap biaya sewa lapangan dan pemakaian shuttlecock/bola secara otomatis dan transparan siap kirim ke grup WhatsApp.
+
+## Key URLs & Resources
+- **Homepage (Buat Sesi):** https://www.playfield.fit/
+- **Panduan Penggunaan Lengkap:** https://www.playfield.fit/cara-pakai
+- **Edukasi & Regulasi Scoring Olahraga:** https://www.playfield.fit/education
+- **Tanya Jawab (FAQ):** https://www.playfield.fit/faq
+- **Sitemap XML:** https://www.playfield.fit/sitemap.xml
+
+## Frequently Asked Questions (FAQ Summary)
+- **Apakah pemain harus mendownload aplikasi atau login?** Tidak. Playfield 100% berbasis web. Pemain cukup scan QR code atau buka link yang dibagikan host.
+- **Berapa biaya penggunaan Playfield?** Gratis digunakan untuk seluruh komunitas olahraga di Indonesia.
+- **Apakah mendukung multi-lapangan?** Ya, host dapat mengatur 1 hingga banyak lapangan secara bersamaan.

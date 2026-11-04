@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono, Outfit } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { seoConfig } from "../config/seo.config";
+import { generateWebApplicationSchema, generateOrganizationSchema, generateWebsiteSchema } from "../lib/structured-data";
+import { StructuredData } from "../components/common/StructuredData";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -22,68 +25,22 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.playfield.fit"),
+  metadataBase: new URL(seoConfig.siteUrl),
   title: {
-    default: "Playfield — Pocket Assistant Host Mabar & Pengatur Rotasi Lapangan",
-    template: "%s | Playfield",
+    default: `${seoConfig.siteName} — ${seoConfig.tagline}`,
+    template: `%s | ${seoConfig.siteName}`,
   },
-  description:
-    "Aplikasi web pengatur game untuk host mabar olahraga (Badminton, Tennis, Padel, Tenis Meja, Pickleball, Squash) di Indonesia. Smart WhatsApp list parser, rotasi ganda seimbang, tracker shuttlecock & bola, dan mode TV GOR display.",
-  applicationName: "Playfield",
-  authors: [{ name: "Playfield", url: "https://www.playfield.fit" }],
-  creator: "Playfield",
-  publisher: "Playfield",
-  keywords: [
-    "Playfield",
-    "aplikasi mabar olahraga",
-    "pocket assistant host mabar",
-    "pengatur jadwal pertandingan komunitas",
-    "split bill lapangan mabar",
-    "whatsapp list parser mabar",
-    "kiosk score display TV GOR",
-
-    // Badminton
-    "aplikasi mabar badminton",
-    "rotasi lapangan badminton otomatis",
-    "badminton queue rotation app",
-    "jadwal giliran main bulutangkis",
-    "scoring board badminton online",
-
-    // Tennis
-    "aplikasi mabar tennis",
-    "rotasi ganda tenis lapangan",
-    "tennis queue matchmaking",
-    "atur jadwal main tennis",
-
-    // Padel
-    "aplikasi mabar padel",
-    "padel queue rotation indonesia",
-    "rotasi turnamen padel ganda",
-    "padel matchmaking app",
-
-    // Pickleball
-    "aplikasi mabar pickleball",
-    "pickleball rotation system",
-    "rotasi lapangan pickleball indonesia",
-
-    // Tenis Meja / Pingpong
-    "aplikasi mabar tenis meja",
-    "pengatur giliran pingpong",
-    "turnamen tenis meja komunitas",
-
-    // Squash
-    "aplikasi mabar squash",
-    "rotasi lapangan squash",
-  ],
-  alternates: {
-    canonical: "/",
-  },
+  description: seoConfig.description,
+  applicationName: seoConfig.siteName,
+  authors: [{ name: seoConfig.author.name, url: seoConfig.siteUrl }],
+  creator: seoConfig.author.name,
+  publisher: seoConfig.author.name,
+  keywords: [...seoConfig.primaryKeywords],
   openGraph: {
-    title: "Playfield — Pocket Assistant Host Mabar & Pengatur Rotasi Lapangan",
-    description:
-      "Aplikasi web pengatur game untuk host mabar olahraga (Badminton, Tennis, Padel, Tenis Meja, Pickleball, Squash) di Indonesia. Smart WhatsApp list parser, rotasi ganda seimbang, tracker shuttlecock & bola, dan mode TV GOR display.",
-    url: "https://www.playfield.fit",
-    siteName: "Playfield",
+    title: `${seoConfig.siteName} — ${seoConfig.tagline}`,
+    description: seoConfig.description,
+    url: seoConfig.siteUrl,
+    siteName: seoConfig.siteName,
     locale: "id_ID",
     type: "website",
     images: [
@@ -91,15 +48,14 @@ export const metadata: Metadata = {
         url: "/playfield_banner.png",
         width: 920,
         height: 320,
-        alt: "Playfield — Pocket Assistant Host Mabar & Pengatur Rotasi Lapangan",
+        alt: `${seoConfig.siteName} — ${seoConfig.tagline}`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Playfield — Pocket Assistant Host Mabar & Pengatur Rotasi Lapangan",
-    description:
-      "Aplikasi web pengatur game untuk host mabar olahraga di Indonesia. Smart WhatsApp list parser, rotasi seimbang, dan mode TV GOR display.",
+    title: `${seoConfig.siteName} — ${seoConfig.tagline}`,
+    description: seoConfig.description,
     images: ["/playfield_banner.png"],
   },
   robots: {
@@ -133,6 +89,11 @@ export default function RootLayout({
       lang="id"
       className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} ${outfit.variable} h-full antialiased`}
     >
+      <head>
+        <StructuredData data={generateWebApplicationSchema()} />
+        <StructuredData data={generateOrganizationSchema()} />
+        <StructuredData data={generateWebsiteSchema()} />
+      </head>
       <body className="min-h-full flex flex-col bg-[#faf8f2] text-[#0a0a0a] font-sans selection:bg-[#ccff00] selection:text-black">
         {children}
         <Analytics />

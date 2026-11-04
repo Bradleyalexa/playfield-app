@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { seoConfig } from "../config/seo.config";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://www.playfield.fit";
+  const baseUrl = seoConfig.siteUrl;
   const currentDate = new Date();
 
   return [

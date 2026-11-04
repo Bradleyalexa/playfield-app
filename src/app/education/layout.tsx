@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { seoConfig } from "../../config/seo.config";
+import { generateBreadcrumbSchema } from "../../lib/structured-data";
+import { StructuredData } from "../../components/common/StructuredData";
 
 export const metadata: Metadata = {
   title: "Panduan Aturan & Sistem Scoring Olahraga Raket",
@@ -28,5 +31,15 @@ export default function EducationLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <StructuredData
+        data={generateBreadcrumbSchema([
+          { name: "Beranda", url: `${seoConfig.siteUrl}/` },
+          { name: "Edukasi & Aturan Olahraga", url: `${seoConfig.siteUrl}/education` },
+        ])}
+      />
+      {children}
+    </>
+  );
 }

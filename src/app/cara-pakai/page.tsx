@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "../../components/common/Navbar";
-import {
-  CARA_PAKAI_STEPS,
-} from "../../data/app-guide-data";
+import { StructuredData } from "../../components/common/StructuredData";
+import { seoConfig } from "../../config/seo.config";
+import { generateHowToSchema, generateBreadcrumbSchema } from "../../lib/structured-data";
+import { CARA_PAKAI_STEPS } from "../../data/app-guide-data";
 import {
   BookOpen,
   Sparkles,
@@ -67,6 +68,14 @@ const ICON_MAP: Record<string, React.ElementType> = {
 export default function CaraPakaiPage() {
   return (
     <div className="min-h-screen bg-[#faf8f2] text-black flex flex-col font-sans selection:bg-[#ccff00] selection:text-black">
+      <StructuredData
+        data={generateBreadcrumbSchema([
+          { name: "Beranda", url: `${seoConfig.siteUrl}/` },
+          { name: "Cara Pakai", url: `${seoConfig.siteUrl}/cara-pakai` },
+        ])}
+      />
+      <StructuredData data={generateHowToSchema(CARA_PAKAI_STEPS)} />
+
       <Navbar />
 
       <main className="flex-1 mx-auto max-w-5xl w-full px-3.5 sm:px-6 py-8 sm:py-12 pb-28 sm:pb-16 flex flex-col gap-8 sm:gap-10">

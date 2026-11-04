@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import { FAQ_ITEMS } from "../../data/app-guide-data";
+import { seoConfig } from "../../config/seo.config";
+import { generateFAQSchema, generateBreadcrumbSchema } from "../../lib/structured-data";
+import { StructuredData } from "../../components/common/StructuredData";
 
 export const metadata: Metadata = {
   title: "FAQ & Tanya Jawab Host Mabar",
@@ -28,5 +32,16 @@ export default function FaqLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <StructuredData
+        data={generateBreadcrumbSchema([
+          { name: "Beranda", url: `${seoConfig.siteUrl}/` },
+          { name: "FAQ", url: `${seoConfig.siteUrl}/faq` },
+        ])}
+      />
+      <StructuredData data={generateFAQSchema(FAQ_ITEMS, `${seoConfig.siteUrl}/faq`)} />
+      {children}
+    </>
+  );
 }
